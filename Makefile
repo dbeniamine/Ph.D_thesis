@@ -1,0 +1,50 @@
+# Makefile
+
+#Commands
+TEX = pdflatex -interaction=nonstopmode -synctex=1
+BIB = bibtex
+
+#Files
+TEXSRC = $(wildcard *.tex)
+BIBSRC = $(wildcard *.bib)
+PDF = $(TEXSRC:.tex=.pdf)
+AUX = $(TEXSRC:.tex=.aux)
+BBL = $(TEXSRC:.tex=.bbl)
+NLO = $(TEXSRC:.tex=.nlo)
+NLS = $(TEXSRC:.tex=.nls)
+
+#Commands + arguments
+TEXCOMPILE = $(TEX) $(TEXSRC)
+BIBCOMPILE = $(BIB) $(AUX)
+
+#Windows
+ifeq ($(OS),Windows_NT)
+	SHELL = C:/Windows/System32/cmd.exe
+endif
+
+.PRECIOUS: *.tdo *.idx *.nlo *.bbl *.blg *.pdf *.aux *.toc *.out
+
+all : clean all-bib-default
+
+
+all-bib-default : clean bib-default finalize
+
+all-noclean : bib-default finalize
+
+$(PDF) : $(TEXSRC) $(TEXSUBSRC) $(BIBSRC) $(PDF)
+	$(TEXCOMPILE)
+	$(TEXCOMPILE)
+
+bib-default : $(PDF) $(BIBSRC)
+	$(BIBCOMPILE)
+
+finalize : $(AUX) $(BBL)
+	$(TEXCOMPILE)
+	$(TEXCOMPILE)
+
+clean :
+	rm -rf *.tdo *.idx *.nlo *.log *.lof *.lot *.bbl *.blg *.thm *.pdf *.aux *.backup *.bak *.toc *.out *.ilg *.nls *~ .*~ img/*eps-converted-to.pdf
+	rm -rf *.ml*  *.mt* *.ma* *.pt* *.pl* *.synctex.gz
+
+distclean: clean
+	rm -rf $(PDF)

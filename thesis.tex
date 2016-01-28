@@ -1,0 +1,207 @@
+%!TEX encoding=UTF-8 Unicode
+\documentclass[a4paper,10pt]{book}
+\usepackage[a4paper]{style/meta-donnees}
+
+%========================= Encodage fontes et langues =========================
+
+\usepackage[utf8]{inputenc}
+\usepackage[french,english]{babel}
+\usepackage[T1]{fontenc}
+
+%========================== Fancy =============================================
+\usepackage{etoolbox}
+
+\newif\ifpartialtoc
+
+\usepackage{titlesec}
+\usepackage{titletoc}
+\usepackage{shorttoc}
+
+% pages style
+\newpagestyle{main}{
+    \setheadrule{.55pt}
+    \sethead[\thepage][][\Roman{chapter}\ --\ \chaptertitle] % even
+    {\thesection\ --\ \sectiontitle}{}{\thepage} %odd
+}
+
+
+% Chapter in toc
+ \titlecontents*{chapter}% <section-type>
+   [0pt]% <left>
+   {}% <above-code>
+   {\bfseries \uppercase\expandafter{\romannumeral\thecontentslabel\relax}\quad}% <numbered-entry-format>
+   {}% <numberless-entry-format>
+   {\bfseries\hfill\contentspage}% <filler-page-format>
+
+% chapter pages
+\titleformat{\chapter}[display]
+    {\bfseries\huge}
+    {\filleft\chaptertitlename\Huge\ \Roman{chapter}}
+    {4ex}
+    {\titleline{\titlerule[.25ex]}
+        \vspace{2ex}%
+    }
+    [\vspace{2ex}%
+    \titleline{\titlerule[.25ex]}%
+    \ifpartialtoc
+    \vspace*{2ex}%
+    \startcontents
+    \begin{minipage}{.9\linewidth}
+        \filcenter \Large\contentsname\\
+        \vspace*{1ex}%
+        \titlerule%
+        \vspace*{1ex}%
+        \printcontents{}{1}{\large}
+        \vspace*{1ex}%
+        \titlerule%
+    \end{minipage}
+    \fi
+    \vspace*{4ex}%
+    ]
+
+
+
+%========================= Mise en forme de code ==============================
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+
+\algblockdefx[]{Function}{EndFunction}
+[2]{\algorithmicfunction\ \textproc{#1}{(#2)}}%
+{\algorithmicend\ \algorithmicfunction}%
+
+
+\algnewcommand\Callp[2]{\textproc{#1}(#2)}%
+
+%========================== Liens =============================================
+
+% gestion des hyperliens
+\usepackage{hyperref}
+\hypersetup{
+    colorlinks=true, %colore les liens
+    breaklinks=true, %permet le retour à la ligne dans les liens trop longs
+    urlcolor= blue, %couleur des hyperliens
+    linkcolor= black, %couleur des liens internes
+    bookmarksopen=true,
+    citecolor=black,
+}
+\usepackage{url}
+
+%========================== Images ============================================
+
+\usepackage[]{caption}
+\usepackage[]{subcaption}
+\usepackage{graphicx}
+\graphicspath{{./img/}{./style/}}
+
+%========================== Tikz ==============================================
+
+\usepackage{tikz}
+%% TODO
+
+%========================== Todonotes =========================================
+
+%\usepackage[obeyDraft]{todonotes}
+\usepackage{todonotes}
+\newcommand{\DB}[1]{\todo[author=David,inline]{#1}}
+\newcommand{\GH}[1]{\todo[author=Guillaume,inline]{#1}}
+
+
+%========================== CustomCommands ====================================
+
+\newcommand{\Input}[1]{\input{tex/#1}}
+
+%========================== Misc ==============================================
+
+\usepackage{siunitx}
+\usepackage{multirow,booktabs}
+
+\begin{document}
+
+%========================== Style =============================================
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%             Commandes Meta-données               %%
+%%   à renseigner par les auteurs pour générer      %%
+%%     la couverture modèle Univ. Grenoble          %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%      Fichier encodé au format ISO-8859-16        %%
+
+%\Sethpageshift{???mm}   %%optionnel : à décommenter si besoin pour ajout d'espace afin de center la couvérture horizontalement (valeur par défaut est -5.5mm)
+%\Setvpageshift{???mm}   %%optionnel : à décommenter si besoin pour ajout d'espace afin de center la couvérture verticalement (valeur par défaut est -15.5mm)
+
+
+%\Universite{}    %%optionnel : à décommenter et à renseigenr si vous voulez changer le non d'université
+%\Grade{}         %%optionnel : à décommenter et à renseigenr si vous voulez changer le grade
+\Specialite{Informatique}
+\Arrete{}
+\Auteur{David Beniamine}
+\Directeur{Bruno Raffin}
+\CoDirecteur{Guillaume Huard}    %%optionnel : à décommenter et à renseigenr si présence d'un Co-directeur de thèse
+\Laboratoire{LIG}
+\EcoleDoctorale{EDMSTII}         
+\Titre{Something about performance analysis and stuff}
+%\Soustitre{}      %%optionnel : à décommenter et à renseigenr si présence d'un sous-titre de thèse
+\Depot{}       
+
+
+% Commande pour création de nouvelles catégories dans le jury:
+
+%\UGTNewJuryCategory{...NomDeLaCategorie...}{...Definition...}
+
+% Exemple \UGTNewJuryCategory{UGTFamille}{Membre de la famille} que nous ajoutons dans la commande \Jury ci-dessous sous la forme \UGTFamille{Jean Rousseau}{(...titre_et_affiliation...s'il_y_en_a...)}
+
+
+\Jury{
+    \UGTPresident{Pr, Jes\'us Labarta Mancho}{Professor at Universitat Polit\`ecnica de Catalunya}
+%\UGTPresidente{...Civilité, Prénom\_et\_Nom...}{...titre\_et\_affiliation...}
+
+\UGTRapporteur{Pr, Martin Quinson}{Professor at ENS Rennes}      %% 1er rapporteur
+\UGTRapporteur{Pr,  Raymond Namyste}{Professor at University of Bordeaux}      %% second rapporteur
+ 
+\UGTExaminateur{Dr, Lucas M. Schnorr}{Associate professor at Institute of Informatics of the Federal University of Rio Grande do Sul}     %% 1er examinateur
+%\UGTExaminateur{...Civilité, Prénom\_et\_Nom...}{...titre\_et\_affiliation...}     %% second examinateur
+%\UGTExaminatrice{...Civilité, Prénom\_et\_Nom...}{...titre\_et\_affiliation...}    %% 3ème examinateur
+
+\UGTDirecteur{Pr,Bruno Raffin}{Professeur at INRIA Grenoble}       %% Directeur de thèse
+\UGTCoDirecteur{Dr, Guillaume Huard}{Assistant professor at Grenoble Alpes University}     %% Co-Directeur de thèse s'il y en a
+
+%\UGTInvite{...Civilité, Prénom\_et\_Nom...}{...titre\_et\_affiliation...}
+%\UGTInvitee{...Civilité, Prénom\_et\_Nom...}{...titre\_et\_affiliation...}
+}
+
+\frontmatter
+\pagestyle{empty}
+\MakeUGthesePDG
+
+
+\shorttableofcontents{Outline}{1}
+
+
+\chapter*{Abstract}
+    \DB{abstract in French and English}
+
+\mainmatter
+\partialtoctrue
+\pagestyle{main}
+
+\Input{intro}
+\Input{profiling}
+\Input{tracing}
+\Input{analyzing}
+\Input{cncl}
+
+\backmatter
+\partialtocfalse
+
+\bibliographystyle{apalike}
+\bibliography{biblio}
+
+\tableofcontents
+\listoffigures
+\listoftables
+
+\chapter*{Acknowledgments}
+\DB{C'est là quj'ai le droit de dire plein de conneries !}
+
+%==============================================================================
+
+\end{document}
