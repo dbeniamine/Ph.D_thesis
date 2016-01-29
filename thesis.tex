@@ -27,11 +27,21 @@
 
 % Chapter in toc
  \titlecontents*{chapter}% <section-type>
-   [0pt]% <left>
-   {}% <above-code>
+   [0em]% <left>
+   {\vspace{1em}\centering}% <above-code>
    {\bfseries \uppercase\expandafter{\romannumeral\thecontentslabel\relax}\quad}% <numbered-entry-format>
    {}% <numberless-entry-format>
-   {\bfseries\hfill\contentspage}% <filler-page-format>
+   {\vspace{1em}}% <filler-page-format>
+
+% Section and subsection in small tocs
+\titlecontents{lsection}
+  [3.8em]{\small}{\contentslabel{2.3em}}
+  {\hspace*{-2.3em}}
+  {\titlerule*[.3pc]{.}\contentspage}
+\titlecontents{lsubsection}
+  [5em]{\small}{\normalfont\contentslabel{2.3em}}
+  {\hspace*{-2.3em}}
+  {\titlerule*[.3pc]{.}\contentspage}
 
 % chapter pages
 \titleformat{\chapter}[display]
@@ -40,25 +50,23 @@
     {4ex}
     {\titleline{\titlerule[.25ex]}
         \vspace{2ex}%
+        \filcenter
     }
     [\vspace{2ex}%
     \titleline{\titlerule[.25ex]}%
     \ifpartialtoc
-    \vspace*{2ex}%
+    \vspace*{3ex}%
     \startcontents
-    \begin{minipage}{.9\linewidth}
-        \filcenter \Large\contentsname\\
-        \vspace*{1ex}%
+        \filright\large\contentsname\\
+        \vspace*{2ex}%
         \titlerule%
         \vspace*{1ex}%
-        \printcontents{}{1}{\large}
+        \printcontents{l}{1}{\contentsmargin{5em}}
         \vspace*{1ex}%
         \titlerule%
-    \end{minipage}
     \fi
     \vspace*{4ex}%
     ]
-
 
 
 %========================= Mise en forme de code ==============================
@@ -109,6 +117,8 @@
 %========================== CustomCommands ====================================
 
 \newcommand{\Input}[1]{\input{tex/#1}}
+\newcommand{\Tabarnac}{\emph{Tabarnac}\xspace}
+\newcommand{\Moca}{\emph{Moca}\xspace}
 
 %========================== Misc ==============================================
 
