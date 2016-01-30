@@ -35,37 +35,41 @@
 
 % Section and subsection in small tocs
 \titlecontents{lsection}
-  [3.8em]{\small}{\contentslabel{2.3em}}
+  [3.8em]{\normalsize}{\contentslabel{2.3em}}
   {\hspace*{-2.3em}}
   {\titlerule*[.3pc]{.}\contentspage}
 \titlecontents{lsubsection}
-  [5em]{\small}{\normalfont\contentslabel{2.3em}}
+  [5em]{\normalsize}{\normalfont\contentslabel{2.3em}}
   {\hspace*{-2.3em}}
   {\titlerule*[.3pc]{.}\contentspage}
 
+
+
 % chapter pages
 \titleformat{\chapter}[display]
-    {\bfseries\huge}
-    {\filleft\chaptertitlename\Huge\ \Roman{chapter}}
+    {\bfseries\Huge}
+    {\filleft\chaptertitlename\ \Roman{chapter}}
     {4ex}
     {\titleline{\titlerule[.25ex]}
-        \vspace{2ex}%
+        \vspace{2.5ex}%
         \filcenter
     }
-    [\vspace{2ex}%
+    [ \vspace{2.5ex}%
     \titleline{\titlerule[.25ex]}%
     \ifpartialtoc
-    \vspace*{4ex}%
+    \vspace*{10ex}%
     \startcontents
-        \raggedright\large\contentsname\\
-        \vspace*{2ex}%
+        \raggedright\large\textbf{\contentsname}\\
+        \vspace*{3ex}%
         \titleline{\titlerule}%
         \vspace*{2ex}%
         \printcontents{l}{1}{\contentsmargin{5em}}
         \vspace*{2ex}%
         \titleline{\titlerule}%
-    \fi
+        \newpage
+    \else
     \vspace*{4ex}%
+    \fi
     ]
 
 
