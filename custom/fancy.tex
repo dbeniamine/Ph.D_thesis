@@ -1,0 +1,66 @@
+%!TEX encoding=UTF-8 Unicode
+
+%========================== Fancy =============================================
+\usepackage{etoolbox}
+
+\newif\ifpartialtoc
+
+\usepackage{titlesec}
+\usepackage{titletoc}
+\usepackage{shorttoc}
+
+% pages style
+\newpagestyle{main}{
+    \setheadrule{.55pt}
+    \sethead[\thepage][][\Roman{chapter}\ --\ \chaptertitle] % even
+    {\thesection\ --\ \sectiontitle}{}{\thepage} %odd
+}
+
+
+% Chapter in toc
+ \titlecontents*{chapter}% <section-type>
+   [0em]% <left>
+   {\vspace{1em}\centering}% <above-code>
+   {\bfseries \uppercase\expandafter{\romannumeral\thecontentslabel\relax}\quad}% <numbered-entry-format>
+   {}% <numberless-entry-format>
+   {\vspace{1em}}% <filler-page-format>
+
+% Section and subsection in small tocs
+\titlecontents{lsection}
+  [3.8em]{\normalsize}{\contentslabel{2.3em}}
+  {\hspace*{-2.3em}}
+  {\titlerule*[.3pc]{.}\contentspage}
+\titlecontents{lsubsection}
+  [5em]{\normalsize}{\normalfont\contentslabel{2.3em}}
+  {\hspace*{-2.3em}}
+  {\titlerule*[.3pc]{.}\contentspage}
+
+
+
+% chapter pages
+\titleformat{\chapter}[display]
+    {\bfseries\Huge}
+    {\filleft\chaptertitlename\ \Roman{chapter}}
+    {4ex}
+    {\titleline{\titlerule[.25ex]}
+        \vspace{2.5ex}%
+        \filcenter
+    }
+    [ \vspace{2.5ex}%
+    \titleline{\titlerule[.25ex]}%
+    \ifpartialtoc
+    \vspace*{10ex}%
+    \startcontents
+        \raggedright\large\textbf{\contentsname}\\
+        \vspace*{3ex}%
+        \titleline{\titlerule}%
+        \vspace*{2ex}%
+        \printcontents{l}{1}{\contentsmargin{5em}}
+        \vspace*{2ex}%
+        \titleline{\titlerule}%
+        \newpage
+    \else
+    \vspace*{4ex}%
+    \fi
+    ]
+

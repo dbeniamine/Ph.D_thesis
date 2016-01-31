@@ -1,0 +1,56 @@
+%!TEX encoding=UTF-8 Unicode
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%             Commandes Meta-données               %%
+%%   à renseigner par les auteurs pour générer      %%
+%%     la couverture modèle Univ. Grenoble          %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%      Fichier encodé au format ISO-8859-16        %%
+
+%\Sethpageshift{???mm}   %%optionnel : à décommenter si besoin pour ajout d'espace afin de center la couvérture horizontalement (valeur par défaut est -5.5mm)
+%\Setvpageshift{???mm}   %%optionnel : à décommenter si besoin pour ajout d'espace afin de center la couvérture verticalement (valeur par défaut est -15.5mm)
+
+
+%\Universite{}    %%optionnel : à décommenter et à renseigenr si vous voulez changer le non d'université
+%\Grade{}         %%optionnel : à décommenter et à renseigenr si vous voulez changer le grade
+\Specialite{Informatique}
+\Arrete{}
+\Auteur{David Beniamine}
+\Directeur{Bruno Raffin}
+\CoDirecteur{Guillaume Huard}    %%optionnel : à décommenter et à renseigenr si présence d'un Co-directeur de thèse
+\Laboratoire{LIG}
+\EcoleDoctorale{EDMSTII}         
+\Titre{Something about performance analysis and stuff}
+%\Soustitre{}      %%optionnel : à décommenter et à renseigenr si présence d'un sous-titre de thèse
+\Depot{}       
+
+
+% Commande pour création de nouvelles catégories dans le jury:
+
+%\UGTNewJuryCategory{...NomDeLaCategorie...}{...Definition...}
+
+% Exemple \UGTNewJuryCategory{UGTFamille}{Membre de la famille} que nous ajoutons dans la commande \Jury ci-dessous sous la forme \UGTFamille{Jean Rousseau}{(...titre_et_affiliation...s'il_y_en_a...)}
+
+
+\Jury{
+    \UGTPresident{Pr, Jes\'us Labarta Mancho}{Professor at Universitat Polit\`ecnica de Catalunya}
+%\UGTPresidente{...Civilité, Prénom\_et\_Nom...}{...titre\_et\_affiliation...}
+
+\UGTRapporteur{Pr, Martin Quinson}{Professor at ENS Rennes}      %% 1er rapporteur
+\UGTRapporteur{Pr,  Raymond Namyste}{Professor at University of Bordeaux}      %% second rapporteur
+ 
+\UGTExaminateur{Dr, Lucas M. Schnorr}{Associate professor at Institute of Informatics of the Federal University of Rio Grande do Sul}     %% 1er examinateur
+%\UGTExaminateur{...Civilité, Prénom\_et\_Nom...}{...titre\_et\_affiliation...}     %% second examinateur
+%\UGTExaminatrice{...Civilité, Prénom\_et\_Nom...}{...titre\_et\_affiliation...}    %% 3ème examinateur
+
+\UGTDirecteur{Pr,Bruno Raffin}{Professeur at INRIA Grenoble}       %% Directeur de thèse
+\UGTCoDirecteur{Dr, Guillaume Huard}{Assistant professor at Grenoble Alpes University}     %% Co-Directeur de thèse s'il y en a
+
+%\UGTInvite{...Civilité, Prénom\_et\_Nom...}{...titre\_et\_affiliation...}
+%\UGTInvitee{...Civilité, Prénom\_et\_Nom...}{...titre\_et\_affiliation...}
+}
+
+\frontmatter
+\pagestyle{empty}
+\MakeUGthesePDG
+
