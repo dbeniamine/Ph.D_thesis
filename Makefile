@@ -1,8 +1,5 @@
-# Makefile
-
-#Commands
-TEX = pdflatex -interaction=nonstopmode -synctex=1
-BIB = bibtex
+include common.mk
+SUBDIRS=tikz
 
 #Files
 TEXSRC = $(wildcard *.tex)
@@ -13,25 +10,25 @@ BBL = $(TEXSRC:.tex=.bbl)
 NLO = $(TEXSRC:.tex=.nlo)
 NLS = $(TEXSRC:.tex=.nls)
 
+
 #Commands + arguments
 TEXCOMPILE = $(TEX) $(TEXSRC)
 BIBCOMPILE = $(BIB) $(AUX)
 
-#Windows
-ifeq ($(OS),Windows_NT)
-	SHELL = C:/Windows/System32/cmd.exe
-endif
+.PHONY: $(SUBDIRS) clean distclean
 
-.PRECIOUS: *.tdo *.idx *.nlo *.bbl *.blg *.pdf *.aux *.toc *.out
-
-all : clean all-bib-default
+$(SUBDIRS) :
+	$(MAKE) -c $@
 
 
-all-bib-default : clean bib-default finalize
+all : all-noclean
+
+
+all-clean : clean bib-default finalize
 
 all-noclean : bib-default finalize
 
-$(PDF) : $(TEXSRC) $(TEXSUBSRC) $(BIBSRC) $(PDF)
+$(PDF) : $(SUBDIRS) $(TEXSRC) $(TEXSUBSRC) $(BIBSRC) $(PDF)
 	$(TEXCOMPILE)
 	$(TEXCOMPILE)
 
@@ -42,9 +39,15 @@ finalize : $(AUX) $(BBL)
 	$(TEXCOMPILE)
 	$(TEXCOMPILE)
 
-clean :
-	rm -rf *.tdo *.idx *.nlo *.log *.lof *.lot *.bbl *.blg *.thm *.pdf *.aux *.backup *.bak *.toc *.out *.ilg *.nls *~ .*~ img/*eps-converted-to.pdf
-	rm -rf *.ml*  *.mt* *.ma* *.pt* *.pl* *.synctex.gz
+clean: subclean
+	rm -rf $(TEMP)
+	for dir in $(SUBDIRS); do \
+		$(MAKE) clean -C $$dir; \
+	done
 
 distclean: clean
 	rm -rf $(PDF)
+	for dir in $(SUBDIRS); do \
+		$(MAKE) distclean -C $$dir; \
+	done
+
