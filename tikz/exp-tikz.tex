@@ -98,28 +98,27 @@
   fat blue line/.style = {ultra thick, blue}
 }
 \begin{document}
-\begin{tikzpicture}[node distance = 2cm,scale=0.8]
+\begin{tikzpicture}[node distance = 2cm,scale=0.8]rotate=90
 
     %expe env
     \begin{pgfonlayer}{foreground}
 
-    \node [concept] (bench) {Benchmarks (+ Inputs)};
-    \node [concept, right of=bench] (tools) {Tools};
+    \node [concept] (configs) {Benchmarks, Runtimes, Inputs \ldots};
 
-    \node [concept,right of=tools] (venv) {Virtual environment};
+    \node [concept,right=2.5em of configs] (venv) {Virtual environment};
 
-    \node [file, right= 1.5em of venv] (main) {Main script};
-    \node [file, right of=main] (filt) {Parsing script};
-    \node [file, right of=filt] (ana) {Analysis script};
+    \node [file, below=4em of configs] (filt) {Parsing script};
+    \node [file, right of=filt] (main) {Main script};
+    \node [file, right of=main] (ana) {Analysis script};
 
-    \node [concept, below= 6em of venv] (mach) {Experimental machine(s)};
+    \node [concept, below= 4em of main] (mach) {Experimental machine(s)};
     \end{pgfonlayer}
 
-    \node [group,fit=(bench) (tools),header={Inputs}{groupcol}{north}{}] (inputs) {};
-    \node [group,fit=(main) (filt) (ana),header={Experimental plan}{groupcol}{north}{}] (plan) {};
+    \node [group,fit=(main) (filt) (ana),header={Experimental plan}
+    {groupcol}{north}{}] (plan) {};
 
     \begin{pgfonlayer}{bg1}
-        \node[distrib,fit=(inputs) (venv) (plan),%
+        \node[distrib,fit=(configs) (venv) (plan),%
         header={Experimental setup}{distribcol}{north}{}] (distenv) {};
     \end{pgfonlayer}
 
@@ -166,25 +165,29 @@
 
     % Paths
 
-    \path[dep] (inputs.south) edge[out=270,in=90] node[above] {use} (mach.north);
-    \path[exec] (main.south) edge[out=270,in=90] node[above] {execute} (mach.north);
-    \path[exec] (venv.south) edge[out=270,in=90] node[left] {deploy} (mach.north);
-    \path[copy] (filt.south) edge[out=240,in=50]  (mach.north);
-    \path[copy] (ana.south) edge[out=270,in=50] node[pos=.4,above]  {copy} (mach.north);
+    \begin{pgfonlayer}{background}
+        \path[dep] (configs.south) edge[out=270,in=90]
+        node[above right=.5em and 1em,pos=.4] {depends} (main.north);
+        \path[dep] (venv.south) edge[out=270,in=90]  (main.north);
+    \end{pgfonlayer}
+    % \path[dep] (configs.south) edge[out=270,in=90] node[above] {use} (mach.north);
+    \path[exec] (main.south) edge  (mach.north);
+     \path[copy] (filt.south) edge[out=270,in=90]  (mach.north);
+     \path[copy] (ana.south) edge[out=270,in=90] (mach.north);
 
     \path[exec] (mach.south) edge[out=270,in=90] node[pos=.1,left] {generate} (mi.north);
     \path[exec] (mach.south) edge[out=270,in=90] (raw.north);
-    \path[copy] (mach.south) edge[out=270,in=90] node[pos=.3,right]  {copy} (filt1.north);
+    \path[copy] (mach.south) edge[out=270,in=90] (filt1.north);
     \path[copy] (mach.south) edge[out=270,in=90] (ana1.north);
 
-    \draw[exec] (raw.south) -- node[left] {produce} (csv.north);
+    \draw[exec] (raw.south) -- node[left] {generate} (csv.north);
     \path[exec] (filt1.south) edge[out=270,in=90] (csv.north);
-    \path[copy] (ana1.south) edge[out=270,in=90] node[above]  {copy} (ana2.north);
+    \path[copy] (ana1.south) edge[out=270,in=90] (ana2.north);
 
-    \draw[exec] (csv.south) -- node[left] {produce} (res.north);
+    \draw[exec] (csv.south) -- node[left] {generate} (res.north);
     \path[exec] (ana2.south) edge[out=270,in=90] (res.north);
 
-    \draw[exec] (res.south) -- node[left] {produce} (pap.north);
+    \draw[exec] (res.south) -- node[left] {generate} (pap.north);
     \path[exec] (com.south) edge[out=270,in=90] (pap.north);
 \end{tikzpicture}
 \end{document}

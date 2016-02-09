@@ -16,3 +16,4 @@ sty/*/*.pdf
 *.lot
 *.ptc
 *.toc
+tikz/*.pdf
