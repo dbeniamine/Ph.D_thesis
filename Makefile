@@ -1,53 +1,56 @@
-include common.mk
-SUBDIRS=tikz
-
-#Files
+# Files
 TEXSRC = $(wildcard *.tex)
 BIBSRC = $(wildcard *.bib)
 PDF = $(TEXSRC:.tex=.pdf)
 AUX = $(TEXSRC:.tex=.aux)
 BBL = $(TEXSRC:.tex=.bbl)
-NLO = $(TEXSRC:.tex=.nlo)
-NLS = $(TEXSRC:.tex=.nls)
+BLG = $(TEXSRC:.tex=.bbl)
+
+# Tikz Files
+TIKZSRC = $(wildcard tikz/*.tex)
+TIKZPDF = $(TIKZSRC:.tex=.pdf)
+
+# Temporary files
+TEMP=*.bbl *.blg *.synctex.gz *.aux *.toc *.ptc *.out *.lot *.lof *.log
+# Tell make not to remove them
+.INTERMEDIATE: %.bbl %.blg %.synctex.gz %.aux %.toc %.ptc %.out %.lot %.lof %.log
 
 
-#Commands + arguments
+# Commands + arguments
+TEX = pdflatex -interaction=nonstopmode -synctex=1
+BIB = bibtex
 TEXCOMPILE = $(TEX) $(TEXSRC)
 BIBCOMPILE = $(BIB) $(AUX)
 
-.PHONY: $(SUBDIRS) clean distclean
+all : $(PDF)
 
-$(SUBDIRS) :
-	$(MAKE) -c $@
-
-
-all : all-noclean
-
-
-all-clean : clean bib-default finalize
-
-all-noclean : bib-default finalize
-
-$(PDF) : $(SUBDIRS) $(TEXSRC) $(TEXSUBSRC) $(BIBSRC) $(PDF)
+# Finalize:
+# Note that $(PDF) should only depends on $(BBL) and $(BBL) should depends on
+# $(AUX) but as the last compilation re write $(AUX) if we do so, make will
+# always think that we need to redo the $(BBL) and $(PDF) targets.
+$(PDF) : $(AUX) $(BBL)
 	$(TEXCOMPILE)
 	$(TEXCOMPILE)
 
-bib-default : $(PDF) $(BIBSRC)
+# Bibtex
+$(BBL): $(BIBSRC)
 	$(BIBCOMPILE)
 
-finalize : $(AUX) $(BBL)
+# First compilation
+$(AUX): $(TIKZPDF) $(TEXSRC) $(TEXSUBSRC)
 	$(TEXCOMPILE)
 	$(TEXCOMPILE)
 
-clean: subclean
+# Tikz images
+tikz/%.pdf: tikz/%.tex
+	cd tikz; $(TEX) $(shell basename $^)
+
+.PHONY: clean distclean
+
+clean:
 	rm -rf $(TEMP)
-	for dir in $(SUBDIRS); do \
-		$(MAKE) clean -C $$dir; \
-	done
+	cd tikz; rm -rf $(TEMP)
 
 distclean: clean
 	rm -rf $(PDF)
-	for dir in $(SUBDIRS); do \
-		$(MAKE) distclean -C $$dir; \
-	done
-
+	rm -rf $(TIKZPDF)
