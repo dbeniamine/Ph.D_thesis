@@ -9,11 +9,29 @@
 \usepackage{titletoc}
 \usepackage{shorttoc}
 
-% pages style
+% Set pagestyle according to matter
+\let\myfrontmatter\frontmatter
+\renewcommand{\frontmatter}{\myfrontmatter\pagestyle{empty}}
+\let\mybackmatter\backmatter
+\renewcommand{\backmatter}{\mybackmatter\pagestyle{empty}}
+\let\mymainmatter\mainmatter
+\renewcommand{\mainmatter}{\mymainmatter\pagestyle{main}}
+
+\newcommand{\customFoot}{\setfoot[\thepage][][] % even
+    {}{}{\thepage} %odd
+}
+
+% main page style
 \newpagestyle{main}{
     \setheadrule{.55pt}
-    \sethead[\thepage][][\Roman{chapter}\ --\ \chaptertitle] % even
-    {\thesection\ --\ \sectiontitle}{}{\thepage} %odd
+    \sethead[\Roman{chapter}\ --\ \chaptertitle][][] % even
+    {}{}{\sectiontitle\ --\ \thesection} %odd
+    \customFoot
+    }
+
+% header page style
+\renewpagestyle{plain}{
+    \customFoot
 }
 
 
@@ -38,14 +56,15 @@
 
 
 % chapter pages
-\titleformat{\chapter}[display]
-    {\bfseries\Huge}
-    {\filleft\chaptertitlename\ \Roman{chapter}}
-    {4ex}
+\titleformat{\chapter}%command
+    [display]%shape
+    {\bfseries\Huge}%format
+    {\filleft\chaptertitlename\ \Roman{chapter}}%label
+    {4ex}%sep
     {\titleline{\titlerule[.25ex]}
         \vspace{2.5ex}%
         \filcenter
-    }
+    }%before
     [ \vspace{2.5ex}%
     \titleline{\titlerule[.25ex]}%
     \ifpartialtoc
@@ -62,5 +81,5 @@
     \else
     \vspace*{4ex}%
     \fi
-    ]
+    ]%after
 

@@ -105,20 +105,22 @@
 
     \node [concept] (configs) {Benchmarks, Runtimes, Inputs \ldots};
 
-    \node [concept,right=2.5em of configs] (venv) {Virtual environment};
+    \node [concept,left=1.5em of configs] (venv) {Virtual environment};
 
-    \node [file, below=4em of configs] (filt) {Parsing script};
-    \node [file, right of=filt] (main) {Main script};
-    \node [file, right of=main] (ana) {Analysis script};
+    \node [file, below=4em of configs] (main) {Main script};
+    \node [file, right of=main] (filt) {Parsing script};
+    \node [file, right of=filt] (ana) {Analysis script};
+
+    \node [file,below=4em of venv] (dpl) {Launch scripts};
 
     \node [concept, below= 4em of main] (mach) {Experimental machine(s)};
     \end{pgfonlayer}
 
-    \node [group,fit=(main) (filt) (ana),header={Experimental plan}
+    \node [group,fit=(configs) (main) (filt) (ana),header={Experimental plan}
     {groupcol}{north}{}] (plan) {};
 
     \begin{pgfonlayer}{bg1}
-        \node[distrib,fit=(configs) (venv) (plan),%
+        \node[distrib,fit=(configs) (venv) (plan) (dpl),%
         header={Experimental setup}{distribcol}{north}{}] (distenv) {};
     \end{pgfonlayer}
 
@@ -154,8 +156,8 @@
 
     \begin{pgfonlayer}{foreground}
         \node[file, below= 5em of csv] (res) {Analysis results};
-        \node [concept, right of=res] (com) {Comments};
-        \node [file, below= 3em of res] (pap) {Article};
+        %\node [concept, right of=res] (com) {Comments};
+        %\node [file, below= 3em of res] (pap) {Article};
     \end{pgfonlayer}
 
     \begin{pgfonlayer}{background}
@@ -166,13 +168,13 @@
     % Paths
 
     \begin{pgfonlayer}{background}
-        \path[dep] (configs.south) edge[out=270,in=90]
-        node[above right=.5em and 1em,pos=.4] {depends} (main.north);
+        \path[dep] (configs.south) edge node[left,pos=.4] {depends} (main.north);
         \path[dep] (venv.south) edge[out=270,in=90]  (main.north);
     \end{pgfonlayer}
     % \path[dep] (configs.south) edge[out=270,in=90] node[above] {use} (mach.north);
     \path[exec] (main.south) edge  (mach.north);
      \path[copy] (filt.south) edge[out=270,in=90]  (mach.north);
+     \path[exec] (dpl.south) edge[out=270,in=90]  (mach.north);
      \path[copy] (ana.south) edge[out=270,in=90] (mach.north);
 
     \path[exec] (mach.south) edge[out=270,in=90] node[pos=.1,left] {generate} (mi.north);
@@ -180,14 +182,14 @@
     \path[copy] (mach.south) edge[out=270,in=90] (filt1.north);
     \path[copy] (mach.south) edge[out=270,in=90] (ana1.north);
 
-    \draw[exec] (raw.south) -- node[left] {generate} (csv.north);
+    \draw[exec] (raw.south) -- node[right,pos=.45] {generate} (csv.north);
     \path[exec] (filt1.south) edge[out=270,in=90] (csv.north);
     \path[copy] (ana1.south) edge[out=270,in=90] (ana2.north);
 
-    \draw[exec] (csv.south) -- node[left] {generate} (res.north);
+    \draw[exec] (csv.south) -- node[pos=.2,right] {generate} (res.north);
     \path[exec] (ana2.south) edge[out=270,in=90] (res.north);
 
-    \draw[exec] (res.south) -- node[left] {generate} (pap.north);
-    \path[exec] (com.south) edge[out=270,in=90] (pap.north);
+    %\draw[exec] (res.south) -- node[left] {generate} (pap.north);
+    %\path[exec] (com.south) edge[out=270,in=90] (pap.north);
 \end{tikzpicture}
 \end{document}

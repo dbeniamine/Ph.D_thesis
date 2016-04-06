@@ -28,89 +28,121 @@
 
 \section{Experimental Methodology}
 
-\subsection{Reproducibility in High Performances computing}
+Running and presenting correct experimental results in computer science is a
+challenge there are many ways to introduce bias either in the experiments or
+in the analysis without noticing it and an unlimited number of parameters that
+can influence the experiment~\cite{Mytkowicz09Producing}.
+
+\subsection{Reproducible research}
 
 \begin{itemize}
-    \item  Need for reproducibility
-    \item Levels of reproducibility~\cite{Feitelson15From} (descriptions and
-        goals)
-    \item Git orgmode Luka~\cite{Stanisic15Reproducible} a not sutable for
-        huge experiment traces.
+    \item Need for reproducibility: ACM study \cite{Collberg15Repeatability}
+    \item Levels of reproducibility defined by Dror G. Feitelson~\cite{Feitelson15From}:
+        \begin{quotation}
+            Repeatability concerns the exact repetition of an experiment, using the same experimental apparatus, and under the same conditions.
+
+            Reproducibility is the reproduction of the gist of an experiment: implementing the same general idea, in a similar setting, with newly created appropriate experimental apparatus.
+        \end{quotation}
+        The first is nearly impossible but we can try to provide as much info
+        as possible to reach the second.
+    \item State of the art see \cite[Chapter~3, p17-19]{Stanisic15Reproducible}
+    \item Luka~\cite[Chapter~4, p31-44]{Stanisic15Reproducible}: make whole experiment feedback
+        loop reproducible. Based on git orgmode, not suitable for analysis
+        generating huge traces
+    \item Existing tools \DB{Read more}
 \end{itemize}
 
-\DB{Biblio reproducible + experimental plan, need to read a lot:\\
-    Luka~\cite{Stanisic15Reproducible}\\
-Lien Michael\\
-Damien}
 
 \subsection{Experimental workflow}
 
 \begin{figure}[htb]
     \centering
-    \includegraphics[width=.8\linewidth]{tikz/exp-tikz}
+    \includegraphics[width=\linewidth]{tikz/exp-tikz}
     \caption{Experimental workflow}
     \label{fig:exp}
 \end{figure}
 
 \begin{itemize}
+    \item Focus on experiment and analysis reproducibility (not
+        feedback/experiment loop)
+    \item See experiment as a workflow described in \fig{exp}
     \item Goal: Make all the workflow repetable or at least reproducible
-    \item What do we test ?
-        \begin{itemize}
-            \item Case study (benchmarks: application representing real life
-                problems).
-            \item Configurations (different version of the benchmarks code,
-                runtimes with different set of parameters).
-            \item Experimental machines / environment (recent enough,
-                representative AMD / Intel ?, several OS versions ?)
-        \end{itemize}
-    \item What are our results ?
-        \begin{itemize}
-            \item What do we want to know ? Which metrics can answer our
-                questions ?
-            \item Avoid execution time, prefer overhead, speedup, slowdown
-        \end{itemize}
-    \item Results Display
-        \begin{itemize}
-            \item Rmarkdown
-            \item Prepare it before run
-            \item Repeat original question and expected results
-        \end{itemize}
-    \item Experiment Workflow
-        \begin{itemize}
-            \item Base repository containing everything required for expe
+        \begin{enumerate}
+            \item Setup
                 \begin{itemize}
-                        \item Runtimes
-                        \item Benchmarks
-                        \item patches if required
+                    \item Make a plan:
+                        \begin{itemize}
+                            \item Case study (benchmarks: application representing real life
+                                problems).
+                            \item Configurations (different version of the benchmarks code,
+                                runtimes with different set of parameters).
+                            \item Experimental machines / environment (recent enough,
+                                representative AMD / Intel ?, several OS versions ?)
+                        \end{itemize}
+                    \item Prepare analysis:
+                        \begin{itemize}
+                            \item What do we want to know ? Which metrics can answer our
+                                questions ?
+                            \item Avoid execution time, prefer overhead, speedup, slowdown
+                        \end{itemize}
+                    \item Store everything in a git repository
+                    \item Use git submodule for dependencies
+                    \item An init script can apply patches if required
+                    \item Launch scripts responsible for the experiment
+                        deployment should be included
                 \end{itemize}
-            \item  Actual experiment (on the experimental machine)
-                \begin{enumerate}
-                    \item Deploy environment
-                    \item Log every thing
-                        \begin{itemize}
-                            \item Machine (name, topology, OS \ldots, OS
-                                config)
-                            \item Dependencies status (git version, diff etc.)
-                                script diff
-                            \item Environment variables, script arguments etc.
-                        \end{itemize}
-                    \item Preparation
-                        \begin{itemize}
-                            \item Clean then compile every thing
-                            \item Set environment variables
-                            \item Prepare ordrer of runs (if randomization)
-                        \end{itemize}
-                    \item Execute Runs:
-                        \begin{enumerate}
-                            \item PreCommand: set specific values for the run
-                            \item Run: do the experiment
-                            \item PostCommand: Save data, compute metrics,
-                                restorenormal state
-                        \end{enumerate}
-                        precommand and postcommand must cancel each other
-                \end{enumerate}
-        \end{itemize}
+            \item Raw analysis
+                \begin{itemize}
+                    \item Simpler step but crucial
+                    \item Extract important information from raw traces
+                    \item Do not compute thing here
+                    \item Heavy files cannot be in a git repository
+                    \item Use online storage (for instance zenodo)
+                    \item A Readme should explain file hierarchy
+                    \item Include filtering and analysis scripts
+                \end{itemize}
+            \item Statistic analysis
+                \begin{itemize}
+                    \item Mix text with code (R-markdown, orgmode \ldots)
+                    \item Prepare it before run
+                    \item Repeat original question and expected results
+                    \item Use online storage (for instance zenodo)
+                    \item A Readme should explain file hierarchy
+                    \item Include analysis scripts
+                \end{itemize}
+            \item And now ?
+                \begin{itemize}
+                    \item Raise more question => new experiments
+                    \item Enough answers => write paper
+                \end{itemize}
+        \end{enumerate}
 \end{itemize}
+
+Actual experiment (on the experimental machine)
+\begin{enumerate}
+    \item Log every thing
+        \begin{itemize}
+            \item Machine (name, topology, OS \ldots, OS
+                config)
+            \item Dependencies status (git version, diff etc.)
+                script diff
+            \item Environment variables, script arguments etc.
+        \end{itemize}
+    \item Preparation
+        \begin{itemize}
+            \item Clean then compile every thing
+            \item Set environment variables
+            \item Prepare ordrer of runs (if randomization)
+        \end{itemize}
+    \item Execute Runs:
+        \begin{enumerate}
+            \item PreCommand: set specific values for the run
+            \item Run: do the experiment
+            \item PostCommand: Save data, compute metrics,
+                restorenormal state
+        \end{enumerate}
+        precommand and postcommand must cancel each other
+\end{enumerate}
 
 \DB{My description of experimental workflow / how to make it more
 reproducible}
