@@ -1,47 +1,78 @@
 %!TEX encoding=UTF-8 Unicode
 
 %========================== Fancy =============================================
-\usepackage{etoolbox}
-
-\newif\ifpartialtoc
-
-\usepackage{titlesec}
+\usepackage[pagestyles]{titlesec}
+\usepackage{tocbibind}
 \usepackage{titletoc}
 \usepackage{shorttoc}
+\usepackage{etoolbox}
 
+%% % Custom clear page
+\newcommand{\myclearpage}{\clearpage\thispagestyle{empty}}
+\newcommand{\mycleartoleftpage}{
+    \myclearpage
+    \ifodd\value{page}
+    \null
+    \myclearpage
+    \fi
+}
+% Clear double page before chapter
+\let\oldchapter\chapter
+\renewcommand{\chapter}{\mycleartoleftpage\oldchapter}
+
+\let\oldfrontmatter\frontmatter
 % Set pagestyle according to matter
-\let\myfrontmatter\frontmatter
-\renewcommand{\frontmatter}{\myfrontmatter\pagestyle{empty}}
-\let\mybackmatter\backmatter
-\renewcommand{\backmatter}{\mybackmatter\pagestyle{empty}}
-\let\mymainmatter\mainmatter
-\renewcommand{\mainmatter}{\mymainmatter\pagestyle{main}}
+\renewcommand{\frontmatter}{\oldfrontmatter\pagestyle{special}}
+\let\oldbackmatter\backmatter
+\renewcommand{\backmatter}{\oldbackmatter\pagestyle{special}}
+\let\oldmainmatter\mainmatter
+\renewcommand{\mainmatter}{\oldmainmatter\pagestyle{main}}
 
-\newcommand{\customFoot}{\setfoot[\thepage][][] % even
+% Footer
+\newcommand{\customFooter}{\setfoot[\thepage][][] % even
     {}{}{\thepage} %odd
+}
+
+% Header
+\newcommand{\customHeader}[2]{\setheadrule{.55pt}
+    \sethead[#1][][] % even
+    {}{}{#2} %odd
+}
+
+% special page style (for front/backmatter)
+\newpagestyle{special}{
+    \customHeader{\chaptertitle}{\chaptertitle}
+    \customFooter
 }
 
 % main page style
 \newpagestyle{main}{
-    \setheadrule{.55pt}
-    \sethead[\Roman{chapter}\ --\ \chaptertitle][][] % even
-    {}{}{\sectiontitle\ --\ \thesection} %odd
-    \customFoot
+    \customHeader{\Roman{chapter}\ --\ \chaptertitle}%even
+        {\sectiontitle\ --\ \thesection}%odd
+    \customFooter
     }
 
 % header page style
 \renewpagestyle{plain}{
-    \customFoot
+    \customFooter
 }
 
 
-% Chapter in toc
- \titlecontents*{chapter}% <section-type>
-   [0em]% <left>
-   {\vspace{1em}\centering}% <above-code>
-   {\bfseries \uppercase\expandafter{\romannumeral\thecontentslabel\relax}\quad}% <numbered-entry-format>
-   {}% <numberless-entry-format>
-   {\vspace{1em}}% <filler-page-format>
+%% % Chapter in toc
+%% \titlecontents*{chapter}% <section-type>
+%%   [0em]% <left>
+%%   {\vspace{1em}\centering\bfseries }% <above-code>
+%%   {\uppercase\expandafter{\romannumeral\thecontentslabel\relax}\quad}% <numbered-entry-format>
+%%   {}% <numberless-entry-format>
+%%   {\vspace{1em}}% <filler-page-format>
+
+
+\titlecontents{chapter}
+    [8em]{\addvspace{.5pc}\bfseries}%
+    {\uppercase\expandafter{\romannumeral\thecontentslabel\relax}\quad}
+    {}
+    {\hfill \contentspage}
+    [\addvspace{.5pc}]
 
 % Section and subsection in small tocs
 \titlecontents{lsection}
@@ -53,23 +84,20 @@
   {\hspace*{-2.3em}}
   {\titlerule*[.3pc]{.}\contentspage}
 
-
-
-% chapter pages
-\titleformat{\chapter}%command
-    [display]%shape
-    {\bfseries\Huge}%format
-    {\filleft\chaptertitlename\ \Roman{chapter}}%label
-    {4ex}%sep
-    {\titleline{\titlerule[.25ex]}
-        \vspace{2.5ex}%
-        \filcenter
-    }%before
-    [ \vspace{2.5ex}%
+% Upper chapter page line
+\newcommand{\prechapterline}{%
+    \titleline{\titlerule[.25ex]}
+    \vspace{2.5ex}
+    \filcenter
+}
+% Lower chapter page line
+\newcommand{\postchapterline}{
+    \vspace{2.5ex}%
     \titleline{\titlerule[.25ex]}%
-    \ifpartialtoc
-    \vspace*{10ex}%
-    \startcontents
+}
+% Chapter page short contents
+\newcommand{\shortchapcontents}{
+\startcontents
         \raggedright\large\textbf{\contentsname}\\
         \vspace*{3ex}%
         \titleline{\titlerule}%
@@ -77,9 +105,42 @@
         \printcontents{l}{1}{\contentsmargin{5em}}
         \vspace*{2ex}%
         \titleline{\titlerule}%
-        \newpage
-    \else
-    \vspace*{4ex}%
-    \fi
+}
+
+% chapter pages
+\titleformat{\chapter}%command
+    [display]%shape
+    {\bfseries\Huge}%format
+    {\filleft\chaptertitlename\ \Roman{chapter}}%label
+    {3ex}%sep
+    {\prechapterline}%before
+    [\postchapterline
+    \vspace*{8ex}%
+    \shortchapcontents
+    \newpage
+]%after
+% Unnumbered chapters
+\titleformat{name=\chapter,numberless}%command
+    [display]%shape
+    {\bfseries\Huge}%format
+    {}%label
+    {0ex}%sep
+    {\prechapterline}%before
+    [\postchapterline
+    \vspace*{3ex}%
     ]%after
 
+% Redefine section, subsections and subsections as titlesec remove numbers:
+\titleformat{\section}
+{\normalfont\Large\bfseries}{\thesection}{1em}{\thesection\quad}
+\titleformat{\subsection}
+{\normalfont\large\bfseries}{\thesubsection}{1em}{\thesubsection\quad}
+\titleformat{\subsubsection}
+{\normalfont\normalsize\bfseries}{\thesubsubsection}{1em}{\thesubsubsection\quad}
+% Same definitions but numberless
+\titleformat{name=\section,numberless}
+{\normalfont\Large\bfseries}{\thesection}{1em}{}
+\titleformat{name=\subsection,numberless}
+{\normalfont\large\bfseries}{\thesubsection}{1em}{}
+\titleformat{name=\subsubsection,numberless}
+{\normalfont\normalsize\bfseries}{\thesubsubsection}{1em}{}

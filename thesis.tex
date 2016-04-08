@@ -46,16 +46,21 @@
 \begin{document}
 
 \frontmatter
+
 \input{custom/firstpage.tex}
+
+\begin{chapter}{Abstract}
+    \DB{abstract in English}
+\end{chapter}
+
+\begin{chapter}{Résumé}
+    \DB{Résumé en Français}
+\end{chapter}
+
 
 \shorttableofcontents{Outline}{1}
 
-
-\chapter*{Abstract}
-    \DB{abstract in French and English}
-
 \mainmatter
-\partialtoctrue
 
 \Input{intro}
 \Input{profiling}
@@ -64,11 +69,9 @@
 \Input{cncl}
 
 \backmatter
-\partialtocfalse
 
 \bibliographystyle{apalike}
 \bibliography{biblio}
-
 \setcounter{tocdepth}{4}
 \tableofcontents
 \listoffigures
