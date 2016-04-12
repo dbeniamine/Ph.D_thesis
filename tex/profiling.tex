@@ -29,15 +29,27 @@
 \section{Experimental Methodology}
 
 Running and presenting correct experimental results in computer science is a
-challenge there are many ways to introduce bias either in the experiments or
-in the analysis without noticing it and an unlimited number of parameters that
-can influence the experiment~\cite{Mytkowicz09Producing}.
+challenge as computer systems are complex and reproducibility have not been
+considered an important matter in our field for years. In this section we
+first introduce why reproducibility matters and how people have try to reach
+it in \HPC, then we present the methodology we have developed during this
+thesis to make our experiment as reproducible as possible.
+
 
 \subsection{Reproducible research}
 
+Measurement bias \cite{Mytkowicz09Producing} exists in computer science and
+can be mitigated by good methodology (Randomize runs, use large set of benchs
+/ HW / Intervene, Measure, Confirm). Still other science fields deal with it
+by reproducing peers experiment and validating or contradicting it.
+
+
 \begin{itemize}
-    \item Need for reproducibility: ACM study \cite{Collberg15Repeatability}
-    \item Levels of reproducibility defined by Dror G. Feitelson~\cite{Feitelson15From}:
+    \item Need for reproducibility:
+                It has been proven thet from
+
+        ACM study \cite{Collberg15Repeatability}
+            \item Levels of reproducibility defined by Dror G. Feitelson~\cite{Feitelson15From}:
         \begin{quotation}
             Repeatability concerns the exact repetition of an experiment, using the same experimental apparatus, and under the same conditions.
 

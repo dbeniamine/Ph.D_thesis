@@ -1,0 +1,51 @@
+%!TEX encoding=UTF-8 Unicode
+
+% Custom clear page
+\newcommand{\myclearpage}{\clearpage\thispagestyle{empty}}
+\newcommand{\mycleartoleftpage}{
+    \myclearpage
+    \ifodd\value{page}
+    \null
+    \myclearpage
+    \fi
+}
+% Clear double page before chapter
+\let\oldchapter\chapter
+\renewcommand{\chapter}{\mycleartoleftpage\oldchapter}
+
+\let\oldfrontmatter\frontmatter
+% Set pagestyle according to matter
+\renewcommand{\frontmatter}{\oldfrontmatter\pagestyle{special}}
+\let\oldbackmatter\backmatter
+\renewcommand{\backmatter}{\oldbackmatter\pagestyle{special}}
+\let\oldmainmatter\mainmatter
+\renewcommand{\mainmatter}{\oldmainmatter\pagestyle{main}}
+
+% Footer
+\newcommand{\customFooter}{\setfoot[\thepage][][] % even
+    {}{}{\thepage} %odd
+}
+
+% Header
+\newcommand{\customHeader}[2]{\setheadrule{.55pt}
+    \sethead[#1][][] % even
+    {}{}{#2} %odd
+}
+
+% special page style (for front/backmatter)
+\newpagestyle{special}{
+    \customHeader{\chaptertitle}{\chaptertitle}
+    \customFooter
+}
+
+% main page style
+\newpagestyle{main}{
+    \customHeader{\Roman{chapter}\ --\ \chaptertitle}%even
+        {\sectiontitle\ --\ \thesection}%odd
+    \customFooter
+    }
+
+% header page style
+\renewpagestyle{plain}{
+    \customFooter
+}

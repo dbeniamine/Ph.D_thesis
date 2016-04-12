@@ -1,0 +1,93 @@
+%!TEX encoding=UTF-8 Unicode
+
+% Short toc based on contents named #1, with title #2 and depth #3
+\newcounter{oldtocdepth}
+\newcommand{\shorttoc}[3]{%
+    \stopcontents[#1]
+    \setcounter{oldtocdepth}{\value{tocdepth}}
+    \setcounter{tocdepth}{#3}
+    \begin{chapter}{#2}
+        \printcontents[#1]{}{0}{}
+    \end{chapter}
+    \setcounter{tocdepth}{\value{oldtocdepth}}
+    \resumecontents[#1]
+}
+
+% Chapter in toc
+\titlecontents{chapter}
+    [0em]{\addvspace{.7em}\bfseries}%
+    {\uppercase\expandafter{\romannumeral\thecontentslabel\relax}\hfill}
+    {}
+    {\hfill \contentspage}
+    [\addvspace{.7em}]
+
+% Section and subsection in small tocs
+\titlecontents{lsection}
+  [3.8em]{\normalsize}{\contentslabel{2.3em}}
+  {\hspace*{-2.3em}}
+  {\titlerule*[.3pc]{.}\contentspage}
+\titlecontents{lsubsection}
+  [5em]{\normalsize}{\normalfont\contentslabel{2.3em}}
+  {\hspace*{-2.3em}}
+  {\titlerule*[.3pc]{.}\contentspage}
+
+% Upper chapter page line
+\newcommand{\prechapterline}{%
+    \titleline{\titlerule[.25ex]}
+    \vspace{2.5ex}
+    \filcenter
+}
+% Lower chapter page line
+\newcommand{\postchapterline}{
+    \vspace{2.5ex}%
+    \titleline{\titlerule[.25ex]}%
+}
+% Chapter page short contents
+\newcommand{\shortchapcontents}{
+\startcontents
+        \raggedright\large\textbf{\contentsname}\\
+        \vspace*{3ex}%
+        \titleline{\titlerule}%
+        \vspace*{2ex}%
+        \printcontents{l}{1}{\contentsmargin{5em}}
+        \vspace*{2ex}%
+        \titleline{\titlerule}%
+}
+
+% chapter pages
+\titleformat{\chapter}%command
+    [display]%shape
+    {\bfseries\Huge}%format
+    {\filleft\chaptertitlename\ \Roman{chapter}}%label
+    {3ex}%sep
+    {\prechapterline}%before
+    [\postchapterline
+    \vspace*{8ex}%
+    \shortchapcontents
+    \newpage
+]%after
+% Unnumbered chapters
+\titleformat{name=\chapter,numberless}%command
+    [display]%shape
+    {\bfseries\Huge}%format
+    {}%label
+    {0ex}%sep
+    {\prechapterline}%before
+    [\postchapterline
+    \vspace*{3ex}%
+    ]%after
+
+% Redefine section, subsections and subsections as titlesec remove numbers:
+\titleformat{\section}
+{\normalfont\Large\bfseries}{\thesection}{1em}{\thesection\quad}
+\titleformat{\subsection}
+{\normalfont\large\bfseries}{\thesubsection}{1em}{\thesubsection\quad}
+\titleformat{\subsubsection}
+{\normalfont\normalsize\bfseries}{\thesubsubsection}{1em}{\thesubsubsection\quad}
+% Same definitions but numberless
+\titleformat{name=\section,numberless}
+{\normalfont\Large\bfseries}{\thesection}{1em}{}
+\titleformat{name=\subsection,numberless}
+{\normalfont\large\bfseries}{\thesubsection}{1em}{}
+\titleformat{name=\subsubsection,numberless}
+{\normalfont\normalsize\bfseries}{\thesubsubsection}{1em}{}

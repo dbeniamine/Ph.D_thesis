@@ -43,11 +43,15 @@
 \usepackage{siunitx}
 \usepackage{multirow,booktabs}
 
+\input{custom/glossary}
+
 \begin{document}
 
 \frontmatter
 
 \input{custom/firstpage.tex}
+
+\startcontents[smalltoc]
 
 \begin{chapter}{Abstract}
     \DB{abstract in English}
@@ -58,7 +62,7 @@
 \end{chapter}
 
 
-\shorttableofcontents{Outline}{1}
+\shorttoc{smalltoc}{Outline}{1}
 
 \mainmatter
 
@@ -70,16 +74,20 @@
 
 \backmatter
 
-\bibliographystyle{apalike}
-\bibliography{biblio}
 \setcounter{tocdepth}{4}
 \tableofcontents
+
+
 \listoffigures
 \listoftables
+\printacronyms[title=List of Acronyms]
+\bibliographystyle{apalike}
+\bibliography{biblio}
 
-\chapter*{Acknowledgments}
+\chapter{Acknowledgments}
 \DB{C'est là quj'ai le droit de dire plein de conneries !}
 
+\stopcontents[smalltoc]
 %==============================================================================
 
 \end{document}
