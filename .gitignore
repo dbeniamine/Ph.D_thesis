@@ -17,3 +17,7 @@ sty/*/*.pdf
 *.ptc
 *.toc
 tikz/*.pdf
+thesis.acn
+thesis.acr
+thesis.alg
+thesis.ist

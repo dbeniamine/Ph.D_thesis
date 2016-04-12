@@ -4,6 +4,7 @@ BIBSRC = $(wildcard *.bib)
 # Additional sources
 SUBDIRS=tex custom style
 TEXSUBSRC = $(foreach d, $(SUBDIRS),$(wildcard $d/*.tex))
+TEXALLSRC = $(TEXSRC) $(TEXSUBSRC)
 
 # Intermediate files
 PDF = $(TEXSRC:.tex=.pdf)
@@ -40,11 +41,11 @@ $(PDF) : $(AUX) $(GLS) $(BBL)
 	$(TEXCOMPILE)
 
 # Glossary
-$(GLS): $(TEXSRC)
+$(GLS): $(TEXALLSRC)
 	$(GLOSSARY) $(TEXSRC:.tex=)
 
 # Bibtex
-$(BBL): $(BIBSRC)
+$(BBL): $(BIBSRC) $(TEXALLSRC)
 	$(BIBCOMPILE)
 
 # First compilation

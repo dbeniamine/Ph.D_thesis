@@ -22,12 +22,14 @@
 \renewcommand{\mainmatter}{\oldmainmatter\pagestyle{main}}
 
 % Footer
-\newcommand{\customFooter}{\setfoot[\thepage][][] % even
+\newcommand{\customFooter}{%
+    \setfoot[\thepage][][] % even
     {}{}{\thepage} %odd
 }
 
 % Header
-\newcommand{\customHeader}[2]{\setheadrule{.55pt}
+\newcommand{\customHeader}[2]{%
+    \setheadrule{.55pt}
     \sethead[#1][][] % even
     {}{}{#2} %odd
 }
