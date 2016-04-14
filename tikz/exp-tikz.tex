@@ -104,39 +104,39 @@
     %expe env
     \begin{pgfonlayer}{foreground}
 
-    \node [concept] (configs) {Benchmarks, Runtimes, Inputs \ldots};
 
-    \node [concept,left=1.5em of configs] (venv) {Virtual environment};
+    \node [concept,rotate=90,anchor=west] (configs) {Benchmarks, Runtimes, Inputs \ldots};
+    \node [concept,above right=1em and 2em of configs,rotate=90,anchor=west] (venv) {Virtual environment};
 
-    \node [file, below=4em of configs] (main) {Main script};
-    \node [file, right of=main] (filt) {Parsing script};
-    \node [file, right of=filt] (ana) {Analysis script};
+    \node [file, below right=.6em and 1em of configs] (main) {Main script};
+    \node [file, below=.5em of main] (filt) {Parsing script};
+    \node [file, below=.5em of filt] (ana) {Analysis script};
 
-    \node [file,below=4em of venv] (dpl) {Launch scripts};
+    \node [file, above=.5em of main] (dpl) {Launch scripts};
 
-    \node [concept, below= 4em of main] (mach) {Experimental machine(s)};
+    \node [concept, right=2.5em of main,rotate=90,anchor=north] (mach) {Experimental machine(s)};
     \end{pgfonlayer}
 
-    \node [group,fit=(configs) (main) (filt) (ana),header={Experimental plan}
-    {groupcol}{north}{}] (plan) {};
+    %\node [group,fit=(configs) (main) (filt) (ana),header={Experimental plan}
+    %{groupcol}{north}{}] (plan) {};
 
     \begin{pgfonlayer}{bg1}
-        \node[distrib,fit=(configs) (venv) (plan) (dpl),%
-        header={Experimental setup}{distribcol}{north}{}] (distenv) {};
+        \node[distrib,fit=(configs) (venv) (ana) (filt) (main) (dpl),%
+        header={Experimental plan}{distribcol}{north}{}] (distenv) {};
     \end{pgfonlayer}
 
     \begin{pgfonlayer}{background}
         \node[env,fit=(distenv) (mach),%
-        header={Experiment}{envcol}{west}{rotate=90}] (expenv) {};
+        header={Experiment}{envcol}{south}{}] (expenv) {};
     \end{pgfonlayer}
 
     % Analysis env
 
     \begin{pgfonlayer}{foreground}
-        \node[file, below= 6em of mach] (raw) {Raw results};
-        \node[file, left= 6em  of raw] (mi) {Meta data};
-        \node [file, right= 4em of raw] (filt1) {Parsing script};
-        \node [file, right of=filt1] (ana1) {Analysis script};
+        \node[file, right=9em of main] (raw) {Raw results};
+        \node[file, above=.5em of raw] (mi) {Meta data};
+        \node[file, below=.5em of raw] (filt1) {Parsing script};
+        \node[file, below=.5em of filt1] (ana1) {Analysis script};
     \end{pgfonlayer}
 
     \begin{pgfonlayer}{bg1}
@@ -145,52 +145,51 @@
     \end{pgfonlayer}
 
     \begin{pgfonlayer}{foreground}
-        \node[file, below= 5em  of raw] (csv) {Filtered results};
-        \node [file, right of=csv] (ana2) {Analysis script};
+        \node[file, right=3.5em  of raw] (csv) {Filtered results};
+        \node[file, below=.5em of csv] (ana2) {Analysis script};
     \end{pgfonlayer}
 
     \begin{pgfonlayer}{bg1}
         \node[distrib,fit=(csv) (ana2),%
-        header={Statistic analysis}{distribcol}{west}{rotate=90,text
-        width=4.5em}, inner xsep=2em] (stata) {};
+        header={Statistic analysis}{distribcol}{north}{text width=4.5em}] (stata) {};
     \end{pgfonlayer}
 
     \begin{pgfonlayer}{foreground}
-        \node[file, below= 5em of csv] (res) {Analysis results};
+        \node[file, right=3em of csv] (res) {Analysis results};
         %\node [concept, right of=res] (com) {Comments};
         %\node [file, below= 3em of res] (pap) {Article};
     \end{pgfonlayer}
 
     \begin{pgfonlayer}{background}
         \node[env,fit=(rawa) (stata) (res),%
-        header={Analysis}{envcol}{west}{rotate=90}] (anaenv) {};
+        header={Analysis}{envcol}{south}{}] (anaenv) {};
     \end{pgfonlayer}
 
     % Paths
 
     \begin{pgfonlayer}{background}
-        \path[dep] (configs.south) edge node[left,pos=.4] {depends} (main.north);
-        \path[dep] (venv.south) edge[out=270,in=90]  (main.north);
+        \path[dep] (configs.south) edge node[rotate=90,pos=1.3,above=3em] {depends} (main.west);
+        \path[dep] (venv.south) edge[out=0,in=180]  (dpl.west);
     \end{pgfonlayer}
-    % \path[dep] (configs.south) edge[out=270,in=90] node[above] {use} (mach.north);
-    \path[exec] (main.south) edge  (mach.north);
-     \path[copy] (filt.south) edge[out=270,in=90]  (mach.north);
-     \path[exec] (dpl.south) edge[out=270,in=90]  (mach.north);
-     \path[copy] (ana.south) edge[out=270,in=90] (mach.north);
+    % \path[dep] (configs.east) edge[out=0,in=180] node[above] {use} (mach.west);
 
-    \path[exec] (mach.south) edge[out=270,in=90] node[pos=.1,left] {generate} (mi.north);
-    \path[exec] (mach.south) edge[out=270,in=90] (raw.north);
-    \path[copy] (mach.south) edge[out=270,in=90] (filt1.north);
-    \path[copy] (mach.south) edge[out=270,in=90] (ana1.north);
 
-    \draw[exec] (raw.south) -- node[right,pos=.45] {generate} (csv.north);
-    \path[exec] (filt1.south) edge[out=270,in=90] (csv.north);
-    \path[copy] (ana1.south) edge[out=270,in=90] (ana2.north);
+     \path[exec] (dpl.east) edge[out=0,in=180]  (mach.north);
+     \path[exec] (main.east) edge  (mach.north);
+     \path[copy] (ana.east)  edge (ana1.west);
+     \path[copy] (filt.east) edge  (filt1.west);
 
-    \draw[exec] (csv.south) -- node[pos=.2,right] {generate} (res.north);
-    \path[exec] (ana2.south) edge[out=270,in=90] (res.north);
+    \path[exec] (mach.south) edge[out=0,in=180] node[pos=.2,above=2em,rotate=90] {generate} (mi.west);
+    \path[exec] (mach.south) edge[out=0,in=180] (raw.west);
+
+    \draw[exec] (raw.east) -- node[pos=.7,above=2em,rotate=90] {generate} (csv.west);
+    \path[exec] (filt1.east) edge[out=0,in=180] (csv.west);
+    \path[copy] (ana1.east) edge[out=0,in=180] (ana2.west);
+
+    \draw[exec] (csv.east) -- node[pos=.9,above=2em,rotate=90] {generate} (res.west);
+    \path[exec] (ana2.east) edge[out=0,in=180] (res.west);
 
     %\draw[exec] (res.south) -- node[left] {generate} (pap.north);
-    %\path[exec] (com.south) edge[out=270,in=90] (pap.north);
+    %\path[exec] (com.east) edge[out=0,in=180] (pap.west);
 \end{tikzpicture}
 \end{document}

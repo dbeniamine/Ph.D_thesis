@@ -38,7 +38,7 @@ studies while it is the best way to spot bias or confirm the validity of an
 experimental claim.
 
 In this section we first introduce why reproducibility matters and how people
-have try to reach it in \HPC, then we present the methodology we have
+have try to reach it in \gls{hpc}, then we present the methodology we have
 developed during this thesis to make our experiment as reproducible as
 possible.
 
@@ -46,7 +46,7 @@ possible.
 \subsection{Reproducible research}
 
 Measurement bias is a widely known phenomena in scientific communities and is
-analyzed in most fields. Still in \HPC the only thing we usually do to avoid it
+analyzed in most fields. Still in \gls{hpc} the only thing we usually do to avoid it
 is to run a large number of experiments hopping that if we have enough
 observations on several configurations the measurement bias will be
 negligible. Mytkowicz et al.~\cite{Mytkowicz09Producing} highlighted several
@@ -58,7 +58,7 @@ As measurement bias is unpredictable even when we follow the best practices
 the easiest way to deal with it is to reproduce the study published by other
 team and confirm or invalidate their results. While this is done in every
 scientific fields, it is not common to publish about experiment reproduction
-in \HPC.
+in \gls{hpc}.
 
 A previous study~\cite{Collberg15Repeatability} tried to evaluate how
 reproducible the experiment presented in computer science article are. To do
@@ -82,39 +82,46 @@ proposed by Dror G. Feitelson~\cite{Feitelson15From}:
 \end{quotation}
 
 
-\begin{itemize}
-    \item Repeatability
-        \begin{itemize}
-            \item Not obvious but reachable
-            \item Need access to same machine
-                \begin{itemize}
-                    \item Virtualization
-                    \item Shared platform grid5000~\cite{Cappello05Grid5000}
-                    \item Kameleon recipe~\cite{Ruiz15Reconstructable}
-                \end{itemize}
-            \item List dependencies
-            \item Correct documentation
-        \end{itemize}
-    \item Reproducibility
-        \begin{itemize}
-            \item State of the art see \cite[Chapter~3, p17-19]{Stanisic15Reproducible}
-            \item Luka~\cite[Chapter~4, p31-44]{Stanisic15Reproducible}: make whole experiment feedback
-                loop reproducible. Based on git orgmode, not suitable for analysis
-                generating huge traces
-            \item Importance of logs
-        \end{itemize}
-\end{itemize}
+It is nearly impossible to repeat an experiment in the exact same conditions
+as many exterior factors, such as the machine room temperature or the network
+usage done by other users on the same cluster, might impact the measured
+performances.\todo[author=david]{Citations ? Demander a Arnaud ?}.
+Still it is possible to repeat an experiment in similar conditions: someone
+who runs the same experiments two different days on the same machines can
+expect to obtain similar results. Several tools can helps use making
+experiments more repeatable for instance by running our experiment on a shared
+platform such as grid5000~\cite{Cappello05Grid5000} we can hope that other
+people might access to the same set of machines. Moreover deploying a custom
+environment on these machines allow to control and distribute the set of
+installed libraries. Kameleon~\cite{Ruiz15Reconstructable} go even
+further as it allows to describe an environment as a recipe thus makes it easy
+to check the version of a library or replace it.
 
-\DB{More biblio on existing tools}
+To reproduce an experiment it is important to understand how it has been
+designed and how it evolves from the first version to the results presented in
+the paper. Stanisic et al.~\cite[Chapter~4, p31-44]{Stanisic15Reproducible}
+described an experimental workflow based on \emph{git} and \emph{emacs orgmode}
+to keep track of these evolutions and make easy for someone to understand it.
+One of the main drawback of this workflow is that it is not suitable for
+experiment which generate huge ($\ge$\SI{500}{Mib}) trace files as git is not
+designed to handle such files.
 
+Several tools were designed to conduct experiments in computer science still
+they are not designed for \gls{hpc} and using them in our context would
+require some adjustments. A more complete survey can be found
+in~\cite[Chapter~3, p17-19]{Stanisic15Reproducible}
 
 \subsection{Experimental workflow}
 
+To design repeatable and or reproducible experiment it is important to
+consider the whole workflow, we describe it as a three step pipeline depicted
+in \fig{exp-pipe}.
+
 \begin{figure}[htb]
     \centering
-    \includegraphics[height=.96\textheight]{tikz/exp-tikz}
-    \caption{Experimental workflow}
-    \label{fig:exp}
+    \includegraphics[width=\textwidth]{tikz/exp-tikz}
+    \caption{Experimental pipeline}
+    \label{fig:exp-pipe}
 \end{figure}
 
 \begin{itemize}
@@ -142,6 +149,8 @@ proposed by Dror G. Feitelson~\cite{Feitelson15From}:
                         \end{itemize}
                     \item Store everything in a git repository
                     \item Use git submodule for dependencies
+                    \item Choice of metrics
+                    \item Correct documentation
                     \item An init script can apply patches if required
                     \item Launch scripts responsible for the experiment
                         deployment should be included

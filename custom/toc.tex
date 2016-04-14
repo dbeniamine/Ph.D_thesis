@@ -19,7 +19,7 @@
     {\uppercase\expandafter{\romannumeral\thecontentslabel\relax}\hfill}
     {}
     {\hfill \contentspage}
-    [\addvspace{.7em}]
+    [\ifx\thecontentslabel\empty\else\titleline{\titlerule}\fi\addvspace{.7em}]
 
 % Section and subsection in small tocs
 \titlecontents{lsection}
