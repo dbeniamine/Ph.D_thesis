@@ -81,7 +81,6 @@ proposed by Dror G. Feitelson~\cite{Feitelson15From}:
     created appropriate experimental apparatus.
 \end{quote}
 
-
 It is nearly impossible to repeat an experiment in the exact same conditions
 as many exterior factors, such as the machine room temperature or the network
 usage done by other users on the same cluster, might impact the measured
@@ -113,9 +112,16 @@ in~\cite[Chapter~3, p17-19]{Stanisic15Reproducible}
 
 \subsection{Experimental workflow}
 
-To design repeatable and or reproducible experiment it is important to
-consider the whole workflow, we describe it as a three step pipeline depicted
-in \fig{exp-pipeline}.
+Our goal is to make the whole experiment reproducible (and repeatable to
+someone who have access to our machines or similar ones). To do so, we
+consider an experiment as a workflow (depicted in \fig{exp-pipeline}) that
+consists mainly of three steps. The first one is the actual experiment: it
+produce data (execution time, traces, etc.) by testing several tools, and
+configurations on a set of benchmarks. Then comes the raw analysis, this step
+aims at extracting the pertinent information from the raw results, it can
+compute metrics and produce summary files (csv for instance). Finally the
+statistic analysis step produce a human readable output (figures, tables
+etc.).
 
 \begin{figure}[htb]
     \centering
@@ -124,62 +130,67 @@ in \fig{exp-pipeline}.
     \label{fig:exp-pipeline}
 \end{figure}
 
-\begin{itemize}
-    \item Focus on experiment and analysis reproducibility (not
-        feedback/experiment loop)
-    \item Goal: Make all the workflow repetable or at least reproducible
-        \begin{enumerate}
-            \item Setup
+It is easy for the experiment developer to dismiss some (important) data and
+focus on the one that support it's point, we call this bias the
+\emph{experiment designer bias}\todo[author=david]{Il y a probablement une ref
+ici}. One easy way to limit this bias is to write the parsing and analysis
+scripts, with comments on the expected results and on how to determine which
+tools is “better” before running the experiment. Thus as depicted in
+\fig{exp-pipeline} we consider that an experimental plan includes not only the
+experimental scripts, dependencies and machines but also set of scripts used
+to filter and analyse the data.
+
+\begin{enumerate}
+    \item Setup
+        \begin{itemize}
+            \item Make a plan:
                 \begin{itemize}
-                    \item Make a plan:
-                        \begin{itemize}
-                            \item Case study (benchmarks: application representing real life
-                                problems).
-                            \item Configurations (different version of the benchmarks code,
-                                runtimes with different set of parameters).
-                            \item Experimental machines / environment (recent enough,
-                                representative AMD / Intel ?, several OS versions ?)
-                        \end{itemize}
-                    \item Prepare analysis:
-                        \begin{itemize}
-                            \item What do we want to know ? Which metrics can answer our
-                                questions ?
-                            \item Avoid execution time, prefer overhead, speedup, slowdown
-                        \end{itemize}
-                    \item Store everything in a git repository
-                    \item Use git submodule for dependencies
-                    \item Choice of metrics
-                    \item Correct documentation
-                    \item An init script can apply patches if required
-                    \item Launch scripts responsible for the experiment
-                        deployment should be included
+                    \item Case study (benchmarks: application representing real life
+                        problems).
+                    \item Configurations (different version of the benchmarks code,
+                        runtimes with different set of parameters).
+                    \item Experimental machines / environment (recent enough,
+                        representative AMD / Intel ?, several OS versions ?)
                 \end{itemize}
-            \item Raw analysis
+            \item Prepare analysis:
                 \begin{itemize}
-                    \item Simpler step but crucial
-                    \item Extract important information from raw traces
-                    \item Do not compute thing here
-                    \item Heavy files cannot be in a git repository
-                    \item Use online storage (for instance zenodo)
-                    \item A Readme should explain file hierarchy
-                    \item Include filtering and analysis scripts
+                    \item What do we want to know ? Which metrics can answer our
+                        questions ?
+                    \item Avoid execution time, prefer overhead, speedup, slowdown
                 \end{itemize}
-            \item Statistic analysis
-                \begin{itemize}
-                    \item Mix text with code (R-markdown, orgmode \ldots)
-                    \item Prepare it before run
-                    \item Repeat original question and expected results
-                    \item Use online storage (for instance zenodo)
-                    \item A Readme should explain file hierarchy
-                    \item Include analysis scripts
-                \end{itemize}
-            \item And now ?
-                \begin{itemize}
-                    \item Raise more question => new experiments
-                    \item Enough answers => write paper
-                \end{itemize}
-        \end{enumerate}
-\end{itemize}
+            \item Store everything in a git repository
+            \item Use git submodule for dependencies
+            \item Choice of metrics
+            \item Correct documentation
+            \item An init script can apply patches if required
+            \item Launch scripts responsible for the experiment
+                deployment should be included
+        \end{itemize}
+    \item Raw analysis
+        \begin{itemize}
+            \item Simpler step but crucial
+            \item Extract important information from raw traces
+            \item Do not compute thing here
+            \item Heavy files cannot be in a git repository
+            \item Use online storage (for instance zenodo)
+            \item A Readme should explain file hierarchy
+            \item Include filtering and analysis scripts
+        \end{itemize}
+    \item Statistic analysis
+        \begin{itemize}
+            \item Mix text with code (R-markdown, orgmode \ldots)
+            \item Prepare it before run
+            \item Repeat original question and expected results
+            \item Use online storage (for instance zenodo)
+            \item A Readme should explain file hierarchy
+            \item Include analysis scripts
+        \end{itemize}
+    \item And now ?
+        \begin{itemize}
+            \item Raise more question => new experiments
+            \item Enough answers => write paper
+        \end{itemize}
+\end{enumerate}
 
 Actual experiment (on the experimental machine)
 \begin{enumerate}
