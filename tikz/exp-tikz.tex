@@ -139,19 +139,19 @@
     \begin{pgfonlayer}{foreground}
         % \node[right=3.5em  of mi] (inv0) {};
         \node[fileR, right=3.5em  of raw] (csv) {Filtered results};
-        \node[fileA, below right=.5em and 1.5em of csv] (ana2) {Analysis script};
+        \node[fileA, below = .5em of csv] (ana2) {Analysis script};
     \end{pgfonlayer}
 
     \begin{pgfonlayer}{bg1}
-        \node[distrib,fit=(raw) (mi) (filt1) (ana1) (csv),%
+        \node[distrib,fit=(raw) (mi) (filt1) (ana1),%
         header={Raw analysis}{distribcol}{north}{}] (rawa) {};
     \end{pgfonlayer}
 
-    \node[fileR, above right=.5em and 2.5em of ana2] (res) {Analysis results};
+    \node[fileR, right = 3.5em of csv] (res) {Human readable results};
 
     \begin{pgfonlayer}{bg1}
-        \node[distrib,fit=(csv) (ana2) (res),%
-        header={Statistic analysis}{distribcol}{north}{}] (stata) {};
+        \node[distrib,fit=(csv) (ana2),%
+        header={Statistical analysis}{distribcol}{north}{text width=5em}] (stata) {};
     \end{pgfonlayer}
 
 
@@ -167,14 +167,14 @@
      \path[copy] (ana.east)  edge (ana1.west);
      \path[copy] (filt.east) edge  (filt1.west);
 
-    \path[exec] (mach.south) edge[out=0,in=180] node[pos=.2,above=2em,rotate=90] {generate} (mi.west);
-    \path[exec] (mach.south) edge[out=0,in=180] (raw.west);
+    \path[exec] (mach.south) edge[out=0,in=180] (mi.west);
+    \path[exec] (mach.south) edge[out=0,in=180]  node[pos=.85,above=2em,rotate=90] {generate} (raw.west);
 
-    \draw[exec] (raw.east) -- node[pos=.1,below=2em,rotate=90] {generate} (csv.west);
+    \draw[exec] (raw.east) -- node[pos=.15,below=2em,rotate=90] {generate} (csv.west);
     \path[exec] (filt1.east) edge[out=0,in=180] (csv.west);
     \path[copy] (ana1.east) edge[out=0,in=180] (ana2.west);
 
-    \draw[exec] (csv.east) -- node[pos=.7,below=2em,rotate=90] {generate} (res.west);
+    \draw[exec] (csv.east) -- node[pos=.17,below=2em,rotate=90] {generate} (res.west);
     \path[exec] (ana2.east) edge[out=0,in=180] (res.west);
 
 \end{tikzpicture}

@@ -112,16 +112,14 @@ in~\cite[Chapter~3, p17-19]{Stanisic15Reproducible}
 
 \subsection{Experimental workflow}
 
-Our goal is to make the whole experiment reproducible (and repeatable to
-someone who have access to our machines or similar ones). To do so, we
-consider an experiment as a workflow (depicted in \fig{exp-pipeline}) that
-consists mainly of three steps. The first one is the actual experiment: it
-produce data (execution time, traces, etc.) by testing several tools, and
-configurations on a set of benchmarks. Then comes the raw analysis, this step
-aims at extracting the pertinent information from the raw results, it can
-compute metrics and produce summary files (csv for instance). Finally the
-statistic analysis step produce a human readable output (figures, tables
-etc.).
+We design experiments to answer simple questions such as ``Is my tool more
+efficient than the existing ones'', obviously this formulation is too vague to
+be answered scientifically. We first need to find a set of relevant state of
+the art tools and then decide and on which configurations we are going to do
+the comparison. This means choosing a set of benchmarks representing real life
+applications, one or several credible experimental machine(s). Finally we must
+determine a set of metrics that we can measured accurately to evaluate the
+efficiency of the tools.
 
 \begin{figure}[htb]
     \centering
@@ -130,15 +128,31 @@ etc.).
     \label{fig:exp-pipeline}
 \end{figure}
 
-It is easy for the experiment developer to dismiss some (important) data and
-focus on the one that support it's point, we call this bias the
-\emph{experiment designer bias}\todo[author=david]{Il y a probablement une ref
-ici}. One easy way to limit this bias is to write the parsing and analysis
-scripts, with comments on the expected results and on how to determine which
-tools is “better” before running the experiment. Thus as depicted in
-\fig{exp-pipeline} we consider that an experimental plan includes not only the
-experimental scripts, dependencies and machines but also set of scripts used
-to filter and analyse the data.
+All these choices form a high level \emph{experiment plan}: it contains all
+the information required to reproduce the experiment but not to repeat it.
+Indeed it miss the code that actually execute the experimental plan.
+We can see an experiment as a pipeline that flow from this plan to the final
+human readable results as described in \fig{exp-pipeline}. This pipeline is
+composed of three steps: the experimental plan that produce a (usually) huge
+set of data and meta data, the first one are meant to be used during the
+analysis while the second are only generate to find issue in the experiment or
+additional information to repeat it. Then comes the raw analysis that extract
+pertinent information and compute metrics from the raw data. The results of
+this step are usually easy to parse for a computer but not human friendly.
+Thus the last step is there to present these data in a readable way.
+
+Yet it is easy to present data in a tendentious way that reflects more our
+expectations than the reality without even noticing it, we call this the
+\emph{experiment designer bias}\todo[author=david]{Ref ?}. To limit this bias,
+it is very important to design carefully the whole analysis before running the
+actual experiment and test the visualisation on a filler set of data.
+Furthermore, adding comments to the visualisations about what they mean and
+what we expect to see can help avoiding this bias. Technologies such as
+\texttt{R-markdown},\texttt{Jupyter Notebook} (anciently known as IPython
+Notebook) or \texttt{Emacs Orgmode} are great help to produce reproducible
+experiments.
+
+\subsubsection{Methodology}
 
 \begin{enumerate}
     \item Setup
