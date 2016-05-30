@@ -84,7 +84,7 @@ proposed by Dror G. Feitelson~\cite{Feitelson15From}:
 It is nearly impossible to repeat an experiment in the exact same conditions
 as many exterior factors, such as the machine room temperature or the network
 usage done by other users on the same cluster, might impact the measured
-performances.\todo[author=david]{Citations ? Demander a Arnaud ?}.
+performances.\DBm{Citations ? Demander a Arnaud ?}
 Still it is possible to repeat an experiment in similar conditions: someone
 who runs the same experiments two different days on the same machines can
 expect to obtain similar results. Several tools can helps use making
@@ -128,7 +128,7 @@ efficiency of the tools.
     \label{fig:exp-pipeline}
 \end{figure}
 
-All these choices form a high level \emph{experiment plan}: it contains all
+All these choices form a high level \emph{experimental plan}: it contains all
 the information required to reproduce the experiment but not to repeat it.
 Indeed it miss the code that actually execute the experimental plan.
 We can see an experiment as a pipeline that flow from this plan to the final
@@ -143,7 +143,7 @@ Thus the last step is there to present these data in a readable way.
 
 Yet it is easy to present data in a tendentious way that reflects more our
 expectations than the reality without even noticing it, we call this the
-\emph{experiment designer bias}\todo[author=david]{Ref ?}. To limit this bias,
+\emph{experiment designer bias}\DBm{Ref ?}. To limit this bias,
 it is very important to design carefully the whole analysis before running the
 actual experiment and test the visualisation on a filler set of data.
 Furthermore, adding comments to the visualisations about what they mean and
@@ -154,32 +154,78 @@ experiments.
 
 \subsubsection{Methodology}
 
+\paragraph{Preparing an experiment:}
+
+In this thesis, we ran two types of experiments: the fist one aims at
+analysing the behavior of one application (mostly \Gls{sofa}) while the second
+one aims at comparing trace collection tools. For both analysis we need to
+find a set of \emph{benchmarks} conduct our experiments, but the signification
+of this term is slightly different for the two cases. In the first case, a
+benchmark is an input for the studied application and the set of benchmarks
+used should be defined with the developers of the application to cover the
+code that they want to improve. While in the second case it means a set of
+applications, for this need, we use the \gls{npb} which allow to cover a large
+set of applications from simple computational kernels to real life
+applications.\DB{Citation, table NPB from paper Cluster} Yet to compare several
+analysis tools, a set of benchmarks is not a sufficient input as these tools
+usually provides a large set of parameters allowing to modify their behavior,
+thus we must evaluate each tool under at least two set of parameters: the
+default and a tuned version with a set of parameters optimized for the results
+we are measuring.
+
+Once the benchmarks are chosen, we need to decide of one machine or a set of
+machines on which we will run the experiment. This step is crucial as
+computers architectures are getting more and more complex \DB{Ref partie 2.1
+?} and applications are (usually) designed for one type of machines.
+Furthermore some tools (such as \gls{Pin}\DBm{Citation ?}, \gls{PEBS}, \gls{IBS}) are vendor
+specific or optimized for some architecture. Thus we must find machines that
+allow to do our study in a relevant situation and fair to the tools and
+libraries used.
+
+Finally we need to find some relevant metric(s) to answer the question(s) that we
+are trying to answer with our experiment. These metrics should remain as
+simple as they will be interpreted by humans. Yet they must also cover every
+aspects that we are studying. A complete set of simple measurable metrics is
+often easier to understand that one complex metric that provide an overall
+score in an unknown unit. Still simple ratios and percentages can make an
+analysis more reproducible for instance an execution time is significant only
+for a very specific configuration on one machine, while speedups and overheads
+can be compared more easily.
+
+\paragraph{Experiment and trace distribution}
+
+Trying to compile a badly documented code can be painful and time consuming,
+the same problems occurs when it comes to reproduce experiment. Thus the
+distribution of the experiment traces and script must be considered carefully.
+To reproduce an experiment with need the scripts that run it, a description of
+the machines and/or the virtual environment that is deployed and a link to the
+right version of each tool, applications and benchmarks used during the
+experiment. Several services such as Github, Bitbucked, and Gitlab\DBm{Urls ?}
+host freely code repositories, furthermore \glspl{VCS} such as Git and
+Mercurial \DBm{Citations ?} allow to track easily dependencies with a system
+of submodules, therefore they are well suited for experiment distribution.
+Finally an effort must be done on the documentation to help the user
+understand why the experiment is designed, how it works and where (on which
+machines) we should run it.
+
+Distributing the experiment results can be more tricky as these files can be
+quite heavy and code repositories are usually not designed to handle large
+files. While the experimental repository allows to reproduce the whole
+experiment, the trace distribution is useful to reproduce only some specific
+steps of the analysis, thus we distribute to set of files corresponding to the
+two analysis steps depicted in \fig{exp-pipeline}. The first one contains all
+the files generated by the experiment and the scripts to run that analysis.
+This distribution can be quite heavy (around \SI{100}{Gib} for some of our
+experiments) but allows to redo the whole analysis, compute new metrics or
+look for additional informations in the meta data. At the opposite, the second
+one only contains the filtered results and the scripts that generate the
+plots, it allows to redo the statistical analysis exploring the data with a
+different approach. Furthermore this trace usually contains more plots and
+data than a published article that have to fit a certain amount of pages. Such
+traces can be distributed using specialized large file hosting services such
+as Renater File Sender, or Zenodo\DBm{Url, Citation ?}
+
 \begin{enumerate}
-    \item Setup
-        \begin{itemize}
-            \item Make a plan:
-                \begin{itemize}
-                    \item Case study (benchmarks: application representing real life
-                        problems).
-                    \item Configurations (different version of the benchmarks code,
-                        runtimes with different set of parameters).
-                    \item Experimental machines / environment (recent enough,
-                        representative AMD / Intel ?, several OS versions ?)
-                \end{itemize}
-            \item Prepare analysis:
-                \begin{itemize}
-                    \item What do we want to know ? Which metrics can answer our
-                        questions ?
-                    \item Avoid execution time, prefer overhead, speedup, slowdown
-                \end{itemize}
-            \item Store everything in a git repository
-            \item Use git submodule for dependencies
-            \item Choice of metrics
-            \item Correct documentation
-            \item An init script can apply patches if required
-            \item Launch scripts responsible for the experiment
-                deployment should be included
-        \end{itemize}
     \item Raw analysis
         \begin{itemize}
             \item Simpler step but crucial
