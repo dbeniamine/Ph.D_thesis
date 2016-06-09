@@ -1,7 +1,24 @@
 %!TEX encoding=UTF-8 Unicode
 \chapter{Performances analysis}
+\label{chap:perf}
+
+\begin{itemize}
+    \item Aim: improving application without a priori knowledge
+    \item Requires to have knowledge on the  machine architecture
+    \item Profiling is an experiment blabla
+\end{itemize}
+
+This chapter is organised as follow: first we present some specificities of
+modern computing system that must be considered while trying to improve an
+application's performances in \sect{mod-syst}, then in \sect{prof-tools} we
+present some of the existing profiling tools, discuss their strength and
+limits. After that we detail our experimental methodology and discuss
+reproducibility matters in \sect{expe-methodo}. Finally we present a study
+case where we evaluated the performances of a physical simulation application
+in \sect{sofa}.
 
 \section{Modern computing systems}
+\label{sec:mod-syst}
 
 \subsection{Architectural considerations}
 
@@ -13,20 +30,220 @@
 
 
 \section{Profiling tools}
+\label{sec:prof-tools}
+
+
+\begin{itemize}
+    \item Two steps
+        \begin{itemize}
+            \item collection
+            \item Presentation
+        \end{itemize}
+    \item Several categories:
+        \begin{itemize}
+            \item Low level (perf counters)
+            \item High level (Generic tools)
+            \item Specific tools (High or low level)
+        \end{itemize}
+    \item How to get a global overview of an application's performances ?
+\end{itemize}
 
 \DB{Main Biblio}
 
 \subsection{Performance counters}
 
-\DB{perfctr}
+Most profiling tools are based on performance counters, these counters are
+implemented using dedicated \gls{CPU} registers. This hardware based design
+allow to retrieve information on the execution with low intrusively and cost.
+Yet the available counters depends on the \gls{CPU} vendor and model,
+furthermore it is only possible to use a restricted number of counters at
+the same time.
+\DB{Est-ce que j'ajoute que ya des compteurs cachés qu'on ne peux utiliser
+qu'avec des outils propriétaires ?}
+
+Performance counters can directly be accessed using the \gls{Perfctr}
+driver which is part of the \gls{Linux} kernel since version
+2.6.x\DBm{Vérifier}, yet higher level library such as
+\gls{PAPI}~\cite{Browne00Portable,Weaver13PAPI,Malony11Parallel} and
+\gls{Likwid}~\cite{Treibig10LIKWID} were designed to access them, and computes
+metrics. \DB{continue here}
+
+\DB{From biblio:}
+\begin{itemize}
+    \item tools:
+        \begin{itemize}
+            \item Perfctr driver => driver included on linux kernel since 2.6.x ? no
+                paper found for the moment. Only perfctr \DBm{citation}
+            \item Likwid \cite{Treibig10LIKWID} collection of command line application
+                to measure performance, do pinning etc.
+                \begin{itemize}
+                    \item likwid-perfctr : hw counters collected over the runtime (can
+                        be restricted by API). Uses linux msr (model specific
+                        reigsters) module to modify counters from user space. Event
+                        counts are core-based => no filters according to the process
+                        running. User must enforce affinity to avoid noise.
+                    \item likwid-topology give threads, socket, cache topology, can
+                        draw it as an ascii art. based on cpuid.
+                    \item likwid-pin => affect thread/process to cores.
+                    \item likwid-feature (un)set prefetcher features.
+                \end{itemize}
+            \item Papi \cite{Browne00Portable,Weaver13PAPI,Malony11Parallel} Two
+                interfaces : high level start / stop counters (for a user defined set of
+                counters. Low level: fully programmable, monitor EventSets i.e. events
+                that the user decide to count as a group. Possibility to define user
+                callback when a counter reach a threshold. Two tools designed to
+                demonstrate graphical display of PAPI perf. perfometer show a runtime trace
+                of a chosen metric. profometer histogram of the occurence of an event
+                related to a text adress in the program.
+                \\
+                Papi is interface with many profiling tools vprof,
+                \\
+                PAPI cuda componnent.
+            \item PerfSuite \cite{Kufrin05Perfsuite} Based on PAPI. Can be used as
+                library or command line utility
+            \item Oprofile \cite{Oprofile} is also a set of tool, but it is used
+                differently than PAPI. We call Oprofile on a binary, it runs the
+                application and gives a profile of the application and it's shared
+                library. Oprofile is not as customisable than PAPI and is not well
+                suited for highly complex applications.
+        \end{itemize}
+    \item Pros
+        \begin{itemize}
+            \item Low level
+            \item Global overview
+            \item Low intrusivity
+        \end{itemize}
+    \item Cons
+        \begin{itemize}
+            \item Archi dependents (CPU registers)
+            \item Not suitable for most developper
+        \end{itemize}
+\end{itemize}
 
 \subsection{Generic tools}
 
-\DB{HPC toolkit etc}
+\DB{From Moca paper:}
+Several generic tools have been designed to analyze and improve parallel
+applications performances, such as Intel's VTune~\cite{Reinders05VTune},
+Performance Counter Monitor~(PCM)~\cite{Intel2012b}, the
+HPCToolkit~\cite{Adhianto10HPCTOOLKIT}, and AMD's
+CodeAnalyst~\cite{Drongowski2008}. All of these tools use performance
+counters and execution traces to show when and where CPUs are idle, and, thus,
+highlight potential places for improvements.
+
+\DB{From biblio:}
+The following tools provides at least the same informations as performance
+counters but display it in a nicer way.
+\begin{itemize}
+    \item Vtune \cite{Reinders05VTune} is the Intel tool for analysing
+        performances. It's allow the user to design a lot of different
+        analysis and give the results in different views. VTune always tries
+        to show the origin of the problem and to give hints. It also allow the
+        user to map the counters to binary or high level code. However it is a
+        very complex program, most informations are displayed as huge tables.
+        And some features as the bandwith analysis seems to be broken.
+    \item HPCToolkit \cite{Adhianto10HPCTOOLKIT} is one of the most complete
+        toolkit. It respect the following principles:
+        \begin{itemize}
+            \item Avoid code instrumentation
+            \item Language independent
+            \item Try to correlate data (for instance cache miss rate \&
+                cache latency)
+            \item Combine many techniques
+                \begin{itemize}
+                    \item Binary analysis
+                    \item Statistical sampling
+                    \item Event triggers
+                \end{itemize}
+        \end{itemize}
+        However this framework is very complex to use, it does not allow the
+        user to easily build new tools, and it focuses on processors events.
+    \item MAQAO \cite{Djoudi05MAQAO}
+        \begin{itemize}
+            \item Consider themself as HPCToolkit concurrent
+            \item Works on compilers binary
+            \item Very interesting state of the art
+            \item Pattern recognition inside assembly code
+        \end{itemize}
+        However only works on the binary \dots
+    \item Paradyn \cite{Miller95Paradyn}
+        \begin{itemize}
+            \item Dynamic instrumentation library
+            \item Search model and performance consultant
+                \begin{itemize}
+                    \item Three axes:
+                        \begin{itemize}
+                            \item Why: what kind of pb
+                            \item Where: code / data centric
+                            \item When: function call graph
+                        \end{itemize}
+                    \item Predefine statical hypotheses to explain perf issue
+                \end{itemize}
+            \item Old paper 95 nothing about perf bug research on website
+        \end{itemize}
+    \item Paraver + DINEMAS \cite{Pillet95PARAVER} visualization and
+        simulation tools. Standard interface for visualization allow to plug
+        custom tools inside Paraver. Provide the capability to define custom
+        metrics.
+    \item Paramedir \cite{Jost04Paramedir} CLI tool which allow to display
+        ASCII representation of Paraver trace.
+    \item Vampir  \cite{Brunst01Performance} %also described in \cite{Sunderl07Profiling}.
+        Commercial trace visualization tool.
+        \begin{itemize}
+            \item Designed for distributed systems: hierarchichal view (Gantt)
+            \item Call stack infos
+        \end{itemize}
+    \item ATUM \cite{Agarwal86ATUM}
+        \begin{itemize}
+            \item HW trace using microcode
+            \item Arch dependent
+            \item Old paper, obsolete methode: perf counters
+        \end{itemize}
+    \item URSA MINOR \cite{Park00Supporting}
+        \begin{itemize}
+            \item Trace analyze + guide using MERLIN\cite{Kim01Performance}
+            \item Interactive visualisation (big table and ugly pies)
+            \item No website ?
+        \end{itemize}
+    \item MERLIN \cite{Kim01Performance}
+        \begin{itemize}
+            \item Automatic performance advisor
+            \item Same kind of guide as paradyn \cite{Miller95Paradyn} /
+                Vtune \cite{Reinders05VTune}
+        \end{itemize}
+    \item TAU \cite{Shende06Tau} is one of the most known measurement tools
+        \begin{itemize}
+            \item Provides lot of API for instrumentation
+            \item Visualization with VAMPIR or paraver
+        \end{itemize}
+    \item Scalasca \cite{Geimer10Scalasca} is very similar to Tau, but
+        designed to improve scalability, indeed it aims at massively parallel
+        systems.
+\end{itemize}
+
+All these tools focuses on the CPU while most performance problems comes from
+communication (network and/or memory).
+Malony et al. \cite{Malony11Parallel} adds support for CUDA in classical
+performance system (TAU, PAPI, VAMPIR)
+
+\begin{itemize}
+    \item Basically counters + Visu
+    \item Often complex to use
+    \item Vtunes proprietary, horrible license
+\end{itemize}
 
 \subsection{Discussion}
 
+Profiling can be a mess:
+\begin{itemize}
+    \item lots of tools
+    \item Architecture dependent
+    \item Language dependent
+    \item Most programmers don't know about the architecture
+\end{itemize}
+
 \section{Experimental Methodology}
+\label{sec:expe-methodo}
 
 While in other domains such as biology experiments takes a large amount of
 time and money, they are almost inexpensive and can be designed very quickly
@@ -83,8 +300,8 @@ proposed by Dror G. Feitelson~\cite{Feitelson15From}:
 
 It is nearly impossible to repeat an experiment in the exact same conditions
 as many exterior factors, such as the machine room temperature or the network
-usage done by other users on the same cluster, might impact the measured
-performances.\DBm{Citations ? Demander a Arnaud ?}
+usage done by other users  \DBm{Citations ? Demander a Arnaud ?} on the same cluster, might impact the measured
+performances.
 Still it is possible to repeat an experiment in similar conditions: someone
 who runs the same experiments two different days on the same machines can
 expect to obtain similar results. Several tools can helps use making
@@ -272,12 +489,16 @@ as Renater File Sender, or Zenodo.\DBm{Url, Citation ?}
 
 
 \section{Sofa: case study}
+\label{sec:sofa}
 
 \subsection{Sofa}
 
 \DB{Sofa particularities, different improvements approach (Everton / Julio)}
 
 \subsection{Experimental analysis}
+
+
+Voir Wiki/Meetings/CR\_Reu\_Sofa\_20140326.wiki
 
 \DB{Application of the methodology presented above}
 
@@ -289,3 +510,5 @@ as Renater File Sender, or Zenodo.\DBm{Url, Citation ?}
 \subsection{Proposition}
 
 \DB{Main goals of a memory analysis tool}
+
+
