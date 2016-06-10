@@ -48,10 +48,6 @@ in \sect{sofa}.
     \item How to get a global overview of an application's performances ?
 \end{itemize}
 
-\DB{Main Biblio}
-
-\subsection{Performance counters}
-
 Most profiling tools are based on performance counters, these counters are
 implemented using dedicated \gls{CPU} registers. This hardware based design
 allow to retrieve information on the execution with low intrusively and cost.
@@ -61,103 +57,126 @@ the same time.
 \DB{Est-ce que j'ajoute que ya des compteurs cachés qu'on ne peux utiliser
 qu'avec des outils propriétaires ?}
 
-Performance counters can directly be accessed using the \gls{Perfctr}
-driver which is part of the \gls{Linux} kernel since version
-2.6.x\DBm{Vérifier}, yet higher level library such as
-\gls{PAPI}~\cite{Browne00Portable,Weaver13PAPI,Malony11Parallel} and
-\gls{Likwid}~\cite{Treibig10LIKWID} were designed to access them, and computes
-metrics. \DB{continue here}
+Performance counters can directly be accessed using the \gls{Perfctr} driver
+which is part of the \gls{Linux} kernel since version 2.6.x\DBm{Vérifier
+version, citation perfctr ?}, 
+%% Vendor specific
+%% Hard to interpret
 
-\DB{From biblio:}
-\begin{itemize}
-    \item tools:
-        \begin{itemize}
-            \item Perfctr driver => driver included on linux kernel since 2.6.x ? no
-                paper found for the moment. Only perfctr \DBm{citation}
-            \item Likwid \cite{Treibig10LIKWID} collection of command line application
-                to measure performance, do pinning etc.
-                \begin{itemize}
-                    \item likwid-perfctr : hw counters collected over the runtime (can
-                        be restricted by API). Uses linux msr (model specific
-                        reigsters) module to modify counters from user space. Event
-                        counts are core-based => no filters according to the process
-                        running. User must enforce affinity to avoid noise.
-                    \item likwid-topology give threads, socket, cache topology, can
-                        draw it as an ascii art. based on cpuid.
-                    \item likwid-pin => affect thread/process to cores.
-                    \item likwid-feature (un)set prefetcher features.
-                \end{itemize}
-            \item Papi \cite{Browne00Portable,Weaver13PAPI,Malony11Parallel} Two
-                interfaces : high level start / stop counters (for a user defined set of
-                counters. Low level: fully programmable, monitor EventSets i.e. events
-                that the user decide to count as a group. Possibility to define user
-                callback when a counter reach a threshold. Two tools designed to
-                demonstrate graphical display of PAPI perf. perfometer show a runtime trace
-                of a chosen metric. profometer histogram of the occurence of an event
-                related to a text adress in the program.
-                \\
-                Papi is interface with many profiling tools vprof,
-                \\
-                PAPI cuda componnent.
-            \item PerfSuite \cite{Kufrin05Perfsuite} Based on PAPI. Can be used as
-                library or command line utility
-            \item Oprofile \cite{Oprofile} is also a set of tool, but it is used
-                differently than PAPI. We call Oprofile on a binary, it runs the
-                application and gives a profile of the application and it's shared
-                library. Oprofile is not as customisable than PAPI and is not well
-                suited for highly complex applications.
-        \end{itemize}
-    \item Pros
-        \begin{itemize}
-            \item Low level
-            \item Global overview
-            \item Low intrusivity
-        \end{itemize}
-    \item Cons
-        \begin{itemize}
-            \item Archi dependents (CPU registers)
-            \item Not suitable for most developper
-        \end{itemize}
-\end{itemize}
+yet higher level library such as
+\gls{PAPI}~\cite{Browne00Portable,Malony11Parallel,Weaver13PAPI} and
+\gls{Likwid}~\cite{Treibig10LIKWID} were designed to compute metrics based on
+these counters in a more portable way. Both of these tools allow to use
+predefined performance groups, start and stop the counters during the
+execution to focus on critical parts of the execution. Although this last
+ability can be very useful to focus on the most important part of the code, it
+might lead to missing out inefficient code.
 
-\subsection{Generic tools}
+%% Global trace plus context
+%%  Retrieve context infos:
+%%      Hooks librarys / syscall (slow)
+%%      Instrumentation (slower)
 
-\DB{From Moca paper:}
+%% Oprofile / Persuite
+%% TAU
+
+%% Lots of Value, complexe data => Visualization
+
+Performances counter were originally designed by vendors to debug their
+processors prototypes, as a result, interpreting performance counters requires
+a deep knowledge of \glspl{CPU}, that most computer scientist do not have. The
+capability to group counters and compute metrics provided by \gls{PAPI} and
+\gls{Likwid} mitigate this limitations.
+
+
+
+Finally \gls{OProfile}~\cite{Oprofile}
+allows the user to retrieve a profile of an application detailing the values
+of the performance counters on different parts of the program.
+
+An other approach to overpass the limitations of performances counters consist
+on combining them with other informations obtain by hooking \glspl{syscall} or
+calls to the standard C library and other usual libraries such as \gls{MPI} or
+\gls{OpenMP}.
+
+Yet these methods are more intrusive thus slower and might
+impact the behavior of the studied application.
+
+
+%% Other collection Methods:
+
+Instrumentation (Pin, Paradyn)
+
+PerfSuite => PAPI + Glibc wrapper
+
+
+TAU: advanced trace measurement, no visu (Vampir)
+
+
+All the above tools address the challenge of data collection but not the
+presentation of results, thus the user have to go through the trace by itself
+to extract the pertinent information.
+
+%%%%%%%%% Higher level tools
+
+Visu only:
+    + Vampir
+    + FrameSoc: Trace storage + visualization, nothing for collection
+
+All In one tools: Perfctr + Simu / instru + Visu
+
+Vendors:
+    + AMD CodeAnalyst / CodeXL
+    + Intel VTune (proprietaty)
+
+Research:
+    + Complete framework / plugable
+        + HTPC Toolkit
+        + MAQAO
+        + Paraver
+            + DINEMAS
+            + Paramedir
+    + MERLIN: Automatic performance advisor
+    + Scalasca: For massively parrallel systems
+
 Several generic tools have been designed to analyze and improve parallel
-applications performances, such as Intel's VTune~\cite{Reinders05VTune},
-Performance Counter Monitor~(PCM)~\cite{Intel2012b}, the
-HPCToolkit~\cite{Adhianto10HPCTOOLKIT}, and AMD's
-CodeAnalyst~\cite{Drongowski2008}. All of these tools use performance
-counters and execution traces to show when and where CPUs are idle, and, thus,
-highlight potential places for improvements.
+applications performances, such as \gls{PerfSuite}~\cite{Kufrin05Perfsuite}
+\gls{Intel}'s \gls{VTune}~\cite{Reinders05VTune},
+\gls{PCM}~\cite{Wilhalm16Intel}, the
+\gls{HPCToolkit}~\cite{Adhianto10HPCTOOLKIT}, and \gls{AMD}'s
+\gls{CodeAnalyst}~\cite{Drongowski08introduction}. All of these tools rely on
+performance counters and execution traces to show when and where CPUs are
+idle, and, thus, highlight potential places for improvements.
+\gls{CodeAnalyst}'s successor \gls{CodeXL}~\cite{AMDCodeXL} is also able to
+trace and display \gls{GPU} related performance informations.
 
 \DB{From biblio:}
 The following tools provides at least the same informations as performance
 counters but display it in a nicer way.
 \begin{itemize}
-    \item Vtune \cite{Reinders05VTune} is the Intel tool for analysing
-        performances. It's allow the user to design a lot of different
-        analysis and give the results in different views. VTune always tries
-        to show the origin of the problem and to give hints. It also allow the
-        user to map the counters to binary or high level code. However it is a
-        very complex program, most informations are displayed as huge tables.
-        And some features as the bandwith analysis seems to be broken.
-    \item HPCToolkit \cite{Adhianto10HPCTOOLKIT} is one of the most complete
-        toolkit. It respect the following principles:
-        \begin{itemize}
-            \item Avoid code instrumentation
-            \item Language independent
-            \item Try to correlate data (for instance cache miss rate \&
-                cache latency)
-            \item Combine many techniques
-                \begin{itemize}
-                    \item Binary analysis
-                    \item Statistical sampling
-                    \item Event triggers
-                \end{itemize}
-        \end{itemize}
-        However this framework is very complex to use, it does not allow the
-        user to easily build new tools, and it focuses on processors events.
+    %\item Vtune \cite{Reinders05VTune} is the Intel tool for analysing
+    %    performances. It allows the user to design a lot of different
+    %    analysis and give the results in different views. VTune always tries
+    %    to show the origin of the problem and to give hints. It also allow the
+    %    user to map the counters to binary or high level code. However it is a
+    %    very complex program, most informations are displayed as huge tables.
+    %    And some features as the bandwith analysis seems to be broken.
+    %\item HPCToolkit \cite{Adhianto10HPCTOOLKIT} is one of the most complete
+    %    toolkit. It respect the following principles:
+    %    \begin{itemize}
+    %        \item Avoid code instrumentation
+    %        \item Language independent
+    %        \item Try to correlate data (for instance cache miss rate \&
+    %            cache latency)
+    %        \item Combine many techniques
+    %            \begin{itemize}
+    %                \item Binary analysis
+    %                \item Statistical sampling
+    %                \item Event triggers
+    %            \end{itemize}
+    %    \end{itemize}
+    %    However this framework is very complex to use, it does not allow the
+    %    user to easily build new tools, and it focuses on processors events.
     \item MAQAO \cite{Djoudi05MAQAO}
         \begin{itemize}
             \item Consider themself as HPCToolkit concurrent
@@ -214,7 +233,8 @@ counters but display it in a nicer way.
     \item TAU \cite{Shende06Tau} is one of the most known measurement tools
         \begin{itemize}
             \item Provides lot of API for instrumentation
-            \item Visualization with VAMPIR or paraver
+            \item Visualization with
+                VAMPIR~\cite{Nagel96VAMPIR} or paraver
         \end{itemize}
     \item Scalasca \cite{Geimer10Scalasca} is very similar to Tau, but
         designed to improve scalability, indeed it aims at massively parallel
