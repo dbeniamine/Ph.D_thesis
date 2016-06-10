@@ -1,5 +1,5 @@
 %!TEX encoding=UTF-8 Unicode
-\chapter{Performances analysis}
+\chapter{Case Study}
 \label{chap:perf}
 
 \begin{itemize}
@@ -16,18 +16,6 @@ limits. After that we detail our experimental methodology and discuss
 reproducibility matters in \sect{expe-methodo}. Finally we present a study
 case where we evaluated the performances of a physical simulation application
 in \sect{sofa}.
-
-\section{Modern computing systems}
-\label{sec:mod-syst}
-
-\subsection{Architectural considerations}
-
-\DB{Caches, prefetechrs, NUMA few words about GPGPU, MIC \ldots}
-
-\subsection{Usual performances issues}
-
-\DB{All to all sharing, bad Mappings, false sharing \ldots}
-
 
 \section{Profiling tools}
 \label{sec:prof-tools}
@@ -95,9 +83,9 @@ allows the user to retrieve a profile of an application detailing the values
 of the performance counters on different parts of the program.
 
 An other approach to overpass the limitations of performances counters consist
-on combining them with other informations obtain by hooking \glspl{syscall} or
-calls to the standard C library and other usual libraries such as \gls{MPI} or
-\gls{OpenMP}.
+on combining them with other informations obtain by hooking syscall or
+calls to the standard C library and other usual libraries such as MPI or
+OpenMP.
 
 Yet these methods are more intrusive thus slower and might
 impact the behavior of the studied application.
@@ -522,13 +510,6 @@ Voir Wiki/Meetings/CR\_Reu\_Sofa\_20140326.wiki
 
 \DB{Application of the methodology presented above}
 
-\subsection{Results and Discussions}
+\section{Results and Discussions}
 
 \DB{Need memory oriented tools, improve the methodology}
-
-
-\subsection{Proposition}
-
-\DB{Main goals of a memory analysis tool}
-
-
