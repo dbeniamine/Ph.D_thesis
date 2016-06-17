@@ -2,20 +2,64 @@
 \chapter{Case Study}
 \label{chap:perf}
 
+\DB{Rewritte, ugly}
+
+Optimizing a complete application written by computers scientist that are not
+aware of performances is complex, indeed it needs a lot of knowledge to only
+find the slow part of the code and even more to improve it. Furthermore if the
+optimizations are cryptic for the developers they might not actually use it.
+In this chapter, we present a case study on the performance optimisation of
+\gls{SOFA}. It is organized as follow: first we present \gls{SOFA}, it's
+specificities and previous attempt to parallelise or optimize it in
+\sect{cs-motivations}. Then we discuss the existing profiling tools that can
+be used to analyze an application performances' in \sect{prof-tools}. After
+that we detail our experimental methodology and discuss reproducibility
+matters in \sect{expe-methodo}. Finally we present our analysis and first
+conclusions in \sect{sofa}.
+
+\section{Motivations}
+\label{sec:motivations}
+
+\subsection{Sofa: a physical simulation framework}
+
+\DB{Add biblio}
+
+Presentation of Sofa
 \begin{itemize}
-    \item Aim: improving application without a priori knowledge
-    \item Requires to have knowledge on the  machine architecture
-    \item Profiling is an experiment blabla
+    \item Physical Simu
+        \begin{itemize}
+            \item Pipeline (init state => Force => collisions => Display)
+            \item Interactive time
+            \item Precise (compare to video games => realism)
+        \end{itemize}
+    \item Generic framework:
+        \begin{itemize}
+            \item Tree (change algo at each level)
+            \item Highly optimized algorithms ?
+            \item Complex mechanisms above
+        \end{itemize}
 \end{itemize}
 
-This chapter is organised as follow: first we present some specificities of
-modern computing system that must be considered while trying to improve an
-application's performances in \sect{mod-syst}, then in \sect{prof-tools} we
-present some of the existing profiling tools, discuss their strength and
-limits. After that we detail our experimental methodology and discuss
-reproducibility matters in \sect{expe-methodo}. Finally we present a study
-case where we evaluated the performances of a physical simulation application
-in \sect{sofa}.
+\subsection{Previous work on Sofa parallelisation}
+
+Previous contributions:
+\begin{itemize}
+    \item  Hermann: Runtime inside Sofa
+        \begin{itemize}
+            \item Good performance gain
+            \item Too complex for dev not from HPC
+            \item Hard to maintain
+        \end{itemize}
+    \item  Julio: Improve components outside Sofa, then incorporate
+        \begin{itemize}
+            \item Efficient improvements on small parts
+            \item Impossible to keep the rythm
+            \item What if the dev don't know their perf issues ?
+            \item Can't fix architectural issues
+        \end{itemize}
+\end{itemize}
+
+My approach => analyze first
 
 \section{Profiling tools}
 \label{sec:prof-tools}
@@ -382,7 +426,7 @@ experiments.
 \paragraph{Preparing an experiment:}
 
 In this thesis, we ran two types of experiments: the fist one aims at
-analysing the behavior of one application (mostly \Gls{sofa}) while the second
+analysing the behavior of one application (mostly \gls{SOFA}) while the second
 one aims at comparing trace collection tools. For both analysis we need to
 find a set of \emph{benchmarks} conduct our experiments, but the signification
 of this term is slightly different for the two cases. In the first case, a
@@ -496,20 +540,16 @@ traces can be distributed using specialized large file hosting services such
 as Renater File Sender, or Zenodo.\DBm{Url, Citation ?}
 
 
-\section{Sofa: case study}
+\section{Analysis}
 \label{sec:sofa}
 
-\subsection{Sofa}
-
-\DB{Sofa particularities, different improvements approach (Everton / Julio)}
-
-\subsection{Experimental analysis}
+\subsection{Experiments}
 
 
 Voir Wiki/Meetings/CR\_Reu\_Sofa\_20140326.wiki
 
 \DB{Application of the methodology presented above}
 
-\section{Results and Discussions}
+\subsection{Results and Discussions}
 
 \DB{Need memory oriented tools, improve the methodology}
