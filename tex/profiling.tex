@@ -2,16 +2,19 @@
 \chapter{Case Study}
 \label{chap:perf}
 
-\DB{Rewritte, ugly}
-
-Optimizing a complete application written by computers scientist that are not
-aware of performances is complex, indeed it needs a lot of knowledge to only
-find the slow part of the code and even more to improve it. Furthermore if the
-optimizations are cryptic for the developers they might not actually use it.
+Optimizing a computation kernel is a complex tasks, it requires both a deep
+understanding of the algorithm mechanics and of the machine that will execute
+it. Lots of works have be done to optimize most usual linear algebra kernels
+with the blas and lapack libraries. \DB{citations,gls} The task is even more
+complex when it comes to optimizing a whole application, we first need to
+identify the hotspots which means understand where and why the performances
+are suboptimal. Then improving them is even more complex as the modifications
+must be both efficient and understandable by developers not specialized in
+\gls{HPC}, indeed cryptic optimizations are easily ignored. \DB{reformuler}
 In this chapter, we present a case study on the performance optimisation of
 \gls{SOFA}. It is organized as follow: first we present \gls{SOFA}, it's
 specificities and previous attempt to parallelise or optimize it in
-\sect{cs-motivations}. Then we discuss the existing profiling tools that can
+\sect{motivations}. Then we discuss the existing profiling tools that can
 be used to analyze an application performances' in \sect{prof-tools}. After
 that we detail our experimental methodology and discuss reproducibility
 matters in \sect{expe-methodo}. Finally we present our analysis and first
@@ -22,41 +25,83 @@ conclusions in \sect{sofa}.
 
 \subsection{Sofa: a physical simulation framework}
 
-\DB{Add biblio}
+\gls{SOFA}~\cite{Allard07SOFA} is a simulation framework designed for
+interactive and exact simulation as it aims at helping research in medical
+simulation. Thus optimizing the performances of \gls{SOFA} is both mandatory
+to reach interactive time and extremely complex as no approximation is
+allowed.
 
-Presentation of Sofa
-\begin{itemize}
-    \item Physical Simu
-        \begin{itemize}
-            \item Pipeline (init state => Force => collisions => Display)
-            \item Interactive time
-            \item Precise (compare to video games => realism)
-        \end{itemize}
-    \item Generic framework:
-        \begin{itemize}
-            \item Tree (change algo at each level)
-            \item Highly optimized algorithms ?
-            \item Complex mechanisms above
-        \end{itemize}
-\end{itemize}
+\begin{figure}[htb]
+    \centering
+    \includegraphics[width=\textwidth]{simu-pipeline}
+    \caption[The simulation pipeline]{The simulation pipeline}
+    \label{fig:simu-pipeline}
+\end{figure}
+
+
+A simulation can be seen as a pipeline depicted in \fig{simu-pipeline}: we
+start from an initial configuration were a set of objects are placed under a
+force field. Then we have to resolve a system of equation to compute the next
+position of each objects. The third step consist in detecting overlap between
+objects and applying repulsing force to simulate the collision.  Finally the
+result of these step is displayed (rendered) and we are back at the first
+step. The time integration and the collision detection are the most costly
+steps, there are many algorithms that allow to compute these steps efficiently
+depending on the objects that are involved in them.
+
+\begin{figure}[htb]
+    \centering
+    \includegraphics[width=\textwidth]{Sofa-graph}
+    \caption[Example of Sofa scene graph]{Sofa representation of a scene with two objects: a liver and a
+        heart. Each node of the scene can embed it's own set of solvers and
+        visual representation.\\
+        Image from Sofa documentation~\cite{SOFA16Sofa}.}
+    \label{fig:sofa-tree}
+\end{figure}
+
+One of \gls{SOFA}'s main specificity is to have a multi-model representation
+of each component: a simulation scene is represented as a graph, as shown in
+\fig{sofa-tree}, each physical object is a node of the graph and can replace
+the default solvers, collision detector and visual representation. This
+hierarchical representation allows to manage dependencies between objects and
+represent complex embedded objects~\cite{Nesme09Preserving,Faure11Sparse}.
+
 
 \subsection{Previous work on Sofa parallelisation}
 
-Previous contributions:
+Several efforts were made to parallelise \gls{SOFA}
+
+Everton Hermann works~\cite{Hermann10Simulations}, 
+
+focus on the time integration but collision detection should be easy to parallelize:
 \begin{itemize}
-    \item  Hermann: Runtime inside Sofa
-        \begin{itemize}
-            \item Good performance gain
-            \item Too complex for dev not from HPC
-            \item Hard to maintain
-        \end{itemize}
-    \item  Julio: Improve components outside Sofa, then incorporate
-        \begin{itemize}
-            \item Efficient improvements on small parts
-            \item Impossible to keep the rythm
-            \item What if the dev don't know their perf issues ?
-            \item Can't fix architectural issues
-        \end{itemize}
+    \item Visitor level : 1 collision group = 1 solver. 2 collision groups are
+        independent. Kaapi can easily exploit the hierarchy of the scene graph
+        to create parallelism. Call a visitor = spawn a new task.
+    \item Dynamic loop (inside the solver) : the task graph of the loop is
+        extracted and redeployed at each iteration. In the latest version of
+        XKaapi, the task creation cost is small enough to avoid that and create
+        new step on the fly.
+    \item Task graph is partitioned and executed on different CPUs, if no steal
+        good locality. To preserve locality, we steal partitions.
+    \item Domain decomposition : If only a few object (ex ball \& drap) we have
+        to create parallelism. Cut one object onto different connected objects
+        (exploiting Sofa capabilities). This method is static and the
+        partitioning might be bad after a time of simulation.
+\end{itemize}
+Note used => XKaapi to complex / not maintained
+
+\begin{itemize}
+        \item Everton : Multi GPU (first)\\
+        task can run either on CPU or GPU\\
+        Warming time : compute CPU time / GPU time\\
+        Efficient after this delay\\
+        Quite bad with a lot of collision.
+
+    \item Julio Toss~\cite{Toss13Parallel,Toss14Parallel} Compute Voronoi Diagram on GPU for
+        heterogeneous flexible materials. Voroni cells determine influence of
+        propagation forces. see~\cite{Faure11Sparse}. Evaluation based on
+        speedup GPU/CPU, no comparison with other works ...
 \end{itemize}
 
 My approach => analyze first
@@ -186,14 +231,14 @@ trace and display \gls{GPU} related performance informations.
 The following tools provides at least the same informations as performance
 counters but display it in a nicer way.
 \begin{itemize}
-    %\item Vtune \cite{Reinders05VTune} is the Intel tool for analysing
+    %\item Vtune~\cite{Reinders05VTune} is the Intel tool for analysing
     %    performances. It allows the user to design a lot of different
     %    analysis and give the results in different views. VTune always tries
     %    to show the origin of the problem and to give hints. It also allow the
     %    user to map the counters to binary or high level code. However it is a
     %    very complex program, most informations are displayed as huge tables.
     %    And some features as the bandwith analysis seems to be broken.
-    %\item HPCToolkit \cite{Adhianto10HPCTOOLKIT} is one of the most complete
+    %\item HPCToolkit~\cite{Adhianto10HPCTOOLKIT} is one of the most complete
     %    toolkit. It respect the following principles:
     %    \begin{itemize}
     %        \item Avoid code instrumentation
@@ -209,7 +254,7 @@ counters but display it in a nicer way.
     %    \end{itemize}
     %    However this framework is very complex to use, it does not allow the
     %    user to easily build new tools, and it focuses on processors events.
-    \item MAQAO \cite{Djoudi05MAQAO}
+    \item MAQAO~\cite{Djoudi05MAQAO}
         \begin{itemize}
             \item Consider themself as HPCToolkit concurrent
             \item Works on compilers binary
@@ -217,7 +262,7 @@ counters but display it in a nicer way.
             \item Pattern recognition inside assembly code
         \end{itemize}
         However only works on the binary \dots
-    \item Paradyn \cite{Miller95Paradyn}
+    \item Paradyn~\cite{Miller95Paradyn}
         \begin{itemize}
             \item Dynamic instrumentation library
             \item Search model and performance consultant
@@ -232,50 +277,50 @@ counters but display it in a nicer way.
                 \end{itemize}
             \item Old paper 95 nothing about perf bug research on website
         \end{itemize}
-    \item Paraver + DINEMAS \cite{Pillet95PARAVER} visualization and
+    \item Paraver + DINEMAS~\cite{Pillet95PARAVER} visualization and
         simulation tools. Standard interface for visualization allow to plug
         custom tools inside Paraver. Provide the capability to define custom
         metrics.
-    \item Paramedir \cite{Jost04Paramedir} CLI tool which allow to display
+    \item Paramedir~\cite{Jost04Paramedir} CLI tool which allow to display
         ASCII representation of Paraver trace.
-    \item Vampir  \cite{Brunst01Performance} %also described in \cite{Sunderl07Profiling}.
+    \item Vampir ~\cite{Brunst01Performance} %also described in~\cite{Sunderl07Profiling}.
         Commercial trace visualization tool.
         \begin{itemize}
             \item Designed for distributed systems: hierarchichal view (Gantt)
             \item Call stack infos
         \end{itemize}
-    \item ATUM \cite{Agarwal86ATUM}
+    \item ATUM~\cite{Agarwal86ATUM}
         \begin{itemize}
             \item HW trace using microcode
             \item Arch dependent
             \item Old paper, obsolete methode: perf counters
         \end{itemize}
-    \item URSA MINOR \cite{Park00Supporting}
+    \item URSA MINOR~\cite{Park00Supporting}
         \begin{itemize}
             \item Trace analyze + guide using MERLIN\cite{Kim01Performance}
             \item Interactive visualisation (big table and ugly pies)
             \item No website ?
         \end{itemize}
-    \item MERLIN \cite{Kim01Performance}
+    \item MERLIN~\cite{Kim01Performance}
         \begin{itemize}
             \item Automatic performance advisor
-            \item Same kind of guide as paradyn \cite{Miller95Paradyn} /
-                Vtune \cite{Reinders05VTune}
+            \item Same kind of guide as paradyn~\cite{Miller95Paradyn} /
+                Vtune~\cite{Reinders05VTune}
         \end{itemize}
-    \item TAU \cite{Shende06Tau} is one of the most known measurement tools
+    \item TAU~\cite{Shende06Tau} is one of the most known measurement tools
         \begin{itemize}
             \item Provides lot of API for instrumentation
             \item Visualization with
                 VAMPIR~\cite{Nagel96VAMPIR} or paraver
         \end{itemize}
-    \item Scalasca \cite{Geimer10Scalasca} is very similar to Tau, but
+    \item Scalasca~\cite{Geimer10Scalasca} is very similar to Tau, but
         designed to improve scalability, indeed it aims at massively parallel
         systems.
 \end{itemize}
 
 All these tools focuses on the CPU while most performance problems comes from
 communication (network and/or memory).
-Malony et al. \cite{Malony11Parallel} adds support for CUDA in classical
+Malony et al.~\cite{Malony11Parallel} adds support for CUDA in classical
 performance system (TAU, PAPI, VAMPIR)
 
 \begin{itemize}
@@ -307,7 +352,7 @@ studies while it is the best way to spot bias or confirm the validity of an
 experimental claim.
 
 In this section we first introduce why reproducibility matters and how people
-have try to reach it in \gls{hpc}, then we present the methodology we have
+have try to reach it in \gls{HPC}, then we present the methodology we have
 developed during this thesis to make our experiment as reproducible as
 possible.
 
@@ -315,7 +360,7 @@ possible.
 \subsection{Reproducible research}
 
 Measurement bias is a widely known phenomena in scientific communities and is
-analyzed in most fields. Still in \gls{hpc} the only thing we usually do to avoid it
+analyzed in most fields. Still in \gls{HPC} the only thing we usually do to avoid it
 is to run a large number of experiments hopping that if we have enough
 observations on several configurations the measurement bias will be
 negligible. Mytkowicz et al.~\cite{Mytkowicz09Producing} highlighted several
@@ -327,7 +372,7 @@ As measurement bias is unpredictable even when we follow the best practices
 the easiest way to deal with it is to reproduce the study published by other
 team and confirm or invalidate their results. While this is done in every
 scientific fields, it is not common to publish about experiment reproduction
-in \gls{hpc}.
+in \gls{HPC}.
 
 A previous study~\cite{Collberg15Repeatability} tried to evaluate how
 reproducible the experiment presented in computer science article are. To do
@@ -375,7 +420,7 @@ experiment which generate huge ($\ge$\SI{500}{Mib}) trace files as git is not
 designed to handle such files.
 
 Several tools were designed to conduct experiments in computer science still
-they are not designed for \gls{hpc} and using them in our context would
+they are not designed for \gls{HPC} and using them in our context would
 require some adjustments. A more complete survey can be found
 in~\cite[Chapter~3, p17-19]{Stanisic15Reproducible}
 
@@ -392,7 +437,7 @@ efficiency of the tools.
 
 \begin{figure}[htb]
     \centering
-    \includegraphics[width=\textwidth]{tikz/exp-tikz}
+    \includegraphics[width=\textwidth]{exp-tikz}
     \caption{Experimental pipeline}
     \label{fig:exp-pipeline}
 \end{figure}
