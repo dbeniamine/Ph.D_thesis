@@ -23,13 +23,14 @@ conclusions in \sect{sofa}.
 \section{Motivations}
 \label{sec:motivations}
 
-\subsection{Sofa: a physical simulation framework}
 
 \gls{SOFA}~\cite{Allard07SOFA} is a simulation framework designed for
 interactive and exact simulation as it aims at helping research in medical
 simulation. Thus optimizing the performances of \gls{SOFA} is both mandatory
 to reach interactive time and extremely complex as no approximation is
 allowed.
+
+\subsection{Sofa: a physical simulation framework}
 
 \begin{figure}[htb]
     \centering
@@ -66,43 +67,34 @@ the default solvers, collision detector and visual representation. This
 hierarchical representation allows to manage dependencies between objects and
 represent complex embedded objects~\cite{Nesme09Preserving,Faure11Sparse}.
 
-
 \subsection{Previous work on Sofa parallelisation}
 
-Several efforts were made to parallelise \gls{SOFA}
+Several efforts were made to parallelise \gls{SOFA} we can categorize them
+into two categories: algorithmic and global optimizations. The work of Everton
+Hermann~\cite{Hermann10Simulations} falls both categories. Indeed he first
+proposed an efficient collision detection algorithm based on ray tracing and
+it's parallelisation~\cite{Hermann08Raytraced}. Then he exploited the
+hierarchy of the scene graph to implement a parallelisation of the time
+integration step of \gls{SOFA} using the \gls{KAAPI}
+runtime~\cite{Gautier07KAAPI}. This runtime allows to provide several
+implementations (\gls{CPU}, \gls{GPU} \ldots) for each task thus to reach
+adaptive performances. Furthermore E. Hermann designed a parallelisation based
+on domain decomposition for scenes with only a small number of
+objects~\cite{Hermann09Interactive}.
 
-Everton Hermann works~\cite{Hermann10Simulations}, 
+While the second contribution seems to be the more important and the more
+generic it was never actually used by \gls{SOFA} developers for several
+reasons: first of all they are not specialized on parallelism thus not used to
+work with runtimes such as \gls{KAAPI}. Second \gls{KAAPI} is a research
+runtime that evolve quickly, therefore, the cost of maintaining code based on
+that runtime seems to important to \gls{SOFA} developers.
 
-focus on the time integration but collision detection should be easy to parallelize:
-\begin{itemize}
-    \item Visitor level : 1 collision group = 1 solver. 2 collision groups are
-        independent. Kaapi can easily exploit the hierarchy of the scene graph
-        to create parallelism. Call a visitor = spawn a new task.
-    \item Dynamic loop (inside the solver) : the task graph of the loop is
-        extracted and redeployed at each iteration. In the latest version of
-        XKaapi, the task creation cost is small enough to avoid that and create
-        new step on the fly.
-    \item Task graph is partitioned and executed on different CPUs, if no steal
-        good locality. To preserve locality, we steal partitions.
-    \item Domain decomposition : If only a few object (ex ball \& drap) we have
-        to create parallelism. Cut one object onto different connected objects
-        (exploiting Sofa capabilities). This method is static and the
-        partitioning might be bad after a time of simulation.
-\end{itemize}
-Note used => XKaapi to complex / not maintained
+\DB{Continue here}
 
-\begin{itemize}
-        \item Everton : Multi GPU (first)\\
-        task can run either on CPU or GPU\\
-        Warming time : compute CPU time / GPU time\\
-        Efficient after this delay\\
-        Quite bad with a lot of collision.
-
-    \item Julio Toss~\cite{Toss13Parallel,Toss14Parallel} Compute Voronoi Diagram on GPU for
-        heterogeneous flexible materials. Voroni cells determine influence of
-        propagation forces. see~\cite{Faure11Sparse}. Evaluation based on
-        speedup GPU/CPU, no comparison with other works ...
-\end{itemize}
+Julio Toss~\cite{Toss13Parallel,Toss14Parallel} Compute Voronoi Diagram on GPU for
+heterogeneous flexible materials. Voroni cells determine influence of
+propagation forces. see~\cite{Faure11Sparse}. Evaluation based on
+speedup GPU/CPU, no comparison with other works ...
 
 My approach => analyze first
 
