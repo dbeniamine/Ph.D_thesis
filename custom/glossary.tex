@@ -8,6 +8,8 @@
 %
 %   \newacronym{name}{SIGLE}{signification}
 
+\newacronym{API}{API}{Application Programming Interface.}
+
 \newacronym{HPC}{HPC}{High Performance Computing}
 
 \newacronym{npb}{NPB}{Nas Parallel Benchmarks}
@@ -38,6 +40,16 @@
 
 \newacronym{PCM}{PCM}{Performance Counter Monitor}
 
+\newacronym{MPI}{MPI}{Message Passing Interface}
+
+\newacronym{OpenMP}{OpenMP}{Open Multi-Processing}
+
+\newacronym{MAQAO}{MAQAO}{Modular Assembler Quality Analyzer and Optimizer.}
+
+\newacronym{TAU}{TAU}{Tunning and Analysis Utilities.}
+
+\newacronym{PARAVER}{PARAVER}{PARAllel Visualization end Events Representation.}
+
 %
 % Glossary entries (technical words): {{{1
 %
@@ -50,11 +62,17 @@
     description={Pin is a dynamic binary instrumentation framework designed by
     Intel for IA-32 and X86-64 architectures}}
 
+\newglossaryentry{Pintool}{name=Pintool,
+    description={Pintool is the nave given (by Intel) to tools developed using
+    Pin}}
+
+
 \newglossaryentry{Linux}{name=Linux,
     description={The Linux kernel}}
 
-\newglossaryentry{Perfctr}{name=Perfctr,
-    description={The Linux  performance monitoring counters driver}}
+\newglossaryentry{Perf}{name=Perf,
+    description={The Linux perf command, also called perf\_events, allows to
+    access performance counters}}
 
 \newglossaryentry{OProfile}{name=Oprofile,
     description={OProfile is an open source project that includes a
@@ -85,5 +103,10 @@
 \newglossaryentry{KAAPI}{name=KAAPI,
     description={KAAPI is a parallel runtime with data flow dependencies}}
 
-%%TODO:
-% MPI, OpenMP syscall
+\newglossaryentry{SimGrid}{name=SimGrid,
+    description={SimGrid is a scientific instrument to study the behavior of
+        large-scale distributed systems such as Grids, Clouds, HPC or P2P
+    systems}}
+
+\newglossaryentry{Framesoc}{name=Framesoc,
+    description={is a generic trace management and analysis infrastructure}}
