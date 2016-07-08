@@ -30,7 +30,7 @@ simulation. Thus optimizing the performances of \gls{SOFA} is both mandatory
 to reach interactive time and extremely complex as no approximation is
 allowed.
 
-\subsection{Sofa: a physical simulation framework}
+\subsection{SOFA: a physical simulation framework}
 
 \begin{figure}[htb]
     \centering
@@ -53,10 +53,10 @@ depending on the objects that are involved in them.
 \begin{figure}[htb]
     \centering
     \includegraphics[width=\textwidth]{Sofa-graph}
-    \caption[Example of Sofa scene graph]{Sofa representation of a scene with two objects: a liver and a
+    \caption[Example of SOFA scene graph]{SOFA representation of a scene with two objects: a liver and a
         heart. Each node of the scene can embed it's own set of solvers and
         visual representation.\\
-        Image from Sofa documentation~\cite{SOFA16Sofa}.}
+        Image from SOFA documentation~\cite{SOFA16Sofa}.}
     \label{fig:sofa-tree}
 \end{figure}
 
@@ -67,7 +67,7 @@ the default solvers, collision detector and visual representation. This
 hierarchical representation allows to manage dependencies between objects and
 represent complex embedded objects~\cite{Nesme09Preserving,Faure11Sparse}.
 
-\subsection{Previous work on Sofa parallelisation}
+\subsection{Previous work on SOFA parallelisation}
 
 It is important to note that the main developers of \gls{SOFA} are  mostly
 computer scientists with a physical or medical background but not specialized in
@@ -181,8 +181,15 @@ it does not provide any way to collect traces but it is able to import traces
 from several tools an describe them with a generic representation. It allows
 to store traces and navigate easily through different visualizations.
 
-\DB{Conclude}
-
+To conclude, many tools were developed to monitor an application's
+performance, the best tool depends of the kind issue we are looking for and
+the application we are monitoring. Most of the tools discussed here are based
+on performance counters and therefore focus on the \gls{CPU}'s point of view.
+In our specific case, we are studying a complex application, yet we are in
+contact with the developers of \gls{SOFA} thus the can give us hints on the
+important parts and the kind of issue we should look for. Therefore low level
+tools such as \gls{Likwid} are well suited as they allow both to compute
+pertinent metrics and to focus on different part of the application.
 
 \section{Experimental Methodology}
 \label{sec:expe-methodo}
@@ -433,13 +440,81 @@ as Renater File Sender, or Zenodo.\DBm{Url, Citation ?}
 \section{Analysis}
 \label{sec:sofa}
 
+In this section, we present first the experiment designed to produce a
+performance analysis of \gls{SOFA}, then we discuss the obtained result on the
+possibility of improvements.
+
 \subsection{Experiments}
 
+\begin{itemize}
+    \item  Note: Methodo not exactly as explained above, as it get more
+        precise with time: no only publication for reproducibility / no
+        deployable environment
+    \item Parallelisation of SOFA => omp vs sequential
+    \item Configuration
+        \begin{itemize}
+            \item Naskapi
+            \item SOFA last version
+            \item 4 simulation scenes specially crafted by SOFA main devs
+            \item Focus on few functions pointed by the devs
+        \end{itemize}
+    \item Metrics
+        \begin{itemize}
+            \item Overall simulation time
+            \item Time in each functions
+            \item L2/L3 bandwith / data volume
+            \item Mem Bandwith / data volume
+            \item Idle time
+        \end{itemize}
+    \item Expected behavior:
+        \begin{itemize}
+            \item Most time should be spent in the observed functions
+            \item Parallelisation should be at least as bad as sequential
+            \item Omp should increase data volume in L3 cache but also
+                bandwith
+        \end{itemize}
+\end{itemize}
 
 Voir Wiki/Meetings/CR\_Reu\_Sofa\_20140326.wiki
 
-\DB{Application of the methodology presented above}
+voir:
+\begin{itemize}
+    \item /home/david/Work/Sofa/expe/FlexibleLikwidPerfctr/MarkerFullTree\_140331\_1650/analyse.html
+        \begin{itemize}
+            \item LinearRigidAndAffine
+                \begin{itemize}
+                    \item OMP slower then seq
+                    \item SeqMat: all level, BW and data volume loss
+                    \item ApplyJT vec:
+                        \begin{itemize}
+                            \item Mem: More volume, comparable (low) BW
+                            \item L3: More Volume, More BW comparable increase
+                            \item L2: More volume, comparable BW (check
+                                numbers)
+                        \end{itemize}
+                    \item ApplyDJT:
+                        \begin{itemize}
+                            \item MEM: Less BW (more than X2), Less Data (less than x2)
+                            \item L3: Less BW (x2), More Data, x2
+                            \item L2: Less BW (more than x3), Comparable data
+                            \item For other scenes, BW increase at all level
+                        \end{itemize}
+                \end{itemize}
+        \end{itemize}
+\end{itemize}
+
+\DB{Do Figure for each level, ApplyDJT, BW and Volume, OMP and Seq,
+    LinearRigidAndAffineFrame, linearQuadraticFrame. And figure simu time OpenMp vs
+Seq for RigidAndAffineFrame and LinearQuadraticFrame}
+
+
 
 \subsection{Results and Discussions}
+
+
+ApplyJ Vec:
+    + Moins de data Mem => meilleur util cache
+    + plus de data en cache (L3 et L2) avec plus de bande passant => bien,
+    yet, bande passante jamais maximale => faux partage ?
 
 \DB{Need memory oriented tools, improve the methodology}
