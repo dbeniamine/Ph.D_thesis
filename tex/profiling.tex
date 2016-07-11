@@ -437,7 +437,7 @@ traces can be distributed using specialized large file hosting services such
 as Renater File Sender, or Zenodo.\DBm{Url, Citation ?}
 
 
-\section{Analysis}
+\section{SOFA Analysis}
 \label{sec:sofa}
 
 In this section, we present first the experiment designed to produce a
@@ -446,9 +446,10 @@ possibility of improvements.
 
 \subsection{Experiments}
 
+see Wiki/Meetings/CR\_Reu\_Sofa\_20140326.wiki
 \begin{itemize}
     \item  Note: Methodo not exactly as explained above, as it get more
-        precise with time: no only publication for reproducibility / no
+        precise with time: no online publication for reproducibility / no
         deployable environment
     \item Parallelisation of SOFA => omp vs sequential
     \item Configuration
@@ -465,6 +466,7 @@ possibility of improvements.
             \item L2/L3 bandwith / data volume
             \item Mem Bandwith / data volume
             \item Idle time
+            \item Explain metrcis computation
         \end{itemize}
     \item Expected behavior:
         \begin{itemize}
@@ -475,23 +477,11 @@ possibility of improvements.
         \end{itemize}
 \end{itemize}
 
-Voir Wiki/Meetings/CR\_Reu\_Sofa\_20140326.wiki
 
-voir:
 \begin{itemize}
     \item /home/david/Work/Sofa/expe/FlexibleLikwidPerfctr/MarkerFullTree\_140331\_1650/analyse.html
         \begin{itemize}
-            \item LinearRigidAndAffine
-                \begin{itemize}
-                    \item OMP slower then seq
-                    \item SeqMat: all level, BW and data volume loss
-                    \item ApplyJT vec:
-                        \begin{itemize}
-                            \item Mem: More volume, comparable (low) BW
-                            \item L3: More Volume, More BW comparable increase
-                            \item L2: More volume, comparable BW (check
-                                numbers)
-                        \end{itemize}
+            \item LinearRigidAndAffine vs LinearQuadraticFrame
                     \item ApplyDJT:
                         \begin{itemize}
                             \item MEM: Less BW (more than X2), Less Data (less than x2)
@@ -499,7 +489,6 @@ voir:
                             \item L2: Less BW (more than x3), Comparable data
                             \item For other scenes, BW increase at all level
                         \end{itemize}
-                \end{itemize}
         \end{itemize}
 \end{itemize}
 
@@ -511,10 +500,67 @@ Seq for RigidAndAffineFrame and LinearQuadraticFrame}
 
 \subsection{Results and Discussions}
 
+\begin{figure}[htb]
+    \centering
+    \includegraphics[width=\textwidth]{SOFA_perfctr.pdf}
+    \caption[SOFA likwid results]{Differences of bandwidth and data volume, from L2 cache to main
+        memory, between sequential and parallel execution of \gls{SOFA} on two
+        different simulation scenes.
+        \\
+        For both bandwidth and data volume, the value is normalized to the
+        mean value of the corresponding sequential executions.
+        \\
+        For bandwidth, higher is better while for data volume lower is better.
+    }
+    \label{fig:SOFA-perfctr}
+\end{figure}
+
+\fig{SOFA-perfctr} shows a small example of the results that we were able to
+observe with our performance evaluation. In this figure, we compare the
+execution of a function called \texttt{applyDJT} that do ??? \DB{what does applyDJT does
+already ?}, for two different \gls{SOFA} scenes. For the first scene
+\texttt{linearQuadraticFrame}, the \gls{OpenMP} parallelisation does improve
+the simulation time, while for the second scene
+\texttt{linearRigidAndAffineFrame} it slows the simulation down. The values of
+bandwidth and data volume are normalized to the mean value for the sequential
+executions. We can see that for the first scenes, the data volume in the L2
+and L3 caches rise slightly while it stay comparable on the main memory.
+Furthermore the bandwidth increase in the caches and stay comparable for the
+main memory. This means that the different threads are effectively sharing
+data. While for the \texttt{linearRigidAndAffineFrame}, we can see a
+considerable increase of data volume in the L3 cache and a drop of bandwidth
+at each level of the memory hierchy. This behavior is typical of false
+sharing.
+
+At this point we can say that false sharing occurs on this precise function,
+yet we don't know on which data structure. We could dig onto the code and try
+to understand the memory access pattern of each data structure to see where
+the false sharing does occurs. Yet this approach would be extremely slow and
+not generic at all. Once we've done it for one particular function, we would
+have to do it again for every other parts of the code \ldots
+
+\DB{TODO}
 
 ApplyJ Vec:
     + Moins de data Mem => meilleur util cache
     + plus de data en cache (L3 et L2) avec plus de bande passant => bien,
     yet, bande passante jamais maximale => faux partage ?
+
+ça ressemble bien a du faux partage
+
+Comment le corriger:
+    + dentifier tout les tableaux
+    + Reperer padding
+    + Faire a la main schémas d'accès
+
+Limites:
+   + Pas générique, laborieux si code est complexe
+
+Objectifs:
+
++ Méthode automatique pour avoir les schémas d'accès
+   + Générique: on ne dépends plus du code
+   + AUtomatique: possibilité de traiter des codes aussi complexes que SOFA
++ Faire le lien entre accès et structure de donées
 
 \DB{Need memory oriented tools, improve the methodology}
