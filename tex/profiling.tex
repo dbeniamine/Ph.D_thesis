@@ -2,7 +2,7 @@
 \chapter{Case Study}
 \label{chap:perf}
 
-Optimizing a computation kernel is a complex tasks, it requires both a deep
+Optimizing a computation kernel is a complex task, it requires both a deep
 understanding of the algorithm mechanics and of the machine that will execute
 it. Lots of works have be done to optimize most usual linear algebra kernels
 with the blas and lapack libraries. \DB{citations,gls} The task is even more
@@ -446,59 +446,89 @@ possibility of improvements.
 
 \subsection{Experiments}
 
-see Wiki/Meetings/CR\_Reu\_Sofa\_20140326.wiki
+The current version of \gls{SOFA} is mostly sequential code with a simple
+\gls{OpenMP} parallelization. Yet this parallelization is known to be often
+not efficient. The \gls{SOFA} developers gave us $4$ simulation scenes
+specifically designed to test the most popular part of \gls{SOFA}. Moreover
+they give us hints of function that are known as hotspots.
+
+We decided to use \gls{Likwid} to analyze \gls{SOFA} performances as it is
+quite flexible allowing both global (wrapper mode) and local (marker mode)
+analysis and provides several useful metrics and performance groups out of the
+box.
+
+More specifically, we focused the following metrics:
 \begin{itemize}
-    \item  Note: Methodo not exactly as explained above, as it get more
-        precise with time: no online publication for reproducibility / no
-        deployable environment
-    \item Parallelisation of SOFA => omp vs sequential
-    \item Configuration
-        \begin{itemize}
-            \item Naskapi
-            \item SOFA last version
-            \item 4 simulation scenes specially crafted by SOFA main devs
-            \item Focus on few functions pointed by the devs
-        \end{itemize}
-    \item Metrics
-        \begin{itemize}
-            \item Overall simulation time
-            \item Time in each functions
-            \item L2/L3 bandwith / data volume
-            \item Mem Bandwith / data volume
-            \item Idle time
-            \item Explain metrcis computation
-        \end{itemize}
+    \item \emph{Idle time ratio}: The idle time for instance when the CPU is
+        waiting for a transfer to memory or disc / network \gls{I/O}. Idle
+        time can often be reduced either by overlapping it with computation or
+        by improving memory (or \gls{I/O} access pattern).
+    \item \emph{Simulation time}: The time spend inside \gls{SOFA} simulation loop,
+        this is only useful to compare parallel execution to sequential ones.
+    \item \emph{Runtime ratio}: For each function, the ratio of the time spend
+        in this function and the total time spent in the simulation loop. This
+        metrics show if a function is a hotspot or not.
+    \item \texttt{L2}, \texttt{L3} and \texttt{MEM} predefined groups from
+        \gls{Likwid}. These groups compute mainly the data volume exchanged at
+        their level level (respectively second level of cache, third level of
+        cache and main memory) and the bandwidth. These two metrics and more
+        precisely their evolution between sequential and parallel executions
+        tells us how much data is shared between the threads and if it shared
+        efficiently or not. These metrics are computed by tracing the misses
+        at the lower level (hence the absence of \texttt{L1} group).
+\end{itemize}
+
+\begin{table}[t]
+    \centering
+    \begin{tabular}{lrrrr}
+        \toprule
+        \multirow{2}{2cm}{CPU} & \multicolumn{1}{l}{Model} & Core & Threads & Frequency \\
+        \cmidrule(lr){2-5}
+        & \multicolumn{1}{l}{Intel Xeon E5-1607} & $4$ & $4$ & \SI{3.00}{Ghz} \\
+        \midrule
+        \multirow{2}{2cm}{Cache and Memory} & L1 size & L2 size & L3 size & Memory size \\
+        \cmidrule(lr){2-5}
+        & \SI{32}{Kib} & \SI{256}{Kib} & \SI{10}{Mib} & \SI{16}{Gib} \\
+        \bottomrule
+    \end{tabular}
+    \caption{Hardware configuration of Hopi.}
+    \label{tab:hopi-hw}
+\end{table}
+
+As \gls{SOFA} is mainly used on personal machines and not \gls{HPC} ones, we
+ran our performance evaluation on a recent desktop machine called \emph{Hopi}.
+The hardware specifications of this machine are described in \tbl{hopi-hw}. It
+runs a \gls{Debian} \emph{Wheezy} on a Linux kernel $3.2.0-4$ with hyper
+threading disabled.
+
+The experimental methodology described in \sect{expe-methodo} evolved during
+this Ph.D thesis, hence the experiments presented here does not fit it
+perfectly, the main mistake is that we did not made an image of our
+experimental system.
+
+
+\subsection{Results and Discussions}
+
+
+\DB{Introduire resultats\\
+    + Nom des scenes, eventuellement caractèristiques.\\
+    + Parallelisation peu efficace voir très lente (choix des deux scènes).\\
+    + Beaucoup d'idle Time => possibilité d'amélioration, voir côté mémoire ou
+    I/O \\
+    + Runtime ratio: on dépasse rarement les 30\% => hotspot non connus \\
+    + Mem introduire courbe.
+}
+
+\begin{itemize}
     \item Expected behavior:
         \begin{itemize}
-            \item Most time should be spent in the observed functions
-            \item Parallelisation should be at least as bad as sequential
+            \item Idle time ratio: low
+            \item RUntime ratio: high, Most time should be spent in the observed functions
+            \item Simulation time: Parallelisation should be at least as bad as sequential
             \item Omp should increase data volume in L3 cache but also
                 bandwith
         \end{itemize}
 \end{itemize}
-
-
-\begin{itemize}
-    \item /home/david/Work/Sofa/expe/FlexibleLikwidPerfctr/MarkerFullTree\_140331\_1650/analyse.html
-        \begin{itemize}
-            \item LinearRigidAndAffine vs LinearQuadraticFrame
-                    \item ApplyDJT:
-                        \begin{itemize}
-                            \item MEM: Less BW (more than X2), Less Data (less than x2)
-                            \item L3: Less BW (x2), More Data, x2
-                            \item L2: Less BW (more than x3), Comparable data
-                            \item For other scenes, BW increase at all level
-                        \end{itemize}
-        \end{itemize}
-\end{itemize}
-
-\DB{Do Figure for each level, ApplyDJT, BW and Volume, OMP and Seq,
-    LinearRigidAndAffineFrame, linearQuadraticFrame. And figure simu time OpenMp vs
-Seq for RigidAndAffineFrame and LinearQuadraticFrame}
-
-
-
-\subsection{Results and Discussions}
 
 \begin{figure}[htb]
     \centering
@@ -539,28 +569,12 @@ the false sharing does occurs. Yet this approach would be extremely slow and
 not generic at all. Once we've done it for one particular function, we would
 have to do it again for every other parts of the code \ldots
 
-\DB{TODO}
+Furthermore as we have seen with the runtime ratio, this particular false
+sharing issue only represent a small part of the execution, therefore a more
+generic approach would be welcome.
 
-ApplyJ Vec:
-    + Moins de data Mem => meilleur util cache
-    + plus de data en cache (L3 et L2) avec plus de bande passant => bien,
-    yet, bande passante jamais maximale => faux partage ?
-
-ça ressemble bien a du faux partage
-
-Comment le corriger:
-    + dentifier tout les tableaux
-    + Reperer padding
-    + Faire a la main schémas d'accès
-
-Limites:
-   + Pas générique, laborieux si code est complexe
-
-Objectifs:
-
-+ Méthode automatique pour avoir les schémas d'accès
-   + Générique: on ne dépends plus du code
-   + AUtomatique: possibilité de traiter des codes aussi complexes que SOFA
-+ Faire le lien entre accès et structure de donées
-
-\DB{Need memory oriented tools, improve the methodology}
+From that point it seems clear that \gls{SOFA} is having memory performance
+issues, yet we need a generic tools to analyze its performances from the
+memory point of view. Such tool should be able to show the memory access
+patterns of each thread over the different data structures and point us
+through patterns that are (or can be) inefficient.
