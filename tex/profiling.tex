@@ -5,20 +5,21 @@
 Optimizing a computation kernel is a complex task, it requires both a deep
 understanding of the algorithm mechanics and of the machine that will execute
 it. Lots of works have be done to optimize most usual linear algebra kernels
-with the blas and lapack libraries. \DB{citations,gls} The task is even more
-complex when it comes to optimizing a whole application, we first need to
-identify the hotspots which means understand where and why the performances
-are suboptimal. Then improving them is even more complex as the modifications
-must be both efficient and understandable by developers not specialized in
-\gls{HPC}, indeed cryptic optimizations are easily ignored. \DB{reformuler}
+with the \gls{BLAS} and \gls{LAPACK}~\cite{Dongarra92LAPACK} libraries. The
+task is even more complex when it comes to optimizing a whole application, we
+first need to identify the hotspots which means understand where and why the
+performances are suboptimal. Then improving them is even more complex as the
+modifications must be both efficient and understandable by developers not
+specialized in \gls{HPC}, indeed cryptic optimizations are easily ignored.
+
 In this chapter, we present a case study on the performance optimisation of
 \gls{SOFA}. It is organized as follow: first we present \gls{SOFA}, it's
 specificities and previous attempt to parallelise or optimize it in
-\sect{motivations}. Then we discuss the existing profiling tools that can
-be used to analyze an application performances' in \sect{prof-tools}. After
-that we detail our experimental methodology and discuss reproducibility
-matters in \sect{expe-methodo}. Finally we present our analysis and first
-conclusions in \sect{sofa}.
+\sect{motivations}. Then we discuss the existing profiling tools that can be
+used to analyze an application performances' in \sect{prof-tools}.  After that
+we detail our experimental methodology and discuss reproducibility matters in
+\sect{expe-methodo}. Finally we present our analysis and first conclusions in
+\sect{sofa}.
 
 \section{Motivations}
 \label{sec:motivations}
@@ -340,9 +341,8 @@ set of parameters optimized for the results we are measuring.
 
 Once the benchmarks are chosen, we need to decide of one machine or a set of
 machines on which we will run the experiment. This step is crucial as
-computers architectures are getting more and more complex \DB{Ref partie 2.1
-?} and applications are (usually) designed for one type of machines.
-Furthermore some tools (such as \gls{Pin}\DBm{Citation ?}, \gls{PEBS}, \gls{IBS}) are vendor
+computers architectures are getting more and more complex  and applications are (usually) designed for one type of machines.
+Furthermore some tools (such as \gls{Pin}, \gls{PEBS}~\cite{Levinthal2009}, \gls{IBS}~\cite{Drongowski07Instructionbased}) are vendor
 specific or optimized for some architecture. Thus we must find machines that
 allow to do our study in a relevant situation and fair to the tools and
 libraries used.
@@ -480,15 +480,18 @@ More specifically, we focused the following metrics:
 
 \begin{table}[t]
     \centering
-    \begin{tabular}{lrrrr}
+    \begin{tabular}{lccccc}
         \toprule
-        \multirow{2}{2cm}{CPU} & \multicolumn{1}{l}{Model} & Core & Threads & Frequency \\
-        \cmidrule(lr){2-5}
-        & \multicolumn{1}{l}{Intel Xeon E5-1607} & $4$ & $4$ & \SI{3.00}{Ghz} \\
+        \multirow{2}{2cm}{CPU} & Vendor & Model & Core & Threads & Frequency \\
+        \cmidrule(lr){2-6}
+        & Intel & Xeon E5-1607 & $4$ & $4$ & \SI{3.00}{Ghz} \\
         \midrule
-        \multirow{2}{2cm}{Cache and Memory} & L1 size & L2 size & L3 size & Memory size \\
-        \cmidrule(lr){2-5}
-        & \SI{32}{Kib} & \SI{256}{Kib} & \SI{10}{Mib} & \SI{16}{Gib} \\
+        \multirow{3}{2cm}{Cache\\and\\Memory} & L1 & L2 & & L3 & Memory \\
+        \cmidrule(lr){2-6}
+        & \multicolumn{2}{c}{Private} & & \multicolumn{2}{c}{Shared} \\
+        \cmidrule(lr){2-3}
+        \cmidrule(lr){5-6}
+        & \SI{32}{Kib} & \SI{256}{Kib} & &\SI{10}{Mib} & \SI{16}{Gib} \\
         \bottomrule
     \end{tabular}
     \caption{Hardware configuration of Hopi.}
@@ -509,26 +512,36 @@ experimental system.
 
 \subsection{Results and Discussions}
 
+To present the results of our evaluation, we will focus on two \gls{SOFA}
+scenes that illustrate kind of the results we obtained. The first scene is
+called \emph{linearQuadraticFrame}, for this scene the \gls{OpenMP}
+parallelisation provides a speedup of $1.37$ with four threads which is
+clearly not optimal yet if we compared it to the second scene
+\emph{linearRigidAndAffineFrame}, which has a speedup of $0.87$, it seems
+efficient. Thus our first goal was to understand why while some scenes takes
+advantage of this parallelisation for some other it slows the execution down.
 
-\DB{Introduire resultats\\
-    + Nom des scenes, eventuellement caractèristiques.\\
-    + Parallelisation peu efficace voir très lente (choix des deux scènes).\\
-    + Beaucoup d'idle Time => possibilité d'amélioration, voir côté mémoire ou
-    I/O \\
-    + Runtime ratio: on dépasse rarement les 30\% => hotspot non connus \\
-    + Mem introduire courbe.
-}
+Before digging into the difference between these scenes, there are two
+similarity between them: first the idle time ratio reported by likwid showed
+that, for the sequential version of the code, during almost half of the
+simulation time the processor is idle, which means that we spend a lot of time
+waiting for \gls{I/O} or memory accesses. In parallel  this idle time
+increases, yet this behavior is expected as the \gls{OpenMP} based
+parallelisation only affect some small parts of the code, hence as soon as we
+are not in a parallel loop, $3$ threads out of $4$ are idle. The second
+notable similarity is that the functions pointed by the developers only represent
+around \SI{30}{\%} of the simulation time, which means that there are some
+unknown hotspots left.
 
-\begin{itemize}
-    \item Expected behavior:
-        \begin{itemize}
-            \item Idle time ratio: low
-            \item RUntime ratio: high, Most time should be spent in the observed functions
-            \item Simulation time: Parallelisation should be at least as bad as sequential
-            \item Omp should increase data volume in L3 cache but also
-                bandwith
-        \end{itemize}
-\end{itemize}
+From here, we know that there might be a memory issue (as the processor spend
+a lot of time idle) and we have two scenes on where the parallelisation speed
+the execution up and one on which it slows it down. We compared the bandwidth
+and data volume from the \texttt{L2} cache to the main memory for the two
+scenes and for the functions indicated by the developers. Those functions are
+generic and thus their actual code varies depending on the parameters of the
+simulation. Therefore while the compared functions are similar in terms of
+role in the simulation, the manipulated data as well as the executed code is
+different for the two scenes.
 
 \begin{figure}[htb]
     \centering
@@ -545,29 +558,38 @@ experimental system.
     \label{fig:SOFA-perfctr}
 \end{figure}
 
-\fig{SOFA-perfctr} shows a small example of the results that we were able to
-observe with our performance evaluation. In this figure, we compare the
-execution of a function called \texttt{applyDJT} that do ??? \DB{what does applyDJT does
-already ?}, for two different \gls{SOFA} scenes. For the first scene
-\texttt{linearQuadraticFrame}, the \gls{OpenMP} parallelisation does improve
-the simulation time, while for the second scene
-\texttt{linearRigidAndAffineFrame} it slows the simulation down. The values of
-bandwidth and data volume are normalized to the mean value for the sequential
-executions. We can see that for the first scenes, the data volume in the L2
-and L3 caches rise slightly while it stay comparable on the main memory.
-Furthermore the bandwidth increase in the caches and stay comparable for the
-main memory. This means that the different threads are effectively sharing
-data. While for the \texttt{linearRigidAndAffineFrame}, we can see a
-considerable increase of data volume in the L3 cache and a drop of bandwidth
-at each level of the memory hierchy. This behavior is typical of false
-sharing.
+\fig{SOFA-perfctr} shows the bandwidth (left side) and the data volume (right
+sides) for the two functions (\emph{linearQuadraticFrame} above,
+\emph{linearRigidAndAffineFrame} below) from \texttt{L2} cache to the main
+memory. Each point represents the mean of $60$ runs and the error bars
+represents the standard error. To make the plot more readable, we've
+normalized each value by dividing it by the value for the corresponding
+sequential run,
+
+We can see that for the first scene, both the bandwidth and data
+volume increases in the cache and stays comparable in the main memory when we
+use the parallel version. This means that the thread are either sharing
+efficiently data or at least working on data different enough to not step on
+each other foots. At the opposite for the second scene, the bandwidth drops
+down at each level and the data volume stays still except at the \texttt{L3}
+level where it increases by a factor $2.5$. It is important to note that the
+\texttt{L3} cache is the only shared cache which means that a considerable
+amount of data is invalidated in \texttt{L2}, in other words, several threads
+are writing the same data, invalidating each other private cache and requiring
+the coherency protocol to interfere. This behavior is called false sharing and
+is a well known performance issue.
 
 At this point we can say that false sharing occurs on this precise function,
 yet we don't know on which data structure. We could dig onto the code and try
 to understand the memory access pattern of each data structure to see where
-the false sharing does occurs. Yet this approach would be extremely slow and
-not generic at all. Once we've done it for one particular function, we would
-have to do it again for every other parts of the code \ldots
+the false sharing does occurs. By looking at \gls{SOFA}'s code, we can see
+that the main difference between the two version of the function is that for
+\texttt{linearRigidAndAffineFrame} there is one more loop in the computation.
+Still this code manipulate several data through many indirections, therefore
+determining on which data the false sharing is happening could be extremely
+slow. Furthermore this approach is not generic at all, and once we've done it
+for one particular function, we would have to redo the same analysis and
+optimization for each potential hotspot.
 
 Furthermore as we have seen with the runtime ratio, this particular false
 sharing issue only represent a small part of the execution, therefore a more
