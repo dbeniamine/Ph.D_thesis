@@ -3,14 +3,17 @@
 \label{chap:perf}
 
 Optimizing a computation kernel is a complex task, it requires both a deep
-understanding of the algorithm mechanics and of the machine that will execute
-it. Lots of works have be done to optimize most usual linear algebra kernels
-with the \gls{BLAS} and \gls{LAPACK}~\cite{Dongarra92LAPACK} libraries. The
-task is even more complex when it comes to optimizing a whole application, we
-first need to identify the hotspots which means understand where and why the
-performances are suboptimal. Then improving them is even more complex as the
-modifications must be both efficient and understandable by developers not
-specialized in \gls{HPC}, indeed cryptic optimizations are easily ignored.
+understanding of the algorithm mechanics and the machine that will execute it.
+Simple computational kernels such as matrix multiplication or Cholesky
+factorization have been subject of years of optimizations, yet some scientists
+we still manage to find improvements on them. The task is even more complex
+when it comes to optimizing a whole actual application, we first need to
+identify hotspots which means understand where and why the performances are
+suboptimal. Once they are identified, improving them is even more complex as
+the modifications must be both efficient and understandable by developers not
+specialized in \gls{HPC}. Indeed, to understand some highly optimized code it
+is required to read one or several scientific publication which makes it hard
+to maintain and thus not suitable for production code.
 
 In this chapter, we present a case study on the performance optimisation of
 \gls{SOFA}. It is organized as follow: first we present \gls{SOFA}, it's
@@ -24,12 +27,13 @@ we detail our experimental methodology and discuss reproducibility matters in
 \section{Motivations}
 \label{sec:motivations}
 
+\gls{SOFA}~\cite{Allard07SOFA} is a simulation framework designed for exact
+interactive simulation as it aims at helping research in medical simulation.
+Video games simulators only cares about realisms (and not exactness) thus they
+can do some approximations to improve their performances. At the opposite,
+\gls{SOFA} aims at exact simulation, thus cannot afford such approximations.
+Hence optimizing the overall performances of \gls{SOFA} is mandatory.
 
-\gls{SOFA}~\cite{Allard07SOFA} is a simulation framework designed for
-interactive and exact simulation as it aims at helping research in medical
-simulation. Thus optimizing the performances of \gls{SOFA} is both mandatory
-to reach interactive time and extremely complex as no approximation is
-allowed.
 
 \subsection{SOFA: a physical simulation framework}
 
@@ -48,12 +52,13 @@ position of each objects. The third step consist in detecting overlap between
 objects and applying repulsing force to simulate the collision.  Finally the
 result of these step is displayed (rendered) and we are back at the first
 step. The time integration and the collision detection are the most costly
-steps, there are many algorithms that allow to compute these steps efficiently
-depending on the objects that are involved in them.
+steps. Hence many algorithms  were developed to compute these steps
+efficiently each algorithm being more appropriate for simulating one type of
+object.
 
 One of \gls{SOFA}'s main specificity is to have a multi-model representation
 of each component: a simulation scene is represented as a graph, as shown in
-\fig{sofa-tree}, each physical object is a node of the graph and can replace
+\fig{sofa-tree}, each physical object is a node of the graph and can override
 the default solvers, collision detector and visual representation. This
 hierarchical representation allows to manage dependencies between objects and
 represent complex embedded objects~\cite{Nesme09Preserving,Faure11Sparse}.
@@ -68,51 +73,55 @@ represent complex embedded objects~\cite{Nesme09Preserving,Faure11Sparse}.
     \label{fig:sofa-tree}
 \end{figure}
 
-
 \subsection{Previous work on SOFA parallelisation}
 
 It is important to note that the main developers of \gls{SOFA} are  mostly
-computer scientists with a physical or medical background but not specialized in
-\gls{HPC}. Several efforts were made (by external developers) to parallelise
-\gls{SOFA}, most of these efforts consist in optimizing one (or several)
-algorithm(s) which, according to \gls{SOFA} developers is costly in time. For
-instance, Everton Hermann proposed an efficient (sequential) collision
-detection algorithm based on ray tracing and a parallelisation of this
-algorithm~\cite{Hermann08Raytraced}. More recently, Julio Toss have been developing
-several algorithms on \glspl{GPU} to improve the computation time of Voronoi
-diagrams~\cite{Toss13Parallel,Toss14Parallel}. These diagrams are critical for
-\gls{SOFA} indeed while they allow to simulate efficiently the propagation
-of forces on heterogeneous materials~\cite{Faure11Sparse}, they generate a
-considerable overhead before the simulation.
+computer scientists with a physical or medical background but not specialized
+in \gls{HPC}. Several efforts were made by external developers to parallelise
+\gls{SOFA}, most of these efforts consist in optimizing some algorithms which,
+according to \gls{SOFA} developers are costly in time. For instance, Everton
+Hermann proposed an efficient (sequential) collision detection algorithm based
+on ray tracing and a parallelisation of this
+algorithm~\cite{Hermann08Raytraced}. More recently, Julio Toss have been
+developing several algorithms on \glspl{GPU} to improve the computation time
+of Voronoi diagrams~\cite{Toss13Parallel,Toss14Parallel}. These diagrams are
+critical for \gls{SOFA}, indeed while they allow to simulate efficiently the
+propagation of forces on heterogeneous materials~\cite{Faure11Sparse}, their
+computation generate a considerable overhead before the simulation.
 
-Yet the limitation of this approach is that it can only optimize part of the
-code that are known to be slow. Furthermore \gls{SOFA} is a generic framework
-used among other things to develop new simulation algorithm, this approach
-does not provide any tool for \gls{SOFA} developers to parallelize their
-algorithms by their own.
+Yet one limitation of this approach is that it can only optimize part of the
+code that are known to be slow. Furthermore \gls{SOFA} is a generic framework,
+used among other things to develop new simulation algorithm, thus a suitable
+optimization should allow \gls{SOFA}'s developers to parallelize their code by
+themselves as they write it.
 
 To overpass these limitations, E. Hermann exploited the hierarchy of the scene
 graph to parallelize the time integration step using the \gls{KAAPI}
 runtime~\cite{Gautier07KAAPI}. This runtime allows to provide several
-implementations (\gls{CPU}, \gls{GPU} \ldots) for each task thus to reach
-adaptive performances. Furthermore E. Hermann designed a parallelisation based
-on domain decomposition for scenes with only a small number of
-objects~\cite{Hermann09Interactive}.
+implementations (\gls{CPU}, \gls{GPU} \ldots) for each task thus it can
+provide good performances on several machines with the same code. Yet the
+amount of parallelisms depends of the number of objects on the scene graph
+thus scenes with only too few objects cannot benefit of this improvement.
+Hence E. Hermann also designed a parallelisation based on domain decomposition
+for such scenes~\cite{Hermann09Interactive}.
 
-While this approach seems to be more generic and easier to deploy it was never
-actually used by \gls{SOFA} developers for several reasons: first of all they
-are not specialized on parallelism thus not used to work with runtimes such as
-\gls{KAAPI}. Second \gls{KAAPI} is a research runtime that evolve quickly,
-therefore, the cost of maintaining code based on that runtime seems to
-important to \gls{SOFA} developers.
+While this approach is more generic and seems easier to generalize it was
+never actually used by \gls{SOFA} developers for several reasons: first of all
+they are not specialized on parallelism thus not used to work with runtimes
+such as \gls{KAAPI}. Second \gls{KAAPI} is a research runtime that evolve
+quickly, therefore, the cost of maintaining code based on that runtime seems
+to important to them. In the end, \gls{SOFA} is currently parallelized using
+simple \gls{OpenMP} \texttt{\#pragma} directives which allows to quickly
+parallelize a code, yet the result is considerably less efficient than the
+\gls{KAAPI} version.
 
-Finally it appears that optimizing algorithm pointed out by
+To conclude it appears that optimizing algorithm pointed out by
 \gls{SOFA} developers is not enough as it can miss important part of the
 execution and it does not help them to writing parallel code. Moreover
 a structural parallelisation relying on a research runtime may be discarded by
 them. Hence, we should acquire a deep knowledge of \gls{SOFA}
 performances to identify hotspots and optimize the most important parts of
-the code.
+the code and try to keep our optimization usable by the developers.
 
 \section{Profiling tools}
 \label{sec:prof-tools}
@@ -120,40 +129,45 @@ the code.
 Performance analysis consists of to two steps: data collection and
 presentation. The first step aims at extracting as much pertinent information
 from an execution as possible, yet observing an execution is not free: it
-takes time to count and record events thus it might change the application
-behavior. Consequently, any analysis provide a trade-off between the amount of
-data collected and the impact on the performance of the monitored application.
-The second step is also challenging as the tools needs to understand which
-data are pertinent and to present them in a meaningful way to the user.
-Several tools were designed to address one or both of these challenges.
+takes time to count and record events thus it can impact the application
+performances or worst modify it's behavior. Consequently, any analysis
+provides
+a trade-off between the amount of data collected and the impact on the
+monitored application.  The second step is also challenging as the tools needs
+to find out which data are pertinent and to present them in a meaningful way
+to the user.  Many tools were designed to address one or both of these
+challenges.
 
 Performance counters, which were originally designed by \glspl{CPU} vendors to
 debug their processors prototypes, allows to count events such as cache miss,
 or branch miss-predict at a very low cost since they are hardware implemented.
 They can directly be accessed using the \gls{Perf} driver which is part of the
 \gls{Linux} kernel since version $2.6.31$. Yet as a result of their initial
-aim, the available counters depends of the \gls{CPU} model and vendor,
-furthermore it requires a deep knowledge of \glspl{CPU} mechanisms to
-understand their meaning. Hence higher level library such as
+aim, the available counters depends of the \gls{CPU} model and vendor.
+Furthermore it requires a deep knowledge of \glspl{CPU} mechanisms to
+understand the meaning of some counters. Therefore higher level library such as
 \gls{PAPI}~\cite{Browne00Portable,Malony11Parallel,Weaver13PAPI} and
-\gls{Likwid}~\cite{Treibig10LIKWID} to make it more convenient to access and
-interpret performance counters. These libraries provides propose performance
+\gls{Likwid}~\cite{Treibig10LIKWID} were designed to make it more convenient to access and
+interpret performance counters. These libraries provides performance
 groups and automatically computes comprehensive metrics. In addition they
 allow to start and stop the counters during the execution to focus on critical
 parts of the execution, which is useful once hotspot are identified, but can
-lead to miss a part of the execution if used to early.
+lead to miss a part of the execution if used too early.
 
 An other approach to make performance counters more understandable consist on
-combining them with other informations obtained by hooking libraries calls
+combining them with contextual informations obtained by hooking libraries calls
 (system calls, C standard library, \gls{MPI}, \gls{OpenMP} \ldots). Such hooks
 can be deployed either by overwriting libraries calls at runtime with
-\texttt{LD\_PRELOAD} hack, or by using binary instrumentation libraries such
+\texttt{LD\_PRELOAD} hack\footnote{One can use the \texttt{LD\_PRELOAD}
+environment variable to tell the linker to load a library before running a
+programming, allowing to intercept functions calls to external libraries such
+\texttt{malloc}}, or by using binary instrumentation libraries such
 as \gls{Intel} \gls{Pin}~\cite{Luk05Pin} or Dyninst from the Paradyn
 Project~\cite{Miller95Paradyn}. The second method is more flexible and usually
-allows higher level data collection, yet it is more intrusive thus it might
+allows higher level data collection, yet it is more intrusive thus it can
 impact the behavior of the studied application. Simulators such as
 \gls{SimGrid}~\cite{Casanova14Versatile} can be used to overpass these
-limitations, still they are more complex to install and use thus less likely
+limitations, still they are usually more complex to install and use thus less likely
 to be adopted by developers from other fields than \gls{HPC}. Several tools
 such as \gls{HPCToolkit}~\cite{Adhianto10HPCTOOLKIT},
 \gls{PARAVER}~\cite{Pillet95PARAVER}, \gls{TAU}~\cite{Shende06Tau},
@@ -165,23 +179,24 @@ collects traces.
 
 When it comes to presenting performance traces in a readable way, we can split
 these tools in three groups: the first one only provides textual traces and
-let the user extract pertinent informations from them. This groups includes
+let the user extract pertinent informations from them. This group includes
 the \gls{Perf} driver, \gls{Likwid} and \gls{PAPI} library as well as several
 \glspl{Pintool}. Such traces are very useful for small applications as they
-does not require complex tools to be read, furthermore they are usually easy
-to parse thus one can build more complex visualisation upon it. Tools from the
+do not require complex tools to be read, furthermore they are usually easy
+to parse thus one can build more complex visualisation upon it using \gls{R}
+for instance. Tools from the
 second group, that includes\gls{VTune}, \gls{CodeXL} tries to present data in
-a more readable way, usually a set of tables and few plots. Moreover they
+a more readable way, usually a set of tables and few plots, where they
 highlight values that seems to be pertinent (for instance cache miss above a
-reasonable threshold) to help the user focusing on important parts. Finally,
+fixed threshold) to help the user focusing on important parts. Finally,
 while tools like \gls{MAQAO}, \gls{HPCToolkit} and \gls{PARAVER} propose
-visualisation similar too the second group by default, they also provides
-simple \glspl{API} to design new visualizations or import external traces.
+visualisation similar too the second group by default, but they also provides
+\glspl{API} to design new visualizations or import external traces.
 \gls{Framesoc}~\cite{Pagano13Trace} is very similar to the previous tools, the
 main difference is that it is designed for trace management and analysis, thus
 it does not provide any way to collect traces but it is able to import traces
-from several tools an describe them with a generic representation. It allows
-to store traces and navigate easily through different visualizations.
+from several tools, it  describe them with a generic representation and allows
+to navigate easily through different visualizations of the same trace.
 
 To conclude, many tools were developed to monitor an application's
 performance, the best tool depends of the kind issue we are looking for and
@@ -206,14 +221,15 @@ studies while it is the best way to spot bias or confirm the validity of an
 experimental claim.
 
 In this section we first introduce why reproducibility matters and how people
-have try to reach it in \gls{HPC}, then we present the methodology we have
+have tried to reach it in \gls{HPC}, then we present the methodology we have
 developed during this thesis to make our experiment as reproducible as
 possible.
 
 
 \subsection{Reproducible research}
 
-Measurement bias is a widely known phenomena in scientific communities and is
+Measurement bias, which means attributing a consequence to the wrong cause due to
+an issue in our measurement method, is a widely known phenomena in scientific communities and is
 analyzed in most fields. Still in \gls{HPC} the only thing we usually do to avoid it
 is to run a large number of experiments hopping that if we have enough
 observations on several configurations the measurement bias will be
@@ -267,7 +283,7 @@ to check the version of a library or replace it.
 To reproduce an experiment it is important to understand how it has been
 designed and how it evolves from the first version to the results presented in
 the paper. Stanisic et al.~\cite[Chapter~4, p31-44]{Stanisic15Reproducible}
-described an experimental workflow based on \emph{git} and \emph{emacs orgmode}
+described an experimental workflow based on \gls{Git} and \gls{Org-mode}
 to keep track of these evolutions and make easy for someone to understand it.
 One of the main drawback of this workflow is that it is not suitable for
 experiment which generate huge ($\ge$\SI{500}{Mib}) trace files as git is not
@@ -303,7 +319,7 @@ We can see an experiment as a pipeline that flow from this plan to the final
 human readable results as described in \fig{exp-pipeline}. This pipeline is
 composed of three steps: the experimental plan that produce a (usually) huge
 set of data and meta data, the first one are meant to be used during the
-analysis while the second are only generate to find issue in the experiment or
+analysis while the second are only generated to find issues in the experiment or
 additional information to repeat it. Then comes the raw analysis that extract
 pertinent information and compute metrics from the raw data. The results of
 this step are usually easy to parse for a computer but not human friendly.
@@ -315,9 +331,9 @@ expectations than the reality without even noticing it, we call this the
 it is very important to design carefully the whole analysis before running the
 actual experiment and test the visualisation on a filler set of data.
 Furthermore, adding comments to the visualisations about what they mean and
-what we expect to see can help avoiding this bias. Technologies such as
-\texttt{R-markdown},\texttt{Jupyter Notebook} (anciently known as IPython
-Notebook) or \texttt{Emacs Orgmode} are great help to produce reproducible
+what we expect to see can help reducing this bias. Technologies such as
+\gls{R-markdown},Jupyter Notebook (anciently known as IPython
+Notebook) or \gls{Org-mode} are great help to produce reproducible
 experiments.
 
 \subsubsection{Methodology}
@@ -327,14 +343,17 @@ experiments.
 In this thesis, we ran two types of experiments: the fist one aims at
 analysing the behavior of one application (mostly \gls{SOFA}) while the second
 one aims at comparing trace collection tools. For both analysis we need to
-find a set of \emph{benchmarks} conduct our experiments, but the signification
+find a set of \emph{benchmarks} to conduct our experiments, but the signification
 of this term is slightly different for the two cases. In the first case, a
 benchmark is an input for the studied application and the set of benchmarks
 used should be defined with the developers of the application to cover the
-code that they want to improve. While in the second case it means a set of
-applications, for this need, we use the \gls{npb}~\cite{Jin1999} which allow
+code that they want to improve.
+While in the second case it means a set of applications which have a behavior
+representative of the applications targeted by the evaluated tool. For this
+need, we use the \gls{npb}~\cite{Jin99NPBOpenMP} which allow
 to cover a large set of applications from simple computational kernels to real
-life applications. Yet to compare several analysis tools, a set of benchmarks
+life applications.
+Yet to compare several analysis tools, a set of benchmarks
 is not a sufficient input as these tools usually provides a large set of
 parameters allowing to modify their behavior, thus we must evaluate each tool
 under at least two set of parameters: the default and a tuned version with a
@@ -343,13 +362,15 @@ set of parameters optimized for the results we are measuring.
 Once the benchmarks are chosen, we need to decide of one machine or a set of
 machines on which we will run the experiment. This step is crucial as
 computers architectures are getting more and more complex  and applications are (usually) designed for one type of machines.
-Furthermore some tools (such as \gls{Pin}, \gls{PEBS}~\cite{Levinthal2009}, \gls{IBS}~\cite{Drongowski07Instructionbased}) are vendor
+Furthermore some tools (such as \gls{Pin},
+\gls{PEBS}~\cite{Levinthal09Performance},
+\gls{IBS}~\cite{Drongowski07Instructionbased}) are either vendor
 specific or optimized for some architecture. Thus we must find machines that
 allow to do our study in a relevant situation and fair to the tools and
 libraries used.
 
-Finally we need to find some relevant metric(s) to answer the question(s) that we
-are trying to answer with our experiment. These metrics should remain as
+Finally we need to find some relevant metrics to answer the questions that we
+are trying to answer with our experiment. These metrics should remain
 simple as they will be interpreted by humans. Yet they must also cover every
 aspects that we are studying. A complete set of simple measurable metrics is
 often easier to understand that one complex metric that provide an overall
@@ -364,13 +385,13 @@ can be compared more easily.
 It is crucial that any step of the experiment from the deployment of the
 environment to the final analysis is properly scripted in a language that can
 be understood by an other developer. Any manual step can make the experiment
-hard to reproduce and an obscure code might make it hard to change some
-parameters.
+impossible to repeat and an obscure code might make it hard to change some
+parameters without breaking the whole experiment.
 
 Furthermore the traces generated by an experiment must be self explanatory or
 at some point they will only be a (large) set of meaningless bytes on a hard
-drive. To do so it is important to keep together the data and both the scripts
-that generated it and the one that allows to interpret its. To do so, all our
+drive. To do so it is important to keep with the data, the scripts
+that generated it and the one that allows to interpret it. To do so, all our
 experimental scripts starts the same way: they create a new directory that
 will hold the traces, copy themselves and all the scripts which are on their
 directory inside it. Then they duplicates their output to a file in this
@@ -380,15 +401,20 @@ the environment variables, the status of every dependencies (git version, diff
 etc.). Such informations can be a great help to someone trying to reproduce
 the experiment or to verify that the experimental condition are not biased.
 
-The actual execution of the experiment consist of a set of runs, to limit the
-impact of external noise, it is a good practise to randomize these runs.
-Therefor our experimental scripts generate the list of runs that should be
-executed shuffle it and then execute it run in a randomized order. A run
-consist of three step: a pre command that can set specific values for the run,
+An experiment consist of a set of independent runs, it is important to both
+separate the execution of the runs and randomize their order. Indeed if
+consecutive runs are part of the same program (i.e one loop that call several
+time the same function instead of re-executing a program at each run), they
+can benefit from cache effects. Moreover if the runs are randomized, external
+(system) noise will either affect all runs are appears as chaotic, while if
+they are ordered, it might be correlated with a parameter change.
+Therefore our experimental scripts generate the list of runs that should be
+executed shuffle it and then execute them in a randomized order. A run
+consist of three step: a pre command that can set specific values,
 the actual command that execute the benchmark and the post command that can
-save data, might compute metrics and must restore the normal state. Note that
+save and pre-process data, might compute metrics and must restore the normal state. Note that
 the first and last steps are not mandatory. Each of the commands executed by
-these 3 steps are printed before execution thus logged.
+these 3 steps are logged before execution.
 
 At the end of the day our experiment have produced a huge set of data that we
 can divide on two categories: the meta data that are useful for debugging and
@@ -397,9 +423,9 @@ The parsing step is designed only to extract data from the traces so the
 analysis scripts can work on clean results, we avoid to do any statistic
 during this step.
 
-Finally for the analysis \texttt{R} provides a large set of reliable statistic
-analysis libraries and technologies such as \texttt{R-markdown} or
-\texttt{Orgmode} allows to mix analysis code and results with comments. These
+Finally for the analysis \gls{R} provides a large set of reliable statistic
+analysis libraries and technologies such as \gls{R-markdown} or
+\gls{Org-mode} allows to mix analysis code and results with comments. These
 technologies allow to produce a standalone result (as a pdf or as a webpage)
 that contains the original questions, our assumptions, the results and plots,
 and our observation on these results.
@@ -408,22 +434,22 @@ and our observation on these results.
 
 Trying to compile a badly documented code can be painful and time consuming,
 the same problems occurs when it comes to reproduce experiment. Thus the
-distribution of the experiment traces and script must be considered carefully.
-To reproduce an experiment with need the scripts that run it, a description of
-the machines and/or the virtual environment that is deployed and a link to the
+distribution of experiment traces and scripts must be considered carefully.
+To repeat an experiment we need the scripts that run it, a description of the
+machines and/or the virtual environment that is deployed and a link to the
 right version of each tool, applications and benchmarks used during the
-experiment. Several services such as Github, Bitbucked, and Gitlab \DBm{Urls ?}
-host freely code repositories, furthermore \glspl{VCS} such as Git and
-Mercurial \DBm{Citations ?} allow to track easily dependencies with a system
-of submodules, therefore they are well suited for experiment distribution.
+experiment. Several services such as Github, Bitbucked, and Gitlab \DBm{Urls
+?} host freely code repositories, furthermore \glspl{VCS} such as \gls{Git}
+\DBm{Citations ?} allow to track easily dependencies with a system of
+submodules, therefore they are well suited for experiment distribution.
 Finally an effort must be done on the documentation to help the user
 understand why the experiment is designed, how it works and where (on which
 machines) we should run it.
 
-Distributing the experiment results can be more tricky as these files can be
+Distributing the experiment results can be more tricky as trace files can be
 quite heavy and code repositories are usually not designed to handle large
-files. While the experimental repository allows to reproduce the whole
-experiment, the trace distribution is useful to reproduce only some specific
+files. While the experimental repository allows to repeat the whole
+experiment, the trace distribution is useful to repeat only some specific
 steps of the analysis, thus we distribute to set of files corresponding to the
 two analysis steps depicted in \fig{exp-pipeline}. The first one contains all
 the files generated by the experiment and the scripts to run that analysis.
@@ -460,10 +486,12 @@ box.
 
 More specifically, we focused the following metrics:
 \begin{itemize}
-    \item \emph{Idle time ratio}: The idle time for instance when the CPU is
-        waiting for a transfer to memory or disc / network \gls{I/O}. Idle
-        time can often be reduced either by overlapping it with computation or
-        by improving memory (or \gls{I/O} access pattern).
+    \item \emph{Idle time ratio}: The CPU is idle when it is waiting for a
+        transfer to memory,  disc or network \gls{I/O}.
+        Idle time can often be reduced either by overlapping it with
+        computation or by improving memory (or \gls{I/O} access pattern). This
+        metric gives the ratio between the time spent idel and the time
+        actually spent computing things during the simulation.
     \item \emph{Simulation time}: The time spend inside \gls{SOFA} simulation loop,
         this is only useful to compare parallel execution to sequential ones.
     \item \emph{Runtime ratio}: For each function, the ratio of the time spend
@@ -475,7 +503,7 @@ More specifically, we focused the following metrics:
         cache and main memory) and the bandwidth. These two metrics and more
         precisely their evolution between sequential and parallel executions
         tells us how much data is shared between the threads and if it shared
-        efficiently or not. These metrics are computed by tracing the misses
+        efficiently or not. These metrics are computed by counting the misses
         at the lower level (hence the absence of \texttt{L1} group).
 \end{itemize}
 
@@ -500,42 +528,44 @@ More specifically, we focused the following metrics:
 \end{table}
 
 As \gls{SOFA} is mainly used on personal machines and not \gls{HPC} ones, we
-ran our performance evaluation on a recent desktop machine called \emph{Hopi}.
+ran our performance evaluation on a recent desktop machine called \emph{Hopi}
+(formerly known as \emph{Naskapi}).
 The hardware specifications of this machine are described in \tbl{hopi-hw}. It
-runs a \gls{Debian} \emph{Wheezy} on a Linux kernel $3.2.0-4$ with hyper
+runs a \gls{Debian} \emph{Wheezy} on a Linux kernel $3.2.0$-$4$ with hyper
 threading disabled.
 
 The experimental methodology described in \sect{expe-methodo} evolved during
 this Ph.D thesis, hence the experiments presented here does not fit it
 perfectly, the main mistake is that we did not made an image of our
-experimental system.
+experimental system, furthermore the runs were independent but not randomized.
 
 
 \subsection{Results and Discussions}
 
 To present the results of our evaluation, we will focus on two \gls{SOFA}
-scenes that illustrate kind of the results we obtained. The first scene is
+scenes that illustrate the kind of results we obtained. The first scene is
 called \emph{linearQuadraticFrame}, for this scene the \gls{OpenMP}
 parallelisation provides a speedup of $1.37$ with four threads which is
-clearly not optimal yet if we compared it to the second scene
+clearly not optimal. Yet compared to the second scene
 \emph{linearRigidAndAffineFrame}, which has a speedup of $0.87$, it seems
 efficient. Thus our first goal was to understand why while some scenes takes
-advantage of this parallelisation for some other it slows the execution down.
+advantage of this parallelisation some other are slowed down by it.
 
-Before digging into the difference between these scenes, there are two
-similarity between them: first the idle time ratio reported by likwid showed
+Before digging into the differences between these scenes, there are two
+noticeable similarities between them to discuss. First the idle time ratio
+reported by \gls{Likwid} showed
 that, for the sequential version of the code, during almost half of the
-simulation time the processor is idle, which means that we spend a lot of time
+simulation the processor is idle, which means that we spend a lot of time
 waiting for \gls{I/O} or memory accesses. In parallel  this idle time
 increases, yet this behavior is expected as the \gls{OpenMP} based
 parallelisation only affect some small parts of the code, hence as soon as we
 are not in a parallel loop, $3$ threads out of $4$ are idle. The second
-notable similarity is that the functions pointed by the developers only represent
+noticeable similarity is that the functions pointed by the developers only represent
 around \SI{30}{\%} of the simulation time, which means that there are some
 unknown hotspots left.
 
 From here, we know that there might be a memory issue (as the processor spend
-a lot of time idle) and we have two scenes on where the parallelisation speed
+a lot of time idle), and we have two scenes: one where the parallelisation speed
 the execution up and one on which it slows it down. We compared the bandwidth
 and data volume from the \texttt{L2} cache to the main memory for the two
 scenes and for the functions indicated by the developers. Those functions are
@@ -565,10 +595,11 @@ sides) for the two functions (\emph{linearQuadraticFrame} above,
 memory. Each point represents the mean of $60$ runs and the error bars
 represents the standard error. To make the plot more readable, we've
 normalized each value by dividing it by the value for the corresponding
-sequential run,
+sequential run, thus these plots show the evolution of the bandwidth and data
+volume when we use the \gls{OpenMP} version of\gls{SOFA}.
 
 We can see that for the first scene, both the bandwidth and data
-volume increases in the cache and stays comparable in the main memory when we
+volume increases by a factor of $1.5$ in the cache and stays comparable in the main memory when we
 use the parallel version. This means that the thread are either sharing
 efficiently data or at least working on data different enough to not step on
 each other foots. At the opposite for the second scene, the bandwidth drops
