@@ -51,6 +51,13 @@ step. The time integration and the collision detection are the most costly
 steps, there are many algorithms that allow to compute these steps efficiently
 depending on the objects that are involved in them.
 
+One of \gls{SOFA}'s main specificity is to have a multi-model representation
+of each component: a simulation scene is represented as a graph, as shown in
+\fig{sofa-tree}, each physical object is a node of the graph and can replace
+the default solvers, collision detector and visual representation. This
+hierarchical representation allows to manage dependencies between objects and
+represent complex embedded objects~\cite{Nesme09Preserving,Faure11Sparse}.
+
 \begin{figure}[htb]
     \centering
     \includegraphics[width=\textwidth]{Sofa-graph}
@@ -61,12 +68,6 @@ depending on the objects that are involved in them.
     \label{fig:sofa-tree}
 \end{figure}
 
-One of \gls{SOFA}'s main specificity is to have a multi-model representation
-of each component: a simulation scene is represented as a graph, as shown in
-\fig{sofa-tree}, each physical object is a node of the graph and can replace
-the default solvers, collision detector and visual representation. This
-hierarchical representation allows to manage dependencies between objects and
-represent complex embedded objects~\cite{Nesme09Preserving,Faure11Sparse}.
 
 \subsection{Previous work on SOFA parallelisation}
 
