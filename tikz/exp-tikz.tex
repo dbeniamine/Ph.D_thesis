@@ -104,7 +104,7 @@
   fat blue line/.style = {ultra thick, blue}
 }
 \begin{document}
-\begin{tikzpicture}[node distance = 2cm,scale=0.8]rotate=90
+\begin{tikzpicture}
 
     %expe env
     \begin{pgfonlayer}{foreground}
@@ -119,7 +119,7 @@
 
     \node [file, above=.5em of main] (dpl) {Launch script};
 
-    \node [Expebox, right=2.5em of main,rotate=90,anchor=north] (mach) {Experimental machine(s)};
+    \node [Expebox, right=2em of main,rotate=90,anchor=north] (mach) {Experimental machine(s)};
     \end{pgfonlayer}
 
     \begin{pgfonlayer}{bg1}
@@ -130,7 +130,7 @@
     % Analysis env
 
     \begin{pgfonlayer}{foreground}
-        \node[fileR, right=9em of main] (raw) {Raw results};
+        \node[fileR, right=8.5em of main] (raw) {Raw results};
         \node[fileR, above=.5em of raw] (mi) {Meta data};
         \node[fileA, below=.5em of raw] (filt1) {Parsing script};
         \node[fileA, below=.5em of filt1] (ana1) {Analysis script};
@@ -147,7 +147,7 @@
         header={Raw analysis}{distribcol}{north}{}] (rawa) {};
     \end{pgfonlayer}
 
-    \node[fileR, right = 3.5em of csv] (res) {Human readable results};
+    \node[fileR, right = 3em of csv] (res) {Human readable results};
 
     \begin{pgfonlayer}{bg1}
         \node[distrib,fit=(csv) (ana2),%
