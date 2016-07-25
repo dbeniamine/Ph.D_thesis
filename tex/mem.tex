@@ -1,14 +1,25 @@
 %!TEX encoding=UTF-8 Unicode
 \chapter{Memory Performance Analysis}
 
+The results of our case study (\chap{perf}) showed that traditional performance analysis tools can help identify memory related performance issues.
+Yet they are not able to tell precisely where (in terms of data structures) the issue occurs and thus it is still required to analyze manually the code.
+
+This chapter presents discuss memory analysis, first we present the specificities of recent memory subsystems in \sect{archi} and the usual mistakes that can generate performances drop in \sect{usual-issues}.
+Finally we present existing performance analysis tools related to memory in \sect{mem-tools} and describe how we could improve these tools in \sect{mem-cncl}.
+
 \section{Architectural considerations}
+\label{sec:archi}
 
 \section{Usual Performance Issues}
+\label{sec:usual-issues}
 
 \section{Existing Tools and Methodology}
+\label{sec:mem-tools}
 
 numap\cite{Selva16numap}
 
 \section{Conclusions}
+\label{sec:mem-cncl}
 
 Need global info / temporal evolution
+% vim:set et si sta lbr  sw=4 ts=4 
