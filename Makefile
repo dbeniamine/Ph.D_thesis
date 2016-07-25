@@ -12,12 +12,7 @@ AUX = $(TEXSRC:.tex=.aux)
 BBL = $(TEXSRC:.tex=.bbl)
 GLS = $(TEXSRC:.tex=.GLS)
 
-# Tikz Files
-TIKZDIR = tikz
-TIKZSRC = $(wildcard $(TIKZDIR)/*.tex)
-TIKZPDF = $(TIKZSRC:.tex=.pdf)
 
-DIRS=$(TIKZDIR)
 
 # Temporary files
 TEMP=*.bbl *.blg *.synctex.gz *.aux *.toc *.ptc *.out *.lot *.lof *.log *.ist *.acn *.acr *.alg
@@ -49,19 +44,14 @@ $(BBL): $(BIBSRC) $(TEXALLSRC)
 	$(BIBCOMPILE)
 
 # First compilation
-$(AUX): $(TIKZPDF) $(TEXSRC) $(TEXSUBSRC)
+$(AUX): $(TEXSRC) $(TEXSUBSRC)
 	$(TEXCOMPILE)
 	$(TEXCOMPILE)
-
-# Tikz images
-$(TIKZDIR)/%.pdf: $(TIKZDIR)/%.tex
-	cd $(TIKZDIR); $(TEX) $(shell basename $^)
 
 .PHONY: clean distclean
 
 clean:
 	rm -rf $(TEMP)
-	cd $(TIKZDIR); rm -rf $(TEMP)
 
 distclean: clean
-	rm -rf $(PDF) $(TIKZPDF)
+	rm -rf $(PDF)

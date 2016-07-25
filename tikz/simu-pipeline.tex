@@ -1,11 +1,4 @@
 %!TEX encoding=UTF-8 Unicode
-\documentclass[tikz,a4paper,landscape]{standalone}
-\usepackage{tikz}
-\input{../custom/magic}
-
-% Libraries
-\usetikzlibrary{shapes,arrows,decorations,decorations.pathreplacing,decorations.markings,fit}
-\usetikzlibrary{positioning,backgrounds,calc}
 
 \definecolor{StepCol}{HTML}{4575B4}
 \definecolor{ObjACol}{HTML}{FDB863}
@@ -55,33 +48,32 @@
 }
 
 \tikzstyle{StepBox} = [drawed box=StepCol]
-\tikzstyle{StepA} = [->,StepCol,thick]
-\tikzstyle{Force} = [->,ForceCol,very thick]
+\tikzstyle{StepA} = [-latex,StepCol,thick]
+\tikzstyle{Force} = [-latex,ForceCol,very thick]
 
-\begin{document}
-\begin{tikzpicture}[node distance = 2cm,scale=0.8]rotate=90
+\begin{tikzpicture}[scale=0.74,font=\small]
 
 
-    \node[ObjA] (Ai) {};
-    \node[ObjB,right=15pt of Ai] (Bi) {};
+    \node[ObjA] (Ai) at (0,0) {};
+    \node[ObjB] (Bi) at (2,0) {};
 
     \node[StepBox,fit=(Ai) (Bi)] (init) {};
 
-    \node[StepCol,text width=5em,above=.5em of init] {Initial\\State};
+    \node[StepCol,text width=5em] (inittxt) at (0,1.5) {Initial\\State};
 
-    \node[ObjA, right=3em of init] (AI) {};
-    \node[ObjB,right=-4pt of AI] (BI) {};
+    \node[ObjA] (AI) at (4.5,0) {};
+    \node[ObjB] (BI) at (5.5,0) {};
 
     \node[StepBox,fit=(AI) (BI)] (inte) {};
 
 
-    \node[ObjA, right=3em of inte] (Ac) {};
-    \node[ObjB,right=5pt of Ac] (Bc) {};
+    \node[ObjA] (Ac) at (8,0) {};
+    \node[ObjB] (Bc) at (9.5,0) {};
 
     \node[StepBox,fit=(Ac) (Bc)] (col) {};
 
-    \node[ObjA-render, right=3em of col] (Ad) {};
-    \node[ObjB-render,right=5pt of Ad] (Bd) {};
+    \node[ObjA-render] (Ad) at (12,0) {};
+    \node[ObjB-render] (Bd) at (13.5,0) {};
 
     \node[StepBox,fit=(Ad) (Bd)] (dis) {};
 
@@ -97,9 +89,6 @@
     \draw[StepA] (col.east) -- node[text width=5em,above=2em]
         {Rendering} (dis.west) {};
 
-    %\path[StepA] (col.south) edge[out=-120,in=-60] node[text width=5em,above]
-    %    {Collision\\response} (inte.south) {};
-
     \path[StepA] (dis.south) edge[out=-160,in=-20] (init.south) {};
 
     % Forces
@@ -107,9 +96,8 @@
     \draw[Force] (Ai.center) -- ++(.8,0) {};
     \draw[Force] (Bi.center) -- ++(-.8,0) {};
 
-    \draw[Force] (Ac.east) -- ++(-.2,0) {};
-    \draw[Force] (Bc.west) -- ++(.2,0) {};
+    \draw[Force] (Ac.east) -- ++(-.4,0) {};
+    \draw[Force] (Bc.west) -- ++(.4,0) {};
 
 
 \end{tikzpicture}
-\end{document}
