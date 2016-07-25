@@ -20,7 +20,7 @@
 \tikzstyle{copy} = [-latex, dashed, thick, Analysecol]
 
 \newlength{\cornerlength}
-\setlength{\cornerlength}{.141cm}
+\setlength{\cornerlength}{.18cm}
 
 \tikzset{
   basic box/.style = {
@@ -28,7 +28,6 @@
     draw,
     text centered,
     text width=6em,
-    %node distance=8em,
     },
   rounded box/.style={
     basic box,
@@ -36,7 +35,6 @@
   },
   drawed box/.style ={
     rounded box,
-    %inner sep=1em,
     draw = #1,},
   filled box/.style = {
     rounded box,
@@ -60,8 +58,7 @@
       basic box,
       fill = Expecol,
       minimum height = 5.5em,
-      text width = 4em,
-      %node distance=5em,
+      text width = 3.5em,
       append after command = {
             \pgfextra{\let\TikZlastnode\tikzlastnode}
             node [corner] (corner-TikZlastnode) at
