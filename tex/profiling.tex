@@ -3,9 +3,9 @@
 \label{chap:perf}
 
 Optimizing a computational kernel is a complex task, it requires a deep understanding of both the algorithm mechanics and the machine that will execute it.
-Simple computational kernels such as matrix multiplication or Cholesky factorization have been subject of years of optimizations, yet some scientists still manage to find improvements on them.
+Simple computational kernels such as matrix multiplication or Cholesky factorization have been subject of years of optimizations, yet some scientists still manage to find improvements.
 The task is even more complex when it comes to optimizing a whole actual application, we first need to identify hotspots which means understand where and why the performances are suboptimal.
-Once the hotspots are identified, we have to understand their nature and their localisation both in terms of code and data structure (if they are memory related).
+Once the hotspots are identified, we have to understand their nature and their localization both in terms of code and data structure (if they are memory related).
 Finally, when optimizing a real life application, it is important to make the optimizations as clear as possible as not all developers are specialized in \gls{HPC}.
 
 \gls{SOFA}~\cite{Allard07SOFA} is a simulation framework designed for exact interactive simulation.
@@ -14,20 +14,16 @@ Thus improving \gls{SOFA} performance is crucial, yet most of the developers are
 Our goal is to guide the developers in the optimization process, therefore we need to analyze \gls{SOFA}'s performances and identify precisely the hotspots.
 
 In this chapter, we present a case study on the performance optimisation of \gls{SOFA}.
-It is organized as follow: first we present \gls{SOFA}, it's specificities and previous attempt to parallelise or optimize it in \sect{motivations}.
-Then we discuss the existing profiling tools that can be used to analyze an application performances' in \sect{prof-tools}.
+It is organized as follow: first we present \gls{SOFA}, its specificities and previous attempt to parallelize or optimize it in \sect{motivations}.
+Then, we discuss the existing profiling tools that can be used to analyze an application's performances in \sect{prof-tools}.
 After that we detail our experimental methodology and discuss reproducibility matters in \sect{expe-methodo}.
 Finally we present our analysis and first conclusions in \sect{sofa}.
 
 \section{Motivations}
 \label{sec:motivations}
 
-
-%\gls{SOFA}~\cite{Allard07SOFA} is a simulation framework designed for exact interactive simulation as it aims at helping research in medical simulation.
-%Video games simulators only cares about realisms (and not exactness) thus they can do some approximations to improve their performances.
-%At the opposite, \gls{SOFA} aims at exact simulation, thus cannot afford such approximations.
-%Hence optimizing the overall performances of \gls{SOFA} is mandatory.
-
+Several efforts were made to parallelize the different part of \gls{SOFA}, using its specificities.
+Before discussing these efforts, we need to present more precisely the \gls{SOFA} framework.
 
 \subsection{SOFA: a physical simulation framework}
 
@@ -38,56 +34,73 @@ Finally we present our analysis and first conclusions in \sect{sofa}.
     \label{fig:simu-pipeline}
 \end{figure}
 
-
-A simulation can be seen as a pipeline depicted in \fig{simu-pipeline}: we start from an initial configuration were a set of objects are placed under a force field.
-Then we have to resolve a system of equation to compute the next position of each objects.
+In \gls{SOFA}, simulation can be seen as a loop depicted in \fig{simu-pipeline}: we start from an initial configuration were a set of objects are subject to a force field.
+Then we have to solve a system of equation to compute the next position of each object.
 The third step consist in detecting overlap between objects and applying repulsing force to simulate the collision.
- Finally the result of these step is displayed (rendered) and we are back at the first step.
-The time integration and the collision detection are the most costly steps.
+Finally the result of these step is displayed (rendered) and we are back the beginning.
+The time integration and the collisions detection are the most costly steps.
 Hence many algorithms  were developed to compute these steps efficiently each algorithm being more appropriate for simulating one type of object.
 
-One of \gls{SOFA}'s main specificity is to have a multi-model representation of each component: a simulation scene is represented as a graph, as shown in \fig{sofa-tree}, each physical object is a node of the graph and can override the default solvers, collision detector and visual representation.
-This hierarchical representation allows to manage dependencies between objects and represent complex embedded objects~\cite{Nesme09Preserving,Faure11Sparse}.
+One of \gls{SOFA}'s main specificity is that it has a multi-model representation of each component: a simulation scene is represented as a graph, as shown in \fig{sofa-tree}, each physical object is a node of the graph and can override the default solvers, collision detector and visual representation.
+This hierarchical representation enable dependencies management between objects and the representation of complex embedded objects~\cite{Nesme09Preserving,Faure11Sparse}.
 
 \begin{figure}[htb]
     \centering
     \includegraphics[width=\textwidth]{Sofa-graph}
     \caption[Example of SOFA scene graph]{SOFA representation of a scene with two objects: a liver and a
-        heart. Each node of the scene can embed it's own set of solvers and
-        visual representation.\\
+        heart. Each node of the scene can embed its own set of solvers and
+        visual representations.\\
         Image from SOFA documentation~\cite{SOFA16Sofa}.}
     \label{fig:sofa-tree}
 \end{figure}
 
-\subsection{Previous work on SOFA parallelisation}
+\subsection{Previous efforts on SOFA parallelization}
+
+\begin{itemize}
+    \item Limitation:
+        \begin{itemize}
+            \item Kaapi complex
+            \item Parallelisme where there seems to be opportunities not where needed => Do not improve overall knowledge of the application
+        \end{itemize}
+    \item Conclusion => Understant what the fuck happens
+\end{itemize}
 
 It is important to note that the main developers of \gls{SOFA} are  mostly computer scientists with a physical or medical background but not specialized in \gls{HPC}.
-Several efforts were made by external developers to parallelise \gls{SOFA}, most of these efforts consist in optimizing some algorithms which, according to \gls{SOFA} developers are costly in time.
-For instance, Everton Hermann proposed an efficient (sequential) collision detection algorithm based on ray tracing and a parallelisation of this algorithm~\cite{Hermann08Raytraced}.
+Several efforts were made by external developers to parallelize \gls{SOFA}, most of these efforts consist in optimizing some algorithms which, according to \gls{SOFA} developers are costly in time.
+For instance, Everton Hermann proposed an efficient (sequential) collision detection algorithm based on ray tracing and a parallelization of this algorithm~\cite{Hermann08Raytraced}.
 More recently, Julio Toss have been developing several algorithms on \glspl{GPU} to improve the computation time of Voronoi diagrams~\cite{Toss13Parallel,Toss14Parallel}.
-These diagrams are critical for \gls{SOFA}, indeed while they allow to simulate efficiently the propagation of forces on heterogeneous materials~\cite{Faure11Sparse}, their computation generate a considerable overhead before the simulation.
+These diagrams are critical for \gls{SOFA} as they enable efficient simulation of force propagation on heterogeneous materials~\cite{Faure11Sparse}.
+Still their computation generates a considerable overhead before the simulation.
 
-Yet one limitation of this approach is that it can only optimize part of the code that are known to be slow.
-Furthermore \gls{SOFA} is a generic framework, used among other things to develop new simulation algorithm, thus a suitable optimization should allow \gls{SOFA}'s developers to parallelize their code by themselves as they write it.
+E. Hermann also proposed a more global approach exploiting the hierarchy of the scene graph to parallelize the time integration step~\cite{Hermann09Interactive}.
+This parallelization relies the \gls{KAAPI} runtime~\cite{Gautier07KAAPI} which consider an application as a set of task and dependencies between them.
+Each task can provide one or several implementations (\gls{CPU}, \gls{GPU} \ldots), the runtime will choose which implementation to use resulting in portable performances.
+With this method the amount of parallelism depends of the number of objects simulated.
+Still most \gls{SOFA} scenes only includes only a few objects, thus this parallelization is not suitable for them.
+Yet the amount of parallelism depends on the number of objects in the scene graph thus scenes with only too few objects cannot benefit from this improvement.
 
-To overpass these limitations, E. Hermann exploited the hierarchy of the scene graph to parallelize the time integration step using the \gls{KAAPI} runtime~\cite{Gautier07KAAPI}.
-This runtime allows to provide several implementations (\gls{CPU}, \gls{GPU} \ldots) for each task thus it can provide good performances on several machines with the same code.
-Yet the amount of parallelisms depends of the number of objects on the scene graph thus scenes with only too few objects cannot benefit of this improvement.
-Hence E. Hermann also designed a parallelisation based on domain decomposition for such scenes~\cite{Hermann09Interactive}.
 
-While this approach is more generic and seems easier to generalize it was never actually used by \gls{SOFA} developers for several reasons: first of all they are not specialized on parallelism thus not used to work with runtimes such as \gls{KAAPI}.
-Second \gls{KAAPI} is a research runtime that evolve quickly, therefore, the cost of maintaining code based on that runtime seems to important to them.
-In the end, \gls{SOFA} is currently parallelized using simple \gls{OpenMP} \texttt{\#pragma} directives which allows to quickly parallelize a code, yet the result is considerably less efficient than the \gls{KAAPI} version.
+While this approach is more generic and seems easier to generalize it was never actually used by \gls{SOFA} developers for several reasons.
+First of all they are not specialized in parallelism thus not used to think their program as in parallel.
+Second \gls{KAAPI} is a research runtime that evolve quickly, therefore, maintaining code based on that runtime seemed to costly for them.
+Last but not least, while this approach helps to parallelize the code it does not help finding hotspots and optimizing existing code.
+In the end, \gls{SOFA} is currently parallelized using simple \gls{OpenMP} \texttt{\#pragma}\footnote{
+    These are compiler directives to tells the \gls{OpenMP} runtime that a region of code should be run in parallel.
+    These \texttt{#pragma} are trivial to use but it requires to spend more time to obtain an efficient parallelization.}.
+This parallelization impacts small chunks of code and miss the global aspect of the previous one.
+Thus it is considerably less efficient than the \gls{KAAPI} version.
 
-To conclude it appears that optimizing algorithm pointed out by \gls{SOFA} developers is not enough as it can miss important part of the execution and it does not help them to writing parallel code.
-Moreover a structural parallelisation relying on a research runtime may be discarded by them.
-Hence, we should acquire a deep knowledge of \gls{SOFA} performances to identify hotspots and optimize the most important parts of the code and try to keep our optimization usable by the developers.
+%
+To conclude it appears that optimizing algorithm pointed out by \gls{SOFA} developers is not sufficient.
+Indeed this approach can miss important part of the execution.
+Moreover while a structural parallelization seems more efficient it does not overpass this limitation.
+At the end of the day, it appears that identifying precisely unknown hotspots and digging into \gls{SOFA} performance would be more profitable than writing small piece of highly optimized code.
 
 \section{Profiling tools}
 \label{sec:prof-tools}
 
 Performance analysis consists of to two steps: data collection and presentation.
-The first step aims at extracting as much pertinent information from an execution as possible, yet observing an execution is not free: it takes time to count and record events thus it can impact the application performances or worst modify it's behavior.
+The first step aims at extracting as much pertinent information from an execution as possible, yet observing an execution is not free: it takes time to count and record events thus it can impact the application performances or worst modify its behavior.
 Consequently, any analysis provides a trade-off between the amount of data collected and the impact on the monitored application.
 The second step is also challenging as the tools needs to find out which data are pertinent and to present them in a meaningful way to the user.
 Many tools were designed to address one or both of these challenges.
@@ -356,16 +369,16 @@ The experimental methodology described in \sect{expe-methodo} evolved during thi
 \subsection{Results and Discussions}
 
 To present the results of our evaluation, we will focus on two \gls{SOFA} scenes that illustrate the kind of results we obtained.
-The first scene is called \emph{linearQuadraticFrame}, for this scene the \gls{OpenMP} parallelisation provides a speedup of $1.37$ with four threads which is clearly not optimal.
+The first scene is called \emph{linearQuadraticFrame}, for this scene the \gls{OpenMP} parallelization provides a speedup of $1.37$ with four threads which is clearly not optimal.
 Yet compared to the second scene \emph{linearRigidAndAffineFrame}, which has a speedup of $0.87$, it seems efficient.
-Thus our first goal was to understand why while some scenes takes advantage of this parallelisation some other are slowed down by it.
+Thus our first goal was to understand why while some scenes takes advantage of this parallelization some other are slowed down by it.
 
 Before digging into the differences between these scenes, there are two noticeable similarities between them to discuss.
 First the idle time ratio reported by \gls{Likwid} showed that, for the sequential version of the code, during almost half of the simulation the processor is idle, which means that we spend a lot of time waiting for \gls{I/O} or memory accesses.
-In parallel  this idle time increases, yet this behavior is expected as the \gls{OpenMP} based parallelisation only affect some small parts of the code, hence as soon as we are not in a parallel loop, $3$ threads out of $4$ are idle.
+In parallel  this idle time increases, yet this behavior is expected as the \gls{OpenMP} based parallelization only affect some small parts of the code, hence as soon as we are not in a parallel loop, $3$ threads out of $4$ are idle.
 The second noticeable similarity is that the functions pointed by the developers only represent around \SI{30}{\%} of the simulation time, which means that there are some unknown hotspots left.
 
-From here, we know that there might be a memory issue (as the processor spend a lot of time idle), and we have two scenes: one where the parallelisation speed the execution up and one on which it slows it down.
+From here, we know that there might be a memory issue (as the processor spend a lot of time idle), and we have two scenes: one where the parallelization speed the execution up and one on which it slows it down.
 We compared the bandwidth and data volume from the \texttt{L2} cache to the main memory for the two scenes and for the functions indicated by the developers.
 Those functions are generic and thus their actual code varies depending on the parameters of the simulation.
 Therefore while the compared functions are similar in terms of role in the simulation, the manipulated data as well as the executed code is different for the two scenes.
@@ -384,7 +397,7 @@ Therefore while the compared functions are similar in terms of role in the simul
 
 \fig{SOFA-perfctr} shows the bandwidth (left side) and the data volume (right sides) for the two functions (\emph{linearQuadraticFrame} above, \emph{linearRigidAndAffineFrame} below) from \texttt{L2} cache to the main memory.
 Each point represents the mean of $60$ runs and the error bars represents the standard error.
-To make the plot more readable, we've normalized each value by dividing it by the value for the corresponding sequential run, thus these plots show the evolution of the bandwidth and data volume when we use the \gls{OpenMP} version of\gls{SOFA}.
+To make the plot more readable, we have normalized each value by dividing it by the value for the corresponding sequential run, thus these plots show the evolution of the bandwidth and data volume when we use the \gls{OpenMP} version of\gls{SOFA}.
 
 We can see that for the first scene, both the bandwidth and data volume increases by a factor of $1.5$ in the cache and stays comparable in the main memory when we use the parallel version.
 This means that the thread are either sharing efficiently data or at least working on data different enough to not step on each other foots.
