@@ -392,15 +392,15 @@ At the opposite for the second scene, the bandwidth drops down at each level and
 It is important to note that the \texttt{L3} cache is the only shared cache which means that a considerable amount of data is invalidated in \texttt{L2}, in other words, several threads are writing the same data, invalidating each other private cache and requiring the coherency protocol to interfere.
 This behavior is called false sharing and is a well known performance issue.
 
-At this point we can say that false sharing occurs on this precise function, yet we don't know on which data structure.
+At this point we can say that false sharing occurs on this precise function, yet we do not know on which data structure.
 We could dig onto the code and try to understand the memory access pattern of each data structure to see where the false sharing does occurs.
 By looking at \gls{SOFA}'s code, we can see that the main difference between the two version of the function is that for \texttt{linearRigidAndAffineFrame} there is one more loop in the computation.
 Still this code manipulate several data through many indirections, therefore determining on which data the false sharing is happening could be extremely slow.
-Furthermore this approach is not generic at all, and once we've done it for one particular function, we would have to redo the same analysis and optimization for each potential hotspot.
+Furthermore this approach is not generic at all, and once we have done it for one particular function, we would have to redo the same analysis and optimization for each potential hotspot.
 
 Furthermore as we have seen with the runtime ratio, this particular false sharing issue only represent a small part of the execution, therefore a more generic approach would be welcome.
 
 From that point it seems clear that \gls{SOFA} is having memory performance issues, yet we need a generic tools to analyze its performances from the memory point of view.
 Such tool should be able to show the memory access patterns of each thread over the different data structures and point us through patterns that are (or can be) inefficient.
 
-% vim:set et si sta lbr  sw=4 ts=4 
+% vim: et si sta lbr  sw=4 ts=4 spelllang=en_us
