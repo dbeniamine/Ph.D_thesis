@@ -2,11 +2,16 @@
 \chapter{Case Study}
 \label{chap:perf}
 
-Optimizing a computation kernel is a complex task, it requires both a deep understanding of the algorithm mechanics and the machine that will execute it.
-Simple computational kernels such as matrix multiplication or Cholesky factorization have been subject of years of optimizations, yet some scientists we still manage to find improvements on them.
+Optimizing a computational kernel is a complex task, it requires a deep understanding of both the algorithm mechanics and the machine that will execute it.
+Simple computational kernels such as matrix multiplication or Cholesky factorization have been subject of years of optimizations, yet some scientists still manage to find improvements on them.
 The task is even more complex when it comes to optimizing a whole actual application, we first need to identify hotspots which means understand where and why the performances are suboptimal.
-Once they are identified, improving them is even more complex as the modifications must be both efficient and understandable by developers not specialized in \gls{HPC}.
-Indeed, to understand some highly optimized code it is required to read one or several scientific publication which makes it hard to maintain and thus not suitable for production code.
+Once the hotspots are identified, we have to understand their nature and their localisation both in terms of code and data structure (if they are memory related).
+Finally, when optimizing a real life application, it is important to make the optimizations as clear as possible as not all developers are specialized in \gls{HPC}.
+
+\gls{SOFA}~\cite{Allard07SOFA} is a simulation framework designed for exact interactive simulation.
+Indeed, it aims at assisting surgeons with real time simulation thus  it cannot afford to reduce the amount of computation by relying on approximations.
+Thus improving \gls{SOFA} performance is crucial, yet most of the developers are not from the \gls{HPC} field.
+Our goal is to guide the developers in the optimization process, therefore we need to analyze \gls{SOFA}'s performances and identify precisely the hotspots.
 
 In this chapter, we present a case study on the performance optimisation of \gls{SOFA}.
 It is organized as follow: first we present \gls{SOFA}, it's specificities and previous attempt to parallelise or optimize it in \sect{motivations}.
@@ -17,10 +22,11 @@ Finally we present our analysis and first conclusions in \sect{sofa}.
 \section{Motivations}
 \label{sec:motivations}
 
-\gls{SOFA}~\cite{Allard07SOFA} is a simulation framework designed for exact interactive simulation as it aims at helping research in medical simulation.
-Video games simulators only cares about realisms (and not exactness) thus they can do some approximations to improve their performances.
-At the opposite, \gls{SOFA} aims at exact simulation, thus cannot afford such approximations.
-Hence optimizing the overall performances of \gls{SOFA} is mandatory.
+
+%\gls{SOFA}~\cite{Allard07SOFA} is a simulation framework designed for exact interactive simulation as it aims at helping research in medical simulation.
+%Video games simulators only cares about realisms (and not exactness) thus they can do some approximations to improve their performances.
+%At the opposite, \gls{SOFA} aims at exact simulation, thus cannot afford such approximations.
+%Hence optimizing the overall performances of \gls{SOFA} is mandatory.
 
 
 \subsection{SOFA: a physical simulation framework}
@@ -28,7 +34,7 @@ Hence optimizing the overall performances of \gls{SOFA} is mandatory.
 \begin{figure}[htb]
     \centering
     \input{tikz/simu-pipeline}
-    \caption[The simulation pipeline]{The simulation pipeline}
+    \caption[The simulation loop]{The simulation loop}
     \label{fig:simu-pipeline}
 \end{figure}
 
