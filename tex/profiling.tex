@@ -41,9 +41,6 @@ Finally the result of these step is displayed (rendered) and we are back the beg
 The time integration and the collisions detection are the most costly steps.
 Hence many algorithms  were developed to compute these steps efficiently each algorithm being more appropriate for simulating one type of object.
 
-One of \gls{SOFA}'s main specificity is that it has a multi-model representation of each component: a simulation scene is represented as a graph, as shown in \fig{sofa-tree}, each physical object is a node of the graph and can override the default solvers, collision detector and visual representation.
-This hierarchical representation enable dependencies management between objects and the representation of complex embedded objects~\cite{Nesme09Preserving,Faure11Sparse}.
-
 \begin{figure}[htb]
     \centering
     \includegraphics[width=\textwidth]{Sofa-graph}
@@ -54,16 +51,10 @@ This hierarchical representation enable dependencies management between objects 
     \label{fig:sofa-tree}
 \end{figure}
 
-\subsection{Previous efforts on SOFA parallelization}
+One of \gls{SOFA}'s main specificity is that it has a multi-model representation of each component: a simulation scene is represented as a graph, as shown in \fig{sofa-tree}, each physical object is a node of the graph and can override the default solvers, collision detector and visual representation.
+This hierarchical representation enable dependencies management between objects and the representation of complex embedded objects~\cite{Nesme09Preserving,Faure11Sparse}.
 
-\begin{itemize}
-    \item Limitation:
-        \begin{itemize}
-            \item Kaapi complex
-            \item Parallelisme where there seems to be opportunities not where needed => Do not improve overall knowledge of the application
-        \end{itemize}
-    \item Conclusion => Understant what the fuck happens
-\end{itemize}
+\subsection{Previous efforts on SOFA parallelization}
 
 It is important to note that the main developers of \gls{SOFA} are  mostly computer scientists with a physical or medical background but not specialized in \gls{HPC}.
 Several efforts were made by external developers to parallelize \gls{SOFA}, most of these efforts consist in optimizing some algorithms which, according to \gls{SOFA} developers are costly in time.
