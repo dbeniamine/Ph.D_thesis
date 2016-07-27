@@ -86,50 +86,62 @@ Second \gls{KAAPI} is a research runtime that evolve quickly, therefore, maintai
 Last but not least, while this approach helps to parallelize the code it does not help finding hotspots and optimizing existing code.
 In the end, \gls{SOFA} is currently parallelized using simple \gls{OpenMP} \texttt{\#pragma}\footnote{
     These are compiler directives to tells the \gls{OpenMP} runtime that a region of code should be run in parallel.
-    These \texttt{#pragma} are trivial to use but it requires to spend more time to obtain an efficient parallelization.}.
+    These \texttt{\#pragma} are trivial to use but it requires to spend more time to obtain an efficient parallelization.}.
 This parallelization impacts small chunks of code and miss the global aspect of the previous one.
 Thus it is considerably less efficient than the \gls{KAAPI} version.
 
-%
-To conclude it appears that optimizing algorithm pointed out by \gls{SOFA} developers is not sufficient.
-Indeed this approach can miss important part of the execution.
-Moreover while a structural parallelization seems more efficient it does not overpass this limitation.
-At the end of the day, it appears that identifying precisely unknown hotspots and digging into \gls{SOFA} performance would be more profitable than writing small piece of highly optimized code.
+To conclude it appears that optimizing algorithms or chunk of codes pointed out by \gls{SOFA} developers is not sufficient.
+Indeed this approach can miss unknown hotspots and therefore opportunities for optimizations.
+Moreover while a structural approach seems potentially more efficient than local optimizations, it does not overpass this limitation.
+At the end of the day, it appears that identifying precisely unknown hotspots and digging into \gls{SOFA} performance would be more profitable than writing pieces of highly optimized code.
 
 \section{Profiling tools}
 \label{sec:prof-tools}
 
-Performance analysis consists of to two steps: data collection and presentation.
-The first step aims at extracting as much pertinent information from an execution as possible, yet observing an execution is not free: it takes time to count and record events thus it can impact the application performances or worst modify its behavior.
+Performance analysis consists of two steps: data collection and presentation.
+The first step aims at extracting as much pertinent information from an execution as possible, but observing an execution is not free.
+Indeed it takes time to count and record events, thus it can impact the application performances or, worst, modify its behavior.
 Consequently, any analysis provides a trade-off between the amount of data collected and the impact on the monitored application.
-The second step is also challenging as the tools needs to find out which data are pertinent and to present them in a meaningful way to the user.
+The second step is also challenging as the tools have to to find out which data are pertinent and to present them in a meaningful way to the user.
 Many tools were designed to address one or both of these challenges.
 
-Performance counters, which were originally designed by \glspl{CPU} vendors to debug their processors prototypes, allows to count events such as cache miss, or branch miss-predict at a very low cost since they are hardware implemented.
+Performance counters are dedicated \gls{CPU} registers that were originally designed by vendors to debug their processor prototypes.
+They count events such as cache misses, or branch miss-predicts at a very low cost compared to software based solutions.
 They can directly be accessed using the \gls{Perf} driver which is part of the \gls{Linux} kernel since version $2.6.31$.
-Yet as a result of their initial aim, the available counters depends of the \gls{CPU} model and vendor.
+Yet, as a result of their initial aim, the available counters depends of the \gls{CPU} model and vendor.
 Furthermore it requires a deep knowledge of \glspl{CPU} mechanisms to understand the meaning of some counters.
-Therefore higher level library such as \gls{PAPI}~\cite{Browne00Portable,Malony11Parallel,Weaver13PAPI} and \gls{Likwid}~\cite{Treibig10LIKWID} were designed to make it more convenient to access and interpret performance counters.
-These libraries provides performance groups and automatically computes comprehensive metrics.
-In addition they allow to start and stop the counters during the execution to focus on critical parts of the execution, which is useful once hotspot are identified, but can lead to miss a part of the execution if used too early.
+Therefore higher level libraries such as \gls{PAPI}~\cite{Browne00Portable,Malony11Parallel,Weaver13PAPI} and \gls{Likwid}~\cite{Treibig10LIKWID} were designed to make performance counter access and interpretation more convenient.
+These libraries provide performance groups and automatically compute comprehensive metrics.
+In addition they provide markers that can be used in the code in order to collect only counters on some parts of the execution.
+This is useful once hotspots are identified, but can lead to miss a part of the execution if used too early.
 
-An other approach to make performance counters more understandable consist on combining them with contextual informations obtained by hooking libraries calls (system calls, C standard library, \gls{MPI}, \gls{OpenMP} \ldots).
-Such hooks can be deployed either by overwriting libraries calls at runtime with \texttt{LD\_PRELOAD} hack\footnote{One can use the \texttt{LD\_PRELOAD} environment variable to tell the linker to load a library before running a programming, allowing to intercept functions calls to external libraries such \texttt{malloc}}, or by using binary instrumentation libraries such as \gls{Intel} \gls{Pin}~\cite{Luk05Pin} or Dyninst from the Paradyn Project~\cite{Miller95Paradyn}.
-The second method is more flexible and usually allows higher level data collection, yet it is more intrusive thus it can impact the behavior of the studied application.
-Simulators such as \gls{SimGrid}~\cite{Casanova14Versatile} can be used to overpass these limitations, still they are usually more complex to install and use thus less likely to be adopted by developers from other fields than \gls{HPC}.
+An other approach to make performance counters more understandable consists in combining them with contextual informations.
+Such informations can be obtained by intercepting libraries calls (system calls, C standard library, \gls{MPI}, \gls{OpenMP} \ldots).
+The easiest way to intercept a library call by overriding it at runtime with the \texttt{LD\_PRELOAD} hack\footnote{
+    One can use the \texttt{LD\_PRELOAD} environment variable to tell the linker to load a library before running a programmings.
+    Thus each call to a function overwritten in the preloaded library will be intercepted.}.
+A second method is to rely on binary instrumentation libraries such as \gls{Intel} \gls{Pin}~\cite{Luk05Pin} or Dyninst from the Paradyn Project~\cite{Miller95Paradyn}.
+This method is more flexible and usually enable higher level data collection, yet it is more intrusive, thus it can impact the behavior of the studied application.
+Simulators such as \gls{SimGrid}~\cite{Casanova14Versatile} can be used to overpass these limitations, still they are usually more complex to install and use.
+Furthermore they are designed for \gls{HPC} applications and often focus on explicit communications (via \gls{MPI} or \gls{OpenMP}) and discard the actual computations, therefore they might miss memory related issues.
 Several tools such as \gls{HPCToolkit}~\cite{Adhianto10HPCTOOLKIT}, \gls{PARAVER}~\cite{Pillet95PARAVER}, \gls{TAU}~\cite{Shende06Tau}, \gls{MAQAO}~\cite{Djoudi05MAQAO}, \gls{AMD} \gls{CodeXL}~\cite{AMD16CodeXL} (the successor of \gls{AMD} \gls{CodeAnalyst}~\cite{Drongowski08introduction}) and \gls{Intel} \gls{VTune}~\cite{Reinders05VTune} combines several of these methods to collects traces.
 
-When it comes to presenting performance traces in a readable way, we can split these tools in three groups: the first one only provides textual traces and let the user extract pertinent informations from them.
-This group includes the \gls{Perf} driver, \gls{Likwid} and \gls{PAPI} library as well as several \glspl{Pintool}.
-Such traces are very useful for small applications as they do not require complex tools to be read, furthermore they are usually easy to parse thus one can build more complex visualisation upon it using \gls{R} for instance.
-Tools from the second group, that includes\gls{VTune}, \gls{CodeXL} tries to present data in a more readable way, usually a set of tables and few plots, where they highlight values that seems to be pertinent (for instance cache miss above a fixed threshold) to help the user focusing on important parts.
-Finally, while tools like \gls{MAQAO}, \gls{HPCToolkit} and \gls{PARAVER} propose visualisation similar too the second group by default, but they also provides \glspl{API} to design new visualizations or import external traces.
-\gls{Framesoc}~\cite{Pagano13Trace} is very similar to the previous tools, the main difference is that it is designed for trace management and analysis, thus it does not provide any way to collect traces but it is able to import traces from several tools, it  describe them with a generic representation and allows to navigate easily through different visualizations of the same trace.
+When it comes to presenting performance traces in a readable way, we can split these tools in three groups.
+The first one only provides textual traces and let the user extract pertinent informations from them.
+It includes the \gls{Perf} driver, \gls{Likwid} and \gls{PAPI} library as well as several \glspl{Pintool}.
+Such traces are very useful for small applications as they do not require complex tools to be read.
+Furthermore they are usually easy to parse thus one can build more complex visualization on top of it using \gls{R} for instance.
+Tools from the second group, that includes\gls{VTune}, \gls{CodeXL} tries to present data in a more readable way.
+Usually their visualization consist in a set of tables and plots, where they highlight values that seems to be pertinent (for instance cache miss above a fixed threshold) pointing important parts to the user.
+Finally, while tools like \gls{MAQAO}, \gls{HPCToolkit} and \gls{PARAVER} propose similar visualizations, they also provide \glspl{API} to design new visualizations or import external traces.
+\gls{Framesoc}~\cite{Pagano13Trace} is very similar to the previous tools, the main difference is that it is designed for trace management and analysis.
+Therefore it does not provide any way to collect traces but it is able to import traces collected by the user.
+It describe them with a generic representation and enable easy navigation through different visualizations of the same trace.
 
-To conclude, many tools were developed to monitor an application's performance, the best tool depends of the kind issue we are looking for and the application we are monitoring.
+To conclude, many tools were developed to monitor an application's performance, the best tool depends on the kind of issues we are looking for and the application we are monitoring.
 Most of the tools discussed here are based on performance counters and therefore focus on the \gls{CPU}'s point of view.
-In our specific case, we are studying a complex application, yet we are in contact with the developers of \gls{SOFA} thus the can give us hints on the important parts and the kind of issue we should look for.
-Therefore low level tools such as \gls{Likwid} are well suited as they allow both to compute pertinent metrics and to focus on different part of the application.
+In our specific case, we are studying a complex application, yet we are in contact with the developers of \gls{SOFA} thus they can give us hints about the important parts and the kind of issues we should look for.
+Therefore low level tools such as \gls{Likwid} are well suited as they can both compute pertinent metrics and focus on different parts of the application.
 
 \section{Experimental Methodology}
 \label{sec:expe-methodo}
