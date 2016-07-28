@@ -19,8 +19,8 @@
 \tikzstyle{exec} = [-latex,Resultcol,thick]
 \tikzstyle{copy} = [-latex, dashed, thick, Analysecol]
 
-\newlength{\cornerlength}
-\setlength{\cornerlength}{.18cm}
+%\newlength{\cornerlength}
+%\setlength{\cornerlength}{.1}
 
 \tikzset{
   basic box/.style = {
@@ -40,29 +40,37 @@
     rounded box,
     draw  = #1,
     fill  = #1,},
-  corner/.style={
+    corner/.style={
       shape=rectangle,
       fill=white,
       alias=this,
       append after command = {
           \pgfextra{
               \begin{pgfonlayer}{ff}
+                % Borders of the corner
                 \draw [] (this.south west) -- (this.south east);
                 \draw [] (this.south west) -- (this.north west);
                 \draw [] (this.north west) -- (this.south east);
+                % Borders of the main rectangle
+                \draw [] (#1.north west)   -- (this.north west);
+                \draw [] (#1.north west)   -- (this.north west);
+                \draw [] (#1.north west)   -- (#1.south west);
+                \draw [] (#1.south west)   -- (#1.south east);
+                \draw [] (#1.south east)   -- (this.south east);
               \end{pgfonlayer}
             }
       }
   },
   file/.style ={
-      basic box,
+      shape = rectangle,
+      text centered,
       fill = Expecol,
       minimum height = 5.5em,
       text width = 3.5em,
       append after command = {
             \pgfextra{\let\TikZlastnode\tikzlastnode}
-            node [corner] (corner-TikZlastnode) at
-            ([xshift=-\cornerlength,yshift=-\cornerlength]\TikZlastnode.north east){}
+                node [corner=\TikZlastnode, anchor=north east] (corner-\TikZlastnode) at
+                (\TikZlastnode.north east){}
           }
   },
   fileA/.style ={
