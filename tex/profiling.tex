@@ -147,11 +147,6 @@ In this section we first introduce why reproducibility matters and how people ha
 
 \subsection{Reproducible research}
 
-\DB{Rewritte\\
-    Positive => Our experiment could be improved by inspiring ourselves from place were they are expensives\ldots\\
-    Define Similar
-}
-
 Measurement bias, which means attributing a consequence to the wrong cause due to an issue in our measurement method, is a widely known phenomena in scientific communities and is analyzed in most fields.
 Mytkowicz et al.~\cite{Mytkowicz09Producing} highlighted several way to introduce significant measurement bias in computer science experiments without noticing it.
 Its experiments showed that measurement bias is both commonplace and unpredictable in our field.
@@ -173,35 +168,81 @@ proposed by Dror G. Feitelson~\cite{Feitelson15From}:
     \emph{Reproducibility} is the reproduction of the gist of an experiment: implementing the same general idea, in a similar setting, with newly created appropriate experimental apparatus.
 \end{quote}
 
-%% 
-%% Many factors can impact perf, and not all can be captured
-%% Yet if <list of factors> we can expect similar results, or one of the two experiment went wrong
-%%% Limits: adaptive algorithms
-
-Repeating an experiment in the sens of Feitelson in \gls{HPC} is nearly impossible.
+Repeating an experiment in the sense of Feitelson in \gls{HPC} is nearly impossible.
 Indeed repeating an experiment requires the access to the machine that executed the original one, with the exact same software stack and all the scripts to run it.
 Yet several unpredictable factors can impact the repeatability: between the two experiments, some hardware (for instance a disc) could have been replace by one faster.
 While we can log the whole hardware configuration during the experiment, some other factors, such as the room temperature, can impact the performances and are nearly impossible to measure during the experiment.
-% Define similar here
+Still there is a gap between the definitions of repeatability and reproducibility.
+Indeed if we have access to a machine, with the exact same software stack and comparable hardware and to the experimental scripts we can repeat the experiment in \emph{similar} conditions.
+This definition of \emph{similar} repeatability is strongest than reproducibility as we do not re-implement the experiment we just re-run it on a similar setting but we cannot expect the exact same results.
+If the experiments compares raw execution times, changing the machine may significantly changes the results, while if we compare relative time (speedup or slowdown) we are more likely to obtain similar results.
+Finally adaptive algorithms may be a limit to similar repetition, indeed small hardware differences might be enough to trigger a change on the executed code of an adaptive algorithm.
 
 Several tools can helps use making experiments more repeatable for instance by running our experiment on a shared platform such as grid5000~\cite{Cappello05Grid5000} we can hope that other people might access to the same set of machines.
-Moreover deploying a custom environment on these machines allow to control and distribute the set of installed libraries.
-Kameleon~\cite{Ruiz15Reconstructable} go even further as it allows to describe an environment as a recipe thus makes it easy to check the version of a library or replace it.
+Moreover one can control and distribute the set of installed libraries by deploying a custom environment on these machines.
+Kameleon~\cite{Ruiz15Reconstructable} go even further as it describe an environment as a recipe thus makes it easy to check the version of a library or replace it.
 
 To reproduce an experiment it is important to understand how it has been designed and how it evolves from the first version to the results presented in the paper.
 Stanisic et al.~\cite[Chapter~4, p31-44]{Stanisic15Reproducible} described an experimental workflow based on \gls{Git} and \gls{Org-mode} to keep track of these evolutions and make easy for someone to understand it.
-One of the main drawback of this workflow is that it is not suitable for experiment which generate huge ($\ge$\SI{500}{Mib}) trace files as git is not designed to handle such files.
+One of the main drawback of this workflow is that it is not suitable for experiment generating huge ($\ge$\SI{500}{Mib}) trace files as git is not designed to handle such files.
 
-Several tools were designed to conduct experiments in computer science still they are not designed for \gls{HPC} and using them in our context would require some adjustments.
+Many tools were designed to conduct experiments in computer science still they are not designed for \gls{HPC} and using them in our context would require some adjustments.
 A more complete survey can be found in~\cite[Chapter~3, p17-19]{Stanisic15Reproducible}
 
 \subsection{Experimental workflow}
 
-\DB{Define: \\
-    Experimental plan\\
-    Raw analysis\\
-    Statistical analysis
-}
+
+\begin{itemize}
+    \item Experiment:
+        \begin{itemize}
+            \item Analyze things
+            \item Answer questions
+            \item Need to go from vague to precise / scientifique:
+                \begin{itemize}
+                    \item Metrics (What do we evaluate)
+                    \item Benchmarks (In which condition do we measure it)
+                    \item References (What are we comparing our results to)
+                    \item Initial plots (How do we visualize it)
+                \end{itemize}
+        \end{itemize}
+    \item Experiment as a workflow, define:
+        \begin{itemize}
+            \item Experimental Plan
+                \begin{itemize}
+                    \item Machines /environment descriptions
+                    \item Benchmarks
+                    \item Metrics
+                    \item References
+                    \item Scripts to run the experiments
+                    \item Scripts for both analysis
+                    \item Full plan enable at least reproduce, at best repeat similar
+                    \item Analysis are fully repeatable !
+                \end{itemize}
+            \item Raw analysis
+                \begin{itemize}
+                    \item Reduce input size (from 100Gio to few Mibs)
+                    \item No statistics !
+                    \item Parse log => from tool dependent output to generic csv
+                    \item Raw analysis + Raw trace enables:
+                        \begin{itemize}
+                            \item Search for issues during the expe (meta data)
+                            \item Search for issues during the parsing (data)
+                            \item Compute new metrics / extract more data, repeat statistical analysis
+                        \end{itemize}
+                \end{itemize}
+            \item Statistical Analysis:
+                \begin{itemize}
+                    \item Statistic + Visu
+                    \item Represent data in a comprehensive way
+                    \item Statistical scripts + data enables:
+                        \begin{itemize}
+                            \item Repeat statistic analysis, looking for maths errors
+                            \item Try different visualization (visual bias)
+                        \end{itemize}
+                \end{itemize}
+        \end{itemize}
+\end{itemize}
+
 We design experiments to answer simple questions such as ``Is my tool more efficient than the existing ones'', obviously this formulation is too vague to be answered scientifically.
 We first need to find a set of relevant state of the art tools and then decide and on which configurations we are going to do the comparison.
 This means choosing a set of benchmarks representing real life applications, one or several credible experimental machine(s).
@@ -209,7 +250,7 @@ Finally we must determine a set of metrics that we can measured accurately to ev
 
 \begin{figure}[htb]
     \centering
-    \input{tikz/exp-tikz}
+    \input{tikz/exp-pipeline}
     \caption{Experimental pipeline}
     \label{fig:exp-pipeline}
 \end{figure}
