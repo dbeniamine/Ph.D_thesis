@@ -191,20 +191,30 @@ A more complete survey can be found in~\cite[Chapter~3, p17-19]{Stanisic15Reprod
 
 \subsection{Experimental workflow}
 
+We design experiments to analyze the behavior of an application, to compare it to other applications or to test it under specific circumstances.
+In each case the goal of the experiment is to answer a question or confirm an hypothesis.
+Answer scientifically a question requires it to be formulated in precise words.
+More specifically, we have to define what we are measuring, how we measure it, under which circumstance, to what are we comparing our results and what results do we expect.
+Designing an experiment consists in translating a high level questions into an \emph{experimental plan} that allow to answer it scientifically.
+
+\begin{figure}[htb]
+    \centering
+    \input{tikz/exp-pipeline}
+    \caption{Experimental workflow}
+    \label{fig:exp-pipeline}
+\end{figure}
+
+We consider an experiment as a three steps workflows depicted in \fig{exp-pipeline}, the first one calle \emph{experimental plan} defines all the experiment.
+We define the \emph{experimental plan} as the smallest set of scripts and documentation required to repeat an experiment.
+It includes the main script that actually run the experiment with all its dependencies.
+These dependencies consists in the tested applications (\gls{VCS} version) with their inputs or the benchmarks used for testing them and the \emph{environment} on which it is run (\gls{OS}, libraries and other configurations).
+It also contains the description of the experimental machine(s) and the command or script used to deploy the \emph{environment} on them and start the main script.
+Finally all the scripts used for parsing and analyzing the experimental results are part of the experimental plan as they are required to repeat it.
+Moreover designing the analysis at the same time as the experiment allow to reduce some bias.
+Indeed preparing the data presentation before obtaining them forces us to work on our expectations thus if the results does not match theses expectation we are more likely to notice it.
+
 
 \begin{itemize}
-    \item Experiment:
-        \begin{itemize}
-            \item Analyze things
-            \item Answer questions
-            \item Need to go from vague to precise / scientifique:
-                \begin{itemize}
-                    \item Metrics (What do we evaluate)
-                    \item Benchmarks (In which condition do we measure it)
-                    \item References (What are we comparing our results to)
-                    \item Initial plots (How do we visualize it)
-                \end{itemize}
-        \end{itemize}
     \item Experiment as a workflow, define:
         \begin{itemize}
             \item Experimental Plan
@@ -243,34 +253,9 @@ A more complete survey can be found in~\cite[Chapter~3, p17-19]{Stanisic15Reprod
         \end{itemize}
 \end{itemize}
 
-We design experiments to answer simple questions such as ``Is my tool more efficient than the existing ones'', obviously this formulation is too vague to be answered scientifically.
-We first need to find a set of relevant state of the art tools and then decide and on which configurations we are going to do the comparison.
-This means choosing a set of benchmarks representing real life applications, one or several credible experimental machine(s).
-Finally we must determine a set of metrics that we can measured accurately to evaluate the efficiency of the tools.
-
-\begin{figure}[htb]
-    \centering
-    \input{tikz/exp-pipeline}
-    \caption{Experimental pipeline}
-    \label{fig:exp-pipeline}
-\end{figure}
-
-All these choices form a high level \emph{experimental plan}: it contains all the information required to reproduce the experiment but not to repeat it.
-Indeed it miss the code that actually execute the experimental plan.
-We can see an experiment as a pipeline that flow from this plan to the final human readable results as described in \fig{exp-pipeline}.
-This pipeline is composed of three steps: the experimental plan that produce a (usually) huge set of data and meta data, the first one are meant to be used during the analysis while the second are only generated to find issues in the experiment or additional information to repeat it.
-Then comes the raw analysis that extract pertinent information and compute metrics from the raw data.
-The results of this step are usually easy to parse for a computer but not human friendly.
-Thus the last step is there to present these data in a readable way.
-
-Yet it is easy to present data in a tendentious way that reflects more our expectations than the reality without even noticing it.
-To limit this bias, it is very important to design carefully the whole analysis before running the actual experiment and test the visualisation on a filler set of data.
-Furthermore, adding comments to the visualisations about what they mean and what we expect to see can help reducing this bias.
-Technologies such as \gls{R-markdown},Jupyter Notebook (anciently known as IPython Notebook) or \gls{Org-mode} are great help to produce reproducible experiments.
-
 \subsection{Methodology}
 
-\DB{Reorganize:\\
+\DB{Reorganize: explain application of the workflow described before\\
     Methodology for our experiments\\
     Describe plans \\
     Automation + Documentation\\
@@ -279,7 +264,7 @@ Technologies such as \gls{R-markdown},Jupyter Notebook (anciently known as IPyth
 
 \paragraph{Preparing an experiment:}
 
-In this thesis, we ran two types of experiments: the fist one aims at analysing the behavior of one application (mostly \gls{SOFA}) while the second one aims at comparing trace collection tools.
+In this thesis, we ran two types of experiments: the fist one aims at analyzing the behavior of one application (mostly \gls{SOFA}) while the second one aims at comparing trace collection tools.
 For both analysis we need to find a set of \emph{benchmarks} to conduct our experiments, but the signification of this term is slightly different for the two cases.
 In the first case, a benchmark is an input for the studied application and the set of benchmarks used should be defined with the developers of the application to cover the code that they want to improve.
 While in the second case it means a set of applications which have a behavior representative of the applications targeted by the evaluated tool.
