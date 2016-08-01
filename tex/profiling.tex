@@ -163,9 +163,9 @@ of this thesis, except if specified otherwise, we will use the definition
 proposed by Dror G. Feitelson~\cite{Feitelson15From}:
 
 \begin{quote}
-    \emph{Repeatability} concerns the exact repetition of an experiment, using the same experimental apparatus, and under the same conditions.
+    \textbf{Repeatability} concerns the exact repetition of an experiment, using the same experimental apparatus, and under the same conditions.
 
-    \emph{Reproducibility} is the reproduction of the gist of an experiment: implementing the same general idea, in a similar setting, with newly created appropriate experimental apparatus.
+    \textbf{Reproducibility} is the reproduction of the gist of an experiment: implementing the same general idea, in a similar setting, with newly created appropriate experimental apparatus.
 \end{quote}
 
 Repeating an experiment in the sense of Feitelson in \gls{HPC} is nearly impossible.
@@ -204,7 +204,7 @@ Designing an experiment consists in translating a high level questions into an \
     \label{fig:exp-pipeline}
 \end{figure}
 
-We consider an experiment as a three steps workflows depicted in \fig{exp-pipeline}, the first one calle \emph{experimental plan} defines all the experiment.
+We consider an experiment as a three steps workflows depicted in \fig{exp-pipeline}, the first one called \textbf{Experimental Plan} defines the whole experiment.
 We define the \emph{experimental plan} as the smallest set of scripts and documentation required to repeat an experiment.
 It includes the main script that actually run the experiment with all its dependencies.
 These dependencies consists in the tested applications (\gls{VCS} version) with their inputs or the benchmarks used for testing them and the \emph{environment} on which it is run (\gls{OS}, libraries and other configurations).
@@ -213,68 +213,37 @@ Finally all the scripts used for parsing and analyzing the experimental results 
 Moreover designing the analysis at the same time as the experiment allow to reduce some bias.
 Indeed preparing the data presentation before obtaining them forces us to work on our expectations thus if the results does not match theses expectation we are more likely to notice it.
 
+The first step of the experimental workflow produces two types of results: the raw results which are the actual output of the experiment and the meta data that describe the condition on which the experiment was executed.
+We call \textbf{Raw Analysis} the second step that extract the raw values needed to compute the metrics defined in the experimental plan from the raw results.
+This step only aims at reducing the amount of data to analyze (from \SI{100}{Gio} to few Mib in some of our experiments).
+The result of the raw analysis is usually one or two \texttt{csv} files that can be easily read by any statistical tool.
 
-\begin{itemize}
-    \item Experiment as a workflow, define:
-        \begin{itemize}
-            \item Experimental Plan
-                \begin{itemize}
-                    \item Machines /environment descriptions
-                    \item Benchmarks
-                    \item Metrics
-                    \item References
-                    \item Scripts to run the experiments
-                    \item Scripts for both analysis
-                    \item Full plan enable at least reproduce, at best repeat similar
-                    \item Analysis are fully repeatable !
-                \end{itemize}
-            \item Raw analysis
-                \begin{itemize}
-                    \item Reduce input size (from 100Gio to few Mibs)
-                    \item No statistics !
-                    \item Parse log => from tool dependent output to generic csv
-                    \item Raw analysis + Raw trace enables:
-                        \begin{itemize}
-                            \item Search for issues during the expe (meta data)
-                            \item Search for issues during the parsing (data)
-                            \item Compute new metrics / extract more data, repeat statistical analysis
-                        \end{itemize}
-                \end{itemize}
-            \item Statistical Analysis:
-                \begin{itemize}
-                    \item Statistic + Visu
-                    \item Represent data in a comprehensive way
-                    \item Statistical scripts + data enables:
-                        \begin{itemize}
-                            \item Repeat statistic analysis, looking for maths errors
-                            \item Try different visualization (visual bias)
-                        \end{itemize}
-                \end{itemize}
-        \end{itemize}
-\end{itemize}
+Finally comes the \textbf{Statistical Analysis} which first read the filtered results and compute statistics such as means, standard error, speedup and slowdown etc.
+The second aim of this step is to present a comprehensive visualization of these statistics.
+
+While the whole \emph{experimental plan} is required repeat the experiment, some people may want to reproduce only the statistical analysis to inspect the results from another point of view.
+Furthermore they might want to extract some other values from the raw results or get more information on the experimental condition from the meta data.
+Thus each step should be distributed separately including all the files required to repeat the experiment from the beginning the of step to the final results.
+Finally while repeating the whole experiment requires access to the experimental machines, the two last steps are not machine dependents thus are easily repeatable.
 
 \subsection{Methodology}
 
-\DB{Reorganize: explain application of the workflow described before\\
-    Methodology for our experiments\\
-    Describe plans \\
-    Automation + Documentation\\
-    Storage
-}
+\paragraph{Construction of an experimental plan:}
 
-\paragraph{Preparing an experiment:}
-
-In this thesis, we ran two types of experiments: the fist one aims at analyzing the behavior of one application (mostly \gls{SOFA}) while the second one aims at comparing trace collection tools.
+In \gls{HPC}, an experiment usually consist in testing the execution time or the exactitude of an application or a tool that uses an application as an input (scheduler, simulator, analysis tool \ldots).
 For both analysis we need to find a set of \emph{benchmarks} to conduct our experiments, but the signification of this term is slightly different for the two cases.
 In the first case, a benchmark is an input for the studied application and the set of benchmarks used should be defined with the developers of the application to cover the code that they want to improve.
 While in the second case it means a set of applications which have a behavior representative of the applications targeted by the evaluated tool.
-For this need, we use the \gls{npb}~\cite{Jin99NPBOpenMP} which allow to cover a large set of applications from simple computational kernels to real life applications.
-Yet to compare several analysis tools, a set of benchmarks is not a sufficient input as these tools usually provides a large set of parameters allowing to modify their behavior, thus we must evaluate each tool under at least two set of parameters: the default and a tuned version with a set of parameters optimized for the results we are measuring.
+For this need, we use the \gls{npb}~\cite{Jin99NPBOpenMP} as they cover a large set of applications from simple computational kernels to real life applications.
+Yet, to evaluate analysis tools, a set of benchmarks might not a sufficient input as such tools are often highly configurable.
+Thus we must evaluate each tool under at least two set of parameters: the default and a tuned version with a set of parameters optimized for the results we are measuring.
+We often design experiment to show the performances of a tool or an application that we have developed.
+For such experiments, we have also to find a set of similar programs that can be used for comparison.
 
-Once the benchmarks are chosen, we need to decide of one machine or a set of machines on which we will run the experiment.
+Once the benchmarks are chosen, we need to decide on one machine or a set of machines on which we will run the experiment.
 This step is crucial as computers architectures are getting more and more complex  and applications are (usually) designed for one type of machines.
 Furthermore some tools (such as \gls{Pin}, \gls{PEBS}~\cite{Levinthal09Performance}, \gls{IBS}~\cite{Drongowski07Instructionbased}) are either vendor specific or optimized for some architecture.
-Thus we must find machines that allow to do our study in a relevant situation and fair to the tools and libraries used.
+Thus our experiment(s) machine must be coherent with the analyzed applications and fair to the tools used for comparison.
 
 Finally we need to find some relevant metrics to answer the questions that we are trying to answer with our experiment.
 These metrics should remain simple as they will be interpreted by humans.
@@ -282,89 +251,142 @@ Yet they must also cover every aspects that we are studying.
 A complete set of simple measurable metrics is often easier to understand that one complex metric that provide an overall score in an unknown unit.
 Still simple ratios and percentages can make an analysis more reproducible for instance an execution time is significant only for a very specific configuration on one machine, while speedups and overheads can be compared more easily.
 
+\begin{itemize}
+    \item Preparing environment: minimalist / library choices
+    \item Parsing => knowing the output / file hierarchy produced by the main script
+    \item Analysis: filler data set, prepare visu with expected results
+\end{itemize}
 
-\paragraph{Writing the experiment scripts:}
+\subsubsection{Automation and documentation}
 
-It is crucial that any step of the experiment from the deployment of the
-environment to the final analysis is properly scripted in a language that can
-be understood by an other developer. Any manual step can make the experiment
-impossible to repeat and an obscure code might make it hard to change some
-parameters without breaking the whole experiment.
+\begin{itemize}
+    \item Main script:
+        \begin{itemize}
+            \item Must be readable
+            \item First log as much info as possible
+            \item Log before each run: cmd + env modifications
+            \item Run randomization
+        \end{itemize}
+    \item Bootstrap: Possible manual command requires documentation
+    \item Output:
+        \begin{itemize}
+            \item Self contained: any dev should b able to answer exactly those questions:
+                \begin{itemize}
+                    \item How (which command) this trace was generated
+                    \item When
+                    \item Where (machine)
+                \end{itemize}
+            \item Include a Readme
+            \item Include all script (that generate and used for prsing / analyzis)
+        \end{itemize}
+    \item Document dependencies and modifications (ideally with git submodules, diff, log and patches)
+\end{itemize}
 
-Furthermore the traces generated by an experiment must be self explanatory or
-at some point they will only be a (large) set of meaningless bytes on a hard
-drive. To do so it is important to keep with the data, the scripts
-that generated it and the one that allows to interpret it. To do so, all our
-experimental scripts starts the same way: they create a new directory that
-will hold the traces, copy themselves and all the scripts which are on their
-directory inside it. Then they duplicates their output to a file in this
-experimental directory and Log every sensible meta data such as the
-command that started the experiment, the machine name, its topology, \gls{OS}
-the environment variables, the status of every dependencies (git version, diff
-etc.). Such informations can be a great help to someone trying to reproduce
-the experiment or to verify that the experimental condition are not biased.
+%It is crucial that any step of the experiment from the deployment of the
+%environment to the final analysis is properly scripted in a language that can
+%be understood by an other developer. Any manual step can make the experiment
+%impossible to repeat and an obscure code might make it hard to change some
+%parameters without breaking the whole experiment.
+%
+%Furthermore the traces generated by an experiment must be self explanatory or
+%at some point they will only be a (large) set of meaningless bytes on a hard
+%drive. To do so it is important to keep with the data, the scripts
+%that generated it and the one that allows to interpret it. To do so, all our
+%experimental scripts starts the same way: they create a new directory that
+%will hold the traces, copy themselves and all the scripts which are on their
+%directory inside it. Then they duplicates their output to a file in this
+%experimental directory and Log every sensible meta data such as the
+%command that started the experiment, the machine name, its topology, \gls{OS}
+%the environment variables, the status of every dependencies (git version, diff
+%etc.). Such informations can be a great help to someone trying to reproduce
+%the experiment or to verify that the experimental condition are not biased.
+%
+%An experiment consist of a set of independent runs, it is important to both
+%separate the execution of the runs and randomize their order. Indeed if
+%consecutive runs are part of the same program (i.e one loop that call several
+%time the same function instead of re-executing a program at each run), they
+%can benefit from cache effects. Moreover if the runs are randomized, external
+%(system) noise will either affect all runs are appears as chaotic, while if
+%they are ordered, it might be correlated with a parameter change.
+%Therefore our experimental scripts generate the list of runs that should be
+%executed shuffle it and then execute them in a randomized order. A run
+%consist of three step: a pre command that can set specific values,
+%the actual command that execute the benchmark and the post command that can
+%save and pre-process data, might compute metrics and must restore the normal state. Note that
+%the first and last steps are not mandatory. Each of the commands executed by
+%these 3 steps are logged before execution.
+%
+%At the end of the day our experiment have produced a huge set of data that we
+%can divide on two categories: the meta data that are useful for debugging and
+%reproducibility and the raw results that will be filtered to then be analyzed.
+%The parsing step is designed only to extract data from the traces so the
+%analysis scripts can work on clean results, we avoid to do any statistic
+%during this step.
+%
+%Finally for the analysis \gls{R} provides a large set of reliable statistic
+%analysis libraries and technologies such as \gls{R-markdown} or
+%\gls{Org-mode} allows to mix analysis code and results with comments. These
+%technologies allow to produce a standalone result (as a pdf or as a webpage)
+%that contains the original questions, our assumptions, the results and plots,
+%and our observation on these results.
 
-An experiment consist of a set of independent runs, it is important to both
-separate the execution of the runs and randomize their order. Indeed if
-consecutive runs are part of the same program (i.e one loop that call several
-time the same function instead of re-executing a program at each run), they
-can benefit from cache effects. Moreover if the runs are randomized, external
-(system) noise will either affect all runs are appears as chaotic, while if
-they are ordered, it might be correlated with a parameter change.
-Therefore our experimental scripts generate the list of runs that should be
-executed shuffle it and then execute them in a randomized order. A run
-consist of three step: a pre command that can set specific values,
-the actual command that execute the benchmark and the post command that can
-save and pre-process data, might compute metrics and must restore the normal state. Note that
-the first and last steps are not mandatory. Each of the commands executed by
-these 3 steps are logged before execution.
+\subsubsection{Distribution}
 
-At the end of the day our experiment have produced a huge set of data that we
-can divide on two categories: the meta data that are useful for debugging and
-reproducibility and the raw results that will be filtered to then be analyzed.
-The parsing step is designed only to extract data from the traces so the
-analysis scripts can work on clean results, we avoid to do any statistic
-during this step.
+\begin{itemize}
+    \item Several constraint for each steps:
+        \begin{itemize}
+            \item Expe
+                \begin{itemize}
+                    \item Git
+                    \item Dependencies as submodules
+                    \item Patches must be documented
+                    \item Init script can clone submodules and apply patch
+                    \item File hierarchy should correspond to the one requested by expe script
+                \end{itemize}
+            \item Raw
+                \begin{itemize}
+                    \item Too large for git
+                    \item Zenodo => DOI linked in the main git
+                    \item Archive of the whole directory, or splited archive with documentation on correct extraction
+                \end{itemize}
+            \item Analysis
+                \begin{itemize}
+                    \item Both git and Zenodo possible
+                    \item Data auto generated => Zenodo seems more apropriate
+                \end{itemize}
+        \end{itemize}
+\end{itemize}
 
-Finally for the analysis \gls{R} provides a large set of reliable statistic
-analysis libraries and technologies such as \gls{R-markdown} or
-\gls{Org-mode} allows to mix analysis code and results with comments. These
-technologies allow to produce a standalone result (as a pdf or as a webpage)
-that contains the original questions, our assumptions, the results and plots,
-and our observation on these results.
-
-\paragraph{Distributing the experiment:}
-
-Trying to compile a badly documented code can be painful and time consuming,
-the same problems occurs when it comes to reproduce experiment. Thus the
-distribution of experiment traces and scripts must be considered carefully.
-To repeat an experiment we need the scripts that run it, a description of the
-machines and/or the virtual environment that is deployed and a link to the
-right version of each tool, applications and benchmarks used during the
-experiment. Several services such as Github, Bitbucked, and Gitlab \DBm{Urls
-?} host freely code repositories, furthermore \glspl{VCS} such as \gls{Git}
-\DBm{Citations ?} allow to track easily dependencies with a system of
-submodules, therefore they are well suited for experiment distribution.
-Finally an effort must be done on the documentation to help the user
-understand why the experiment is designed, how it works and where (on which
-machines) we should run it.
-
-Distributing the experiment results can be more tricky as trace files can be
-quite heavy and code repositories are usually not designed to handle large
-files. While the experimental repository allows to repeat the whole
-experiment, the trace distribution is useful to repeat only some specific
-steps of the analysis, thus we distribute to set of files corresponding to the
-two analysis steps depicted in \fig{exp-pipeline}. The first one contains all
-the files generated by the experiment and the scripts to run that analysis.
-This distribution can be quite heavy (around \SI{100}{Gib} for some of our
-experiments) but allows to redo the whole analysis, compute new metrics or
-look for additional informations in the meta data. At the opposite, the second
-one only contains the filtered results and the scripts that generate the
-plots, it allows to redo the statistical analysis exploring the data with a
-different approach. Furthermore this trace usually contains more plots and
-data than a published article that have to fit a certain amount of pages. Such
-traces can be distributed using specialized large file hosting services such
-as Renater File Sender, or Zenodo.\DBm{Url, Citation ?}
+%Trying to compile a badly documented code can be painful and time consuming,
+%the same problems occurs when it comes to reproduce experiment. Thus the
+%distribution of experiment traces and scripts must be considered carefully.
+%To repeat an experiment we need the scripts that run it, a description of the
+%machines and/or the virtual environment that is deployed and a link to the
+%right version of each tool, applications and benchmarks used during the
+%experiment. Several services such as Github, Bitbucked, and Gitlab \DBm{Urls
+%?} host freely code repositories, furthermore \glspl{VCS} such as \gls{Git}
+%\DBm{Citations ?} allow to track easily dependencies with a system of
+%submodules, therefore they are well suited for experiment distribution.
+%Finally an effort must be done on the documentation to help the user
+%understand why the experiment is designed, how it works and where (on which
+%machines) we should run it.
+%
+%Distributing the experiment results can be more tricky as trace files can be
+%quite heavy and code repositories are usually not designed to handle large
+%files. While the experimental repository allows to repeat the whole
+%experiment, the trace distribution is useful to repeat only some specific
+%steps of the analysis, thus we distribute to set of files corresponding to the
+%two analysis steps depicted in \fig{exp-pipeline}. The first one contains all
+%the files generated by the experiment and the scripts to run that analysis.
+%This distribution can be quite heavy (around \SI{100}{Gib} for some of our
+%experiments) but allows to redo the whole analysis, compute new metrics or
+%look for additional informations in the meta data. At the opposite, the second
+%one only contains the filtered results and the scripts that generate the
+%plots, it allows to redo the statistical analysis exploring the data with a
+%different approach. Furthermore this trace usually contains more plots and
+%data than a published article that have to fit a certain amount of pages. Such
+%traces can be distributed using specialized large file hosting services such
+%as Renater File Sender, or Zenodo.\DBm{Url, Citation ?}
 
 
 \section{SOFA Analysis}
