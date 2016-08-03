@@ -362,7 +362,7 @@ Each of the commands executed by these 3 steps are logged before execution.
 \subsubsection{Distribution:}
 
 The experimental plan is mostly composed of source code, thus it can easily be distributed using a \gls{VCS}.
-As it often dependent of external programs, it is preferable to use \gls{VCS} which manage dependencies and patches such as \gls{Git} or \gls{mercurial}.
+As it often dependent of external programs, it is preferable to use \gls{VCS} which manage dependencies and patches such as \gls{Git} or mercurial.
 We distribute our experimental plans as \gls{Git} repositories, were each dependencies is listed as a submodule.
 This repository includes an initialization script that retrieves all dependencies and apply the patch required.
 If the virtual environment is written as a \gls{Kameleon} recipe, it is trivial to distribute it inside the \gls{Git} repository.
@@ -380,28 +380,27 @@ Yet large file sharing seems more suitable to us as the filtered traces are not 
 \section{SOFA Analysis}
 \label{sec:sofa-analysis}
 
-In this section, we present first the experiment designed to produce a performance analysis of \gls{SOFA}, then we discuss the obtained result on the possibility of improvements.
+In this section, we present first the experiment designed to produce a performance analysis of \gls{SOFA}, then we discuss about the obtained result and the possibility of improvements.
 
-\subsection{Experiments}
+\subsection{Experimental plan}
 
-The current version of \gls{SOFA} is mostly sequential code with a simple \gls{OpenMP} parallelization.
-Yet this parallelization is known to be often not efficient.
-The \gls{SOFA} developers gave us $4$ simulation scenes specifically designed to test the most popular part of \gls{SOFA}.
-Moreover they give us hints of function that are known as hotspots.
+The current version of \gls{SOFA} is mostly sequential with a simple \gls{OpenMP} parallelization in some places.
+Yet this parallelization is known to be often inefficient.
+The \gls{SOFA} developers gave us four simulation scenes specifically designed to test the most popular parts of \gls{SOFA}, and hints about functions that are known as hotspots.
 
 We decided to use \gls{Likwid} to analyze \gls{SOFA} performances as it is quite flexible allowing both global (wrapper mode) and local (marker mode) analysis and provides several useful metrics and performance groups out of the box.
 
-More specifically, we focused the following metrics:
+More specifically, we focused on the following metrics:
 \begin{itemize}
     \item \emph{Idle time ratio}: The CPU is idle when it is waiting for a transfer to memory,  disc or network \gls{I/O}.
         Idle time can often be reduced either by overlapping it with computation or by improving memory (or \gls{I/O} access pattern).
-        This metric gives the ratio between the time spent idel and the time actually spent computing things during the simulation.
-    \item \emph{Simulation time}: The time spend inside \gls{SOFA} simulation loop, this is only useful to compare parallel execution to sequential ones.
-    \item \emph{Runtime ratio}: For each function, the ratio of the time spend in this function and the total time spent in the simulation loop.
-        This metrics show if a function is a hotspot or not.
-    \item \texttt{L2}, \texttt{L3} and \texttt{MEM} predefined groups from \gls{Likwid}. These groups compute mainly the data volume exchanged at their level level (respectively second level of cache, third level of cache and main memory) and the bandwidth.
-        These two metrics and more precisely their evolution between sequential and parallel executions tells us how much data is shared between the threads and if it shared efficiently or not.
-        These metrics are computed by counting the misses at the lower level (hence the absence of \texttt{L1} group).
+        This metric gives the ratio between the time spent idle and the time actually spent computing things during the simulation.
+    \item \emph{Simulation time}: The time spent inside \gls{SOFA} simulation loop, this is only useful to compare parallel executions to sequential ones.
+    \item \emph{Runtime ratio}: For each function, the ratio of the time spent in this function and the total time spent in the simulation loop.
+        This metric is highlight functions that are actually hotspots.
+    \item \texttt{L2}, \texttt{L3} and \texttt{MEM} predefined groups from \gls{Likwid}. These groups mainly compute the data volume exchanged at their level (respectively second level of cache, third level of cache and main memory) and the bandwidth.
+        These two metrics and more precisely their evolution between sequential and parallel executions tell us how data is shared between the threads and if it shared efficiently or not.
+        These metrics are computed by counting the misses at one level lower (hence the absence of \texttt{L1} group).
 \end{itemize}
 
 \begin{table}[t]
@@ -420,31 +419,39 @@ More specifically, we focused the following metrics:
         & \SI{32}{Kib} & \SI{256}{Kib} & &\SI{10}{Mib} & \SI{16}{Gib} \\
         \bottomrule
     \end{tabular}
-    \caption{Hardware configuration of Hopi.}
-    \label{tab:hopi-hw}
+    \caption{Hardware configuration of Naskapi.}
+    \label{tab:naskapi-hw}
 \end{table}
 
-As \gls{SOFA} is mainly used on personal machines and not \gls{HPC} ones, we ran our performance evaluation on a recent desktop machine called \emph{Hopi} (formerly known as \emph{Naskapi}).
-The hardware specifications of this machine are described in \tbl{hopi-hw}.
+As \gls{SOFA} is mainly used on personal machines and not \gls{HPC} ones, we ran our performance evaluation on a recent desktop machine called \emph{Naskapi}.
+The hardware specifications of this machine are described in \tbl{naskapi-hw}.
 It runs a \gls{Debian} \emph{Wheezy} on a Linux kernel $3.2.0$-$4$ with hyper threading disabled.
 
-The experimental methodology described in \sect{expe-methodo} evolved during this Ph.D thesis, hence the experiments presented here does not fit it perfectly, the main mistake is that we did not made an image of our experimental system, furthermore the runs were independent but not randomized.
+
+The experimental methodology described in \sect{expe-methodo} evolved during this Ph.D thesis, hence the experiments presented here does not fit it perfectly.
+Mostly the runs were independent but not randomized, and the experimental logs were not as complete as they should.
+Furthermore as \emph{Naskapi} is a personal machine and not a node from a cluster, we did not deployed an image of the system.
+Therefore repeating these experiment in the exact same condition do not seem possible.
+Yet we distribute the experimental plan and the trace, which should make the experiment easy to reproduce.
+\DB{Do distribution}
 
 
 \subsection{Results and Discussions}
 
 To present the results of our evaluation, we will focus on two \gls{SOFA} scenes that illustrate the kind of results we obtained.
-The first scene is called \emph{linearQuadraticFrame}, for this scene the \gls{OpenMP} parallelization provides a speedup of $1.37$ with four threads which is clearly not optimal.
-Yet compared to the second scene \emph{linearRigidAndAffineFrame}, which has a speedup of $0.87$, it seems efficient.
-Thus our first goal was to understand why while some scenes takes advantage of this parallelization some other are slowed down by it.
+The first scene is called \emph{linearQuadraticFrame}, for this scene the \gls{OpenMP} parallelization provides a speedup of $1.37$ with four threads.
+This speedup seems rather low, yet as the parallelization is only partial we need to determine if we can actually reach a higher speedup.
+However the second scene \emph{linearRigidAndAffineFrame} has a speedup of $0.87$ which means that the parallel version is slower than the sequential one.
+Thus our first goal is to understand why some scenes take advantage of this parallelization while some other are slowed down by it.
 
 Before digging into the differences between these scenes, there are two noticeable similarities between them to discuss.
-First the idle time ratio reported by \gls{Likwid} showed that, for the sequential version of the code, during almost half of the simulation the processor is idle, which means that we spend a lot of time waiting for \gls{I/O} or memory accesses.
-In parallel  this idle time increases, yet this behavior is expected as the \gls{OpenMP} based parallelization only affect some small parts of the code, hence as soon as we are not in a parallel loop, $3$ threads out of $4$ are idle.
+First the idle time ratio reported by \gls{Likwid} showed that, for the sequential version of the code, during almost half of the simulation the processor is idle, which means that it spend a lot of time waiting for \glspl{I/O} or memory accesses.
+In parallel,  this idle time increases.
+This behavior is expected as the \gls{OpenMP} based parallelization only affect some small parts of the code, hence as soon as the code is not in a parallel loop, $3$ threads out of $4$ are idle.
 The second noticeable similarity is that the functions pointed by the developers only represent around \SI{30}{\%} of the simulation time, which means that there are some unknown hotspots left.
 
 From here, we know that there might be a memory issue (as the processor spend a lot of time idle), and we have two scenes: one where the parallelization speed the execution up and one on which it slows it down.
-We compared the bandwidth and data volume from the \texttt{L2} cache to the main memory for the two scenes and for the functions indicated by the developers.
+We compared the bandwidth and data volume going int each cache level and the main memory for the two scenes and for the functions indicated by the developers.
 Those functions are generic and thus their actual code varies depending on the parameters of the simulation.
 Therefore while the compared functions are similar in terms of role in the simulation, the manipulated data as well as the executed code is different for the two scenes.
 
@@ -465,12 +472,12 @@ Each point represents the mean of $60$ runs and the error bars represents the st
 To make the plot more readable, we have normalized each value by dividing it by the value for the corresponding sequential run, thus these plots show the evolution of the bandwidth and data volume when we use the \gls{OpenMP} version of\gls{SOFA}.
 
 We can see that for the first scene, both the bandwidth and data volume increases by a factor of $1.5$ in the cache and stays comparable in the main memory when we use the parallel version.
-This means that the thread are either sharing efficiently data or at least working on data different enough to not step on each other foots.
+This means that there are more useful data in the cache, either because each thread works on a smaller set of independent data which fit in the cache, or because they share data efficiently.
 At the opposite for the second scene, the bandwidth drops down at each level and the data volume stays still except at the \texttt{L3} level where it increases by a factor $2.5$.
 It is important to note that the \texttt{L3} cache is the only shared cache which means that a considerable amount of data is invalidated in \texttt{L2}, in other words, several threads are writing the same data, invalidating each other private cache and requiring the coherency protocol to interfere.
-This behavior is called false sharing and is a well known performance issue.
+This behavior is called false sharing and is a well known performance issue that have been introduced by Torellas et al.~\cite{Torrellas94False}.
 
-At this point we can say that false sharing occurs on this precise function, yet we do not know on which data structure.
+At this point we can say that false sharing occurs in this precise function, yet we do not know on which data structure.
 We could dig onto the code and try to understand the memory access pattern of each data structure to see where the false sharing does occurs.
 By looking at \gls{SOFA}'s code, we can see that the main difference between the two version of the function is that for \texttt{linearRigidAndAffineFrame} there is one more loop in the computation.
 Still this code manipulate several data through many indirections, therefore determining on which data the false sharing is happening could be extremely slow.
@@ -479,6 +486,12 @@ Furthermore this approach is not generic at all, and once we have done it for on
 Furthermore as we have seen with the runtime ratio, this particular false sharing issue only represent a small part of the execution, therefore a more generic approach would be welcome.
 
 From that point it seems clear that \gls{SOFA} is having memory performance issues, yet we need a generic tools to analyze its performances from the memory point of view.
-Such tool should be able to show the memory access patterns of each thread over the different data structures and point us through patterns that are (or can be) inefficient.
+Such tool should be able to establish a complete diagnosis of the memory usage.
+To do so, this tool need to identify memory access patterns and differentiate the efficient ones from the others.
+Moreover to correct an inefficient pattern we need to know precisely why it is inefficient, thus this tool should classify them in terms of performance issues.
+Finally it needs to localize these patterns which means determine where it occurs in term of data structure, which thread(s) are responsible for the accesses and to what lines of code it correspond.
+To sum up, this ideal tool will trace every memory access of an application and give to the user a list of inefficient patterns.
+For each pattern it will specify very precisely what kind of issue is occurring, where it happens and how we could fix it.
+
 
 % vim: et si sta lbr  sw=4 ts=4 spelllang=en_us

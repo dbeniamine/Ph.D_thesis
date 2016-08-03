@@ -113,8 +113,9 @@ Jiang14Understanding,Bosch00Rivet,Weyers14Visualization,Tao01Visualizing,DeRose0
 Several generic tools have been designed on top of hardware performance counters
 to analyze and improve parallel applications performances, such as Intel's
 VTune~\cite{Reinders05VTune}, Performance Counter
-Monitor~(PCM)~\cite{Intel2012b}, the HPCToolkit~\cite{Adhianto10HPCTOOLKIT},
-and AMD's CodeAnalyst~\cite{Drongowski2008}.
+Monitor~(PCM)~%\cite{Intel2012b}
+, the HPCToolkit~\cite{Adhianto10HPCTOOLKIT},
+and AMD's CodeAnalyst~\cite{Drongowski08introduction}.
 %
 Although performance counters provide information about the memory use
 (bandwith, volume of data transferred \ldots),  they consider the memory as
@@ -143,7 +144,7 @@ Other methods, implemented by several
 tools~\cite{Lachaize12MemProf,McCurdy10Memphis,Liu14Tool,Gimenez14Dissecting},
 rely on hardware sampling such as AMD's Instruction Based Sampling
 (IBS)~\cite{Drongowski07Instructionbased} or Intel Precise Event Based
-Sampling (PEBS)~\cite{Levinthal2009}.  These methods provide \emph{incomplete}
+Sampling (PEBS)~\cite{Levinthal09Performance}.  These methods provide \emph{incomplete}
 sampling: some parts of the memory can be accessed without being noticed by
 the tool if none of the associated instructions are part of the sampled
 instructions.  Thus, it is possible that they ignore memory areas
