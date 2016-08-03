@@ -1,10 +1,13 @@
 %!TEX encoding=UTF-8 Unicode
 \usepackage{algorithm}
-\usepackage{algpseudocode}
+\usepackage[noend]{algpseudocode}
 \usepackage{varwidth} % for algorithm in tikz node
 
-\algblockdefx[]{Function}{EndFunction}
-[2]{\algorithmicfunction\ \textproc{#1}{(#2)}}%
-{\algorithmicend\ \algorithmicfunction}%
-\algnewcommand\Callp[2]{\textproc{#1}(#2)}%
+%\algblockdefx[]{Function}{EndFunction}
+%[2]{\algorithmicfunction\ \textproc{#1}{(#2)}}%
+%{\algorithmicend\ \algorithmicfunction}%
+%\algnewcommand\Callp[2]{\textproc{#1}(#2)}%
 
+\algblockdefx[Program]{Program}{EndProgram}%
+    [1]{\texttt{#1:}}%
+    {}

@@ -27,7 +27,7 @@
     shape = rectangle,
     draw,
     text centered,
-    text width=6em,
+    text width=5.5em,
     },
   rounded box/.style={
     basic box,
@@ -107,8 +107,8 @@
     \begin{pgfonlayer}{foreground}
 
 
-    \node [Expebox,rotate=90,anchor=west] (configs) at (-3,-2) {Benchmarks, Runtimes, Inputs \ldots};
-    \node [Expebox,rotate=90,anchor=west] (venv)  at (-3,2) {Virtual environment};
+    \node [Expebox,rotate=90,anchor=center] (configs) at (-3,0) {Benchmarks, Runtimes, Inputs \ldots};
+    \node [Expebox,rotate=90,anchor=center] (venv)  at (-3,4) {Virtual environment};
 
     \node [fileA](filt) at (0,-3.5) {Parsing script};
     \node [file] (main) at (0,0) {Main script};
@@ -161,7 +161,7 @@
     % \path[dep] (configs.east) edge[out=0,in=180] node[above] {use} (mach.west);
 
 
-     \path[exec] (dpl.east) edge[out=-50,in=130]  (mach.north);
+     \path[exec] (dpl.east) edge[out=0,in=180,looseness=.6]  (mach.north);
      \path[exec] (main.east) edge  (mach.north);
      \path[copy] (ana.east)  edge (ana1.west);
      \path[copy] (filt.east) edge  (filt1.west);
@@ -174,7 +174,7 @@
     \path[copy] (ana1.east) edge[out=0,in=180] (ana2.west);
 
     \draw[exec] (csv.east) -- node[pos=.09,below=2em,rotate=90] {generate} (res.west);
-    \path[exec] (ana2.east) edge[out=60,in=240] (res.west);
+    \path[exec] (ana2.east) edge[out=0,in=180,looseness=.6] (res.west);
 
 \end{tikzpicture}
 % vim: et si sta lbr  sw=4 ts=4 spelllang=en_us
