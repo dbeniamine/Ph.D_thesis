@@ -16,27 +16,49 @@
 \newcommand{\colj}[1]{\textcolor{ColJ}{#1}}
 \newcommand{\colk}[1]{\textcolor{ColK}{#1}}
 
-% #1: name, #2: start pos, #3: size
-\newcommand{\matgrid}[3]{
-        \draw #2 grid ($#2+(#3,#3)$);
-        % Four corners
-        \coordinate (m#1-00) at ($#2+(0.5,0.5)$);
-        \coordinate (m#1-0N) at ($#2+(0.5,#3-0.5)$);
-        \coordinate (m#1-N0) at ($#2+(#3-0.5,0.5)$);
-        \coordinate (m#1-NN) at ($#2+(#3-0.5,#3-0.5)$);
+\tikzset{
+    algorithm/.style={
+        shape=rectangle,
+        alias=this,
+        append after command = {
+            \pgfextra{
+              % Top and bottom lines
+                \draw [] ($(this.north west)+(0,.5)$) -- ($(this.north east)+(0,.5)$);
+                \node [anchor=west] at ($(this.north west)+(0,0.25)$) {\textbf{Algorithm} #1};
+                \draw [] (this.north west) -- (this.north east);
+                \draw [] (this.south west) -- (this.south east);
+            }
+        }
+    },
+    matgrid/.style args={#1#2}{
+        %#1: name #2: size
+        alias=this,
+        append after command ={
+            \pgfextra{
+                \draw (this) grid ($(this)+(#2,#2)$);
+                % Four corners
+                \coordinate (m#1-00) at ($(this)+(0.5,0.5)$);
+                \coordinate (m#1-0N) at ($(this)+(0.5,#2-0.5)$);
+                \coordinate (m#1-N0) at ($(this)+(#2-0.5,0.5)$);
+                \coordinate (m#1-NN) at ($(this)+(#2-0.5,#2-0.5)$);
 
-        \node (#1) at ($(m#1-00)+(-1,0)$){#1};
+                \node (#1) at ($(m#1-00)+(-1,0)$){\textbf{#1}};
 
-        \node (#1) at ($(m#1-0N)+(-.2,.2)$)  {0};
-        \node (#1) at ($(m#1-00)+(0,-.2)$) {N-1};
-        \node (#1) at ($(m#1-NN)+(.2,0)$)  {N-1};
+                \node at ($(m#1-0N)+(-.2,.2)$)  {0};
+                \node at ($(m#1-00)+(0,-.2)$) {N-1};
+                \node at ($(m#1-NN)+(.2,0)$)  {N-1};
+
+            }
+        }
+    }
 }
+
 
 
 \begin{tikzpicture}[font=\small]
 
     \begin{pgfonlayer}{background}
-        \node[draw,rounded corners] at (2.5,9){%
+        \node[algorithm=Matrix multiplication] at (2.5,8.5){%
             \begin{varwidth}{\linewidth}
                 \begin{algorithmic}
                     \For{\coli{i in 0..N-1}}
@@ -50,9 +72,9 @@
             \end{varwidth}%
         };
 
-        \matgrid{A}{(0,0)}{5}
-        \matgrid{B}{(6,6)}{5}
-        \matgrid{C}{(6,0)}{5}
+        \node[matgrid={A}{5}] at (0,0){};
+        \node[matgrid={B}{5}] at (6,6){};
+        \node[matgrid={C}{5}] at (6,0){};
 
     \end{pgfonlayer}
 
@@ -60,16 +82,16 @@
 
     \begin{pgfonlayer}{foreground}
         %% A
-        \draw[PrimaryA,ColI]   (mA-0N) -- node [above] {i} (mA-NN);
-        \draw[SecondaryA,ColK] (mA-0N) -- node [left]  {k} (mA-00);
+        \draw[PrimaryA,ColI]   (mA-0N) -- node [above] {\textbf{i}} (mA-NN);
+        \draw[SecondaryA,ColK] (mA-0N) -- node [left]  {\textbf{k}} (mA-00);
 
         %% B
-        \draw[PrimaryA,ColJ]   (mB-0N) -- node [left]  {j} (mB-00);
-        \draw[SecondaryA,ColK] (mB-0N) -- node [above] {k} (mB-NN);
+        \draw[PrimaryA,ColJ]   (mB-0N) -- node [left]  {\textbf{j}} (mB-00);
+        \draw[SecondaryA,ColK] (mB-0N) -- node [above] {\textbf{k}} (mB-NN);
 
         %% C
-        \draw[PrimaryA,ColI]   (mC-0N) -- node [above] {i} (mC-NN);
-        \draw[SecondaryA,ColJ] (mC-0N) -- node [left]  {j} (mC-00);
+        \draw[PrimaryA,ColI]   (mC-0N) -- node [above] {\textbf{i}} (mC-NN);
+        \draw[SecondaryA,ColJ] (mC-0N) -- node [left]  {\textbf{j}} (mC-00);
     \end{pgfonlayer}
 
 \end{tikzpicture}
