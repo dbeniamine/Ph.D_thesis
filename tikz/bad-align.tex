@@ -1,0 +1,77 @@
+%!TEX encoding=UTF-8 Unicode
+
+\definecolor{ColG}{HTML}{1B9E77}
+\definecolor{ColB}{HTML}{D95F02}
+
+\newcommand{\colg}[1]{\textcolor{ColG}{#1}}
+\newcommand{\colb}[1]{\textcolor{ColB}{#1}}
+
+\pgfdeclarelayer{bg}
+\pgfsetlayers{bg,main}
+
+
+\tikzstyle{arr}   = [-latex,thick]
+\tikzstyle{txtnode} = [anchor=west]
+
+\def\eltsz{3}
+\def\vshift{-1.5}
+\def\balign{.4}
+\def\nlines{2}
+\pgfmathparse{\nlines-\balign}
+\edef\resid{\pgfmathresult}
+
+\tikzset{
+    myarray/.style args={#1#2#3}{
+        % args: size-1, fill, show number ?
+        alias=this,
+        append after command = {
+            \pgfextra{
+                \coordinate (base) at ($(this.west)+(0,\vshift)$);
+                \pgfmathparse{#1-1}
+                \foreach \i in {0,...,\pgfmathresult}{
+                    \draw[fill=#2] ($(base)+(\eltsz*\i,0)$) rectangle ($(base)+(\eltsz*\i+\eltsz,1)$);
+                    \ifthenelse{#3=0}{}{
+                        \node[anchor=south] at ($(base)+(\eltsz*\i,1)$) {\i};
+                    }
+                }
+                \ifthenelse{#3=0}{}{
+                    \node[anchor=south] at ($(base)+(\eltsz*#1,1)$){#1};
+                }
+            }
+        }
+    },
+}
+
+
+
+\begin{tikzpicture}[font=\small]
+    \node[myarray={4}{none}{1},txtnode] (bad) at (0,0) {\colb{Bad alignment:}};
+
+    \begin{pgfonlayer}{bg}
+        \node[myarray={2}{ColG,dashed}{0},txtnode] (d0) at (\balign,0) {};
+        \draw[fill=ColB,dashed] (0,\vshift) rectangle ($(0,\vshift)+(\balign,1)$);
+        \draw[fill=ColB,dashed] (\balign+\eltsz*2,\vshift) rectangle (4*\eltsz,1+\vshift);
+    \end{pgfonlayer}
+
+    \node[txtnode] (bf0) at ($(bad.south west)+(0,-1.5)$)
+    {Fetch 0: \colg{\resid~useful lines} / \colb{\balign~useless lines}};
+    \node[txtnode] (bf1) at ($(bad.south west)+(6,-1.5)$)
+    {Fetch 1: \colg{\balign~useful lines} / \colb{\resid~useless lines}};
+
+    \draw[arr] (bf0.south west) -- ($(bad.south west)+(0,-1)$);
+    \draw[arr] (bf1.south west) -- ($(bad.south west)+(6,-1)$);
+
+    %% Good alignment
+    \node[myarray={4}{none}{1},txtnode] (good) at (0,-3) {\colg{Good alignment:}};
+
+    \begin{pgfonlayer}{bg}
+        \node[myarray={2}{ColG,dashed}{0},txtnode] (d1) at (0,-3) {};
+    \end{pgfonlayer}
+
+    \node[txtnode] (gf0) at ($(good.south west)+(0,-1.5)$)
+    {Fetch 0: \colg{2~useful lines} / \colb{0~useless lines}};
+
+    \draw[arr] (gf0.south west) -- ($(good.south west)+(0,-1)$);
+
+\end{tikzpicture}
+% vim: et si sta lbr  sw=4 ts=4 spelllang=en_us

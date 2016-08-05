@@ -1,0 +1,44 @@
+%!TEX encoding=UTF-8 Unicode
+
+\definecolor{Col0}{HTML}{1B9E77}
+\definecolor{Col1}{HTML}{D95F02}
+
+%\newcommand{\col0}[1]{\textcolor{Col0}{#1}}
+%\newcommand{\col1}[1]{\textcolor{Col1}{#1}}
+
+\pgfdeclarelayer{bg}
+\pgfsetlayers{bg,main}
+
+
+\tikzstyle{arr}   = [-latex,very thick]
+\tikzstyle{txtnode} = [anchor=west]
+
+\def\eltsz{1.5}
+%\def\balign{.4}
+%\def\nlines{2}
+%\pgfmathparse{\nlines-\balign}
+%\edef\resid{\pgfmathresult}
+
+\tikzset{
+    myarray/.style args={#1#2}{
+        % args: size-1
+        alias=this,
+        append after command = {
+            \pgfextra{
+                \coordinate (base) at (this.west);
+                \foreach \i in {0,...,#1}{
+                    \draw[fill=#2] ($(base)+(\eltsz*\i,0)$) rectangle ($(base)+(\eltsz*\i+\eltsz,1)$);
+                }
+            }
+        }
+    },
+}
+
+
+
+\begin{tikzpicture}[font=\small]
+    \node[myarray={7}{none}] (cache) at (0,0) {};
+    \draw[arr,Col0] (.5,.5) -- node[above,pos=.5] {Thread 0} (4*\eltsz-.5,.5);
+    \draw[arr,Col1] (4*\eltsz+.5,.5) -- node[above,pos=.5] {Thread 1} (8*\eltsz-.5,.5);
+\end{tikzpicture}
+% vim: et si sta lbr  sw=4 ts=4 spelllang=en_us

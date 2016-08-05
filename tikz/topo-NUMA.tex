@@ -1,5 +1,18 @@
 %!TEX encoding=UTF-8 Unicode
 
+\definecolor{ColPU}{HTML}{FFFFFF}
+\definecolor{ColCore}{HTML}{F0F9E8}
+\definecolor{ColL1}{HTML}{BAE4BC}
+\definecolor{ColL2}{HTML}{7BCCC4}
+\definecolor{ColL3}{HTML}{43A2CA}
+\definecolor{ColM}{HTML}{0868AC}
+\definecolor{ColS}{HTML}{FFFFFF}
+
+\pgfdeclarelayer{bg}
+\pgfdeclarelayer{bbg}
+\pgfsetlayers{bbg,bg,main}
+
+
 \tikzset{
     box/.style={
         shape=rectangle,
@@ -14,20 +27,21 @@
             %PUs
             \foreach \pu in {\pmin,...,\pmax}{
                 \pgfmathtruncatemacro{\pstep}{\pu-\pmin}
-                \node[box] (PU-\pu)at ($(0,0)+(0,-.7*\pstep)$) {PU\#\pu};
+                \node[box,fill=ColPU] (PU-\pu)at ($(0,0)+(0,-.7*\pstep)$) {PU\#\pu};
             }
             \node (inv) at ($(PU-\pmax)+(0,-.2)$) {};
             %Core ID
             \node (name) at ($(PU-\pmin)!0.5!(PU-\pmax)+(0,1)$) {Core\##2};
             % L1
-            \node[box,inner sep=.1pt, fit=(name) (PU-\pmin) (PU-\pmax) (inv)] (box) {};
-            \draw ($(box.north west)+(0,.1)$) rectangle ($(box.north east)+(0,.5)$)%
+            \begin{pgfonlayer}{bg}
+                \node[box,fill=ColCore,inner sep=.1pt, fit=(name) (PU-\pmin)
+                    (PU-\pmax) (inv)] (core-#2) {};
+            \end{pgfonlayer}
+            \draw[fill=ColL1] ($(core-#2.north west)+(0,.1)$) rectangle ($(core-#2.north east)+(0,.5)$)%
                 node[pos=.5] (l1) {L1};
-            % Coordinate for drawing L2
-            \coordinate (core-#2-w) at ($(box.north west)+(0,.5)$);
-            \coordinate (core-#2-e) at ($(box.north east)+(0,.5)$);
             % links
-            \draw (box.north) -- (l1.south);
+            \draw (core-#2.north) -- ($(core-#2.north)+(0,.1)$);
+            \coordinate (l1-#2-n) at ($(core-#2.north)+(0,.5)$);
         }
     },
     pics/l2group/.style args={#1#2}{
@@ -41,15 +55,14 @@
                 \draw ($(0,0)+(1.6*\cstep,0)$) pic {core={2}{\core}};
             }
             % L2
-            \draw ($(core-\cmin-w)+(0,.1)$) rectangle ($(core-\cmax-e)+(0,.5)$)%
-                node[pos=.5]{L2};
+            \draw[fill=ColL2] ($(core-\cmin.north west)+(0,.6)$) rectangle
+                ($(core-\cmax.north east)+(0,1.1)$) node[pos=.5]{L2};
             % Coordinates for L3
-            \coordinate (l2g-#2-w) at ($(core-\cmin-w)+(0,.5)$);
-            \coordinate (l2g-#2-e) at ($(core-\cmax-e)+(0,.5)$);
+            \coordinate (l2g-#2-w) at ($(core-\cmin.north west)+(0,1.1)$);
+            \coordinate (l2g-#2-e) at ($(core-\cmax.north east)+(0,1.1)$);
             %links
             \foreach \core in {\cmin,...,\cmax}{
-                \draw ($(core-\core-w)!.5!(core-\core-e)$) --
-                    ($(core-\core-w)!.5!(core-\core-e)+(0,.1)$);
+                \draw (l1-\core-n) -- ($(core-\core.north)+(0,.6)$);
             }
         }
     },
@@ -62,8 +75,8 @@
             \foreach \lg in {\lmin,...,\lmax}{
                 \draw ($(0,0)+(3.2*\lg,0)$) pic {l2group={2}{\lg}};
             }
-            % L2
-            \draw ($(l2g-\lmin-w)+(0,.1)$) rectangle ($(l2g-\lmax-e)+(0,.5)$)%
+            % L3
+            \draw[fill=ColL3] ($(l2g-\lmin-w)+(0,.1)$) rectangle ($(l2g-\lmax-e)+(0,.5)$)%
                 node[pos=.5]{L3};
             % Coordinates for Mem
             \coordinate (s-#2-w) at ($(l2g-\lmin-w)+(0,.5)$);
@@ -76,14 +89,16 @@
             % CPU
             \node (minnode) at ($(-.7,-1)+(3.2*\lmin,0)$) {};
             \node (maxnode) at ($(l2g-\lmax-e)+(-.1,1)$) {};
-            \node [anchor=west] (sockname) at ($(l2g-\lmin-w)+(0,.8)$) {Socket \##2};
+            \node (sockname) at ($(l2g-\lmin-e)+(0,.8)$) {Socket \##2};
 
-            \node[box,fit=(minnode) (maxnode)] (cpu-#2) {};
+            \begin{pgfonlayer}{bbg}
+                \node[box,fill=ColS,fit=(minnode) (maxnode)] (cpu-#2) {};
+            \end{pgfonlayer}
             % Memory
-            \draw ($(s-#2-w)+(0,1.5)$) rectangle ($(s-#2-e)+(0,2.5)$)%
-                node[pos=.5]{Memory \##2};
+            \draw[fill=ColM] ($(cpu-#2.north west)+(0,.5)$) rectangle ($(cpu-#2.north east)+(0,1.5)$)%
+                node[pos=.5]{Memory bank \##2};
 
-            \draw ($(s-#2-w)!.5!(s-#2-e)+(0,.75)$) -- ($(s-#2-w)!.5!(s-#2-e)+(0,1.5)$);
+            \draw (cpu-#2.north) -- ($(cpu-#2.north)+(0,.5)$);
 
         }
     },
@@ -92,8 +107,6 @@
 \begin{tikzpicture}[font=\small, every pic/.style={scale=.9}]
     \pic at (0,0) {socket={2}{0}};
     \pic at (.5,0) {socket={2}{1}};
-    % Ugly:
-    \draw (2.5,-1.05) |- (7,-2);
-    \draw (7,-2) -| (9.5,-1.05);
+    \draw (cpu-0.south) |- ($(cpu-0.south)!.5!(cpu-1.south)+(0,-1)$) -| (cpu-1.south);
 \end{tikzpicture}
 % vim: et si sta lbr  sw=4 ts=4 spelllang=en_us
