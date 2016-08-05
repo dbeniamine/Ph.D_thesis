@@ -4,6 +4,7 @@
     box/.style={
         shape=rectangle,
         draw,
+        inner sep=1.5pt,
     },
     pics/core/.style args={#1#2}{
         % Args: #1: nb PU, #2 core id
@@ -15,10 +16,11 @@
                 \pgfmathtruncatemacro{\pstep}{\pu-\pmin}
                 \node[box] (PU-\pu)at ($(0,0)+(0,-.7*\pstep)$) {PU\#\pu};
             }
+            \node (inv) at ($(PU-\pmax)+(0,-.2)$) {};
             %Core ID
             \node (name) at ($(PU-\pmin)!0.5!(PU-\pmax)+(0,1)$) {Core\##2};
             % L1
-            \node[box,inner sep=2pt, fit=(name) (PU-\pmin) (PU-\pmax)] (box) {};
+            \node[box,inner sep=.1pt, fit=(name) (PU-\pmin) (PU-\pmax) (inv)] (box) {};
             \draw ($(box.north west)+(0,.1)$) rectangle ($(box.north east)+(0,.5)$)%
                 node[pos=.5] (l1) {L1};
             % Coordinate for drawing L2
@@ -87,11 +89,11 @@
     },
 }
 
-\begin{tikzpicture}[font=\small, every pic/.style={scale=1}]
+\begin{tikzpicture}[font=\small, every pic/.style={scale=.9}]
     \pic at (0,0) {socket={2}{0}};
     \pic at (.5,0) {socket={2}{1}};
     % Ugly:
-    \draw (2.5,-1.25) |- (7,-2);
-    \draw (7,-2) -| (9.5,-1.25);
+    \draw (2.5,-1.05) |- (7,-2);
+    \draw (7,-2) -| (9.5,-1.05);
 \end{tikzpicture}
 % vim: et si sta lbr  sw=4 ts=4 spelllang=en_us
