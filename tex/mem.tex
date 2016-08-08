@@ -95,18 +95,23 @@ At the opposite, in the second case where the data structure is correctly aligne
 \begin{figure}[htb]
     \centering
     \input{tikz/false-sharing}
-    \caption[Example of false sharing.]{Two threads writing 4 consecutive doubles on the same line of cache, without any actual sharing, resulting in false sharing.}
+    \caption[Example of false sharing.]{Two threads writing 4 consecutive doubles on the same line of cache, without any actual sharing, resulting in false sharing and an easy fix by padding the data structure.}
     \label{fig:false-sharing}
 \end{figure}
 
-\DB{continue here}
-False sharing
-\begin{itemize}
-    \item Coherency
-    \item Lot of invalidation
-    \item Contention
-    \item High bandwidth
-\end{itemize}
+False sharing is another classical issue that can easily occurs when writing parallel code.
+We present this issue through a simple example where two threads are working on a small array of $8$ doubles.
+As a double is usually coded on $8$ bytes, this array is exactly the size of one cache line.
+In our example the computation on each value of the array is independent thus we can divide it in two and each thread will  work on one half as illustrated in \fig{false-sharing}.
+The first access will copy the whole array from the memory to all the caches of the thread that triggers it.
+When the second thread reads the array, it will copy it from the lower common cache to its private cache.
+If the threads are only reading it, no more memory access is required and the performance will be optimal.
+Yet in a more realistic example, each thread will update the value of each entry of its array.
+Every time a thread writes a value of the array, it invalidate the whole line.
+Therefore the coherency protocol must interfere at the lower common level of cache between the two threads.
+In the end of the day, each time a thread writes a value, the other one needs to update its line from the L2 or L3 cache, while the two threads are not actually sharing any data thus the name false sharing.
+Not only the accesses to this array are inefficient but it generate lot of useless data traffic in the caches bus which can create some contention slowing down the whole application.
+The easiest way to fix such issues, consist in padding the data structure, which mean introducing zeros in a way that each thread works on a different cache line.
 
 \begin{figure}[htb]
     \centering

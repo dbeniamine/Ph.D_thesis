@@ -1,34 +1,58 @@
 %!TEX encoding=UTF-8 Unicode
 
 \definecolor{Col0}{HTML}{1B9E77}
-\definecolor{Col1}{HTML}{D95F02}
+\definecolor{Col1}{HTML}{7570B3}
+\definecolor{grey}{HTML}{808080}
 
-%\newcommand{\col0}[1]{\textcolor{Col0}{#1}}
-%\newcommand{\col1}[1]{\textcolor{Col1}{#1}}
 
 \pgfdeclarelayer{bg}
 \pgfsetlayers{bg,main}
 
 
 \tikzstyle{arr}   = [-latex,very thick]
+\tikzstyle{hatch} = [pattern=north east lines, pattern color=grey]
 \tikzstyle{txtnode} = [anchor=west]
 
-\def\eltsz{1.5}
-%\def\balign{.4}
-%\def\nlines{2}
-%\pgfmathparse{\nlines-\balign}
-%\edef\resid{\pgfmathresult}
+\def\eltsz{.75}
+\def\arrsz{8}
+\pgfmathparse{\arrsz/2}
+\edef\harrsz{\pgfmathresult}
+\pgfmathparse{\arrsz*2-1}
+\edef\tabsz{\pgfmathresult}
+\def\vshift{-1.5}
 
 \tikzset{
-    myarray/.style args={#1#2}{
-        % args: size-1
+    myarray/.style args={#1#2#3#4#5}{
+        % args: size-1, name, gray from, gray nb, gray pad
         alias=this,
+        anchor=west,
         append after command = {
             \pgfextra{
-                \coordinate (base) at (this.west);
+                \coordinate (#2-base) at ($(this.west)+(0,\vshift)$);
+                % Create array
                 \foreach \i in {0,...,#1}{
-                    \draw[fill=#2] ($(base)+(\eltsz*\i,0)$) rectangle ($(base)+(\eltsz*\i+\eltsz,1)$);
+                    \draw[fill=none] ($(#2-base)+(\eltsz*\i,0)$) rectangle
+                        ($(#2-base)+(\eltsz*\i+\eltsz,1)$);
                 }
+                % Cache lines
+                \foreach \l in {0,...,2}{
+                    \node[anchor=south] at ($(#2-base)+(\eltsz*\l*\arrsz,1)$) {\l};
+                }
+                % Grey padding:
+                \begin{pgfonlayer}{bg}
+                \foreach \step in {1,...,#4}{
+                    \pgfmathtruncatemacro{\pad}{(\step-1)*(#5+\harrsz)}
+                    \pgfmathtruncatemacro{\first}{\eltsz*(#3+\pad)}
+                    \draw[hatch] ($(#2-base)+(\first,0)$) rectangle
+                            ($(#2-base)+(\first+\harrsz*\eltsz,0+1)$);
+                }
+                \end{pgfonlayer}
+                % Threads
+                \draw[arr,Col0] ($(#2-base)+(.5,.5)$) -- node[above,pos=.5] {Thread 0}
+                    ($(#2-base)+(\harrsz*\eltsz-.5,.5)$);
+                \pgfmathtruncatemacro{\first}{\eltsz*(\harrsz+#5)}
+                \draw[arr,Col1] ($(#2-base)+(\first+.5,.5)$) -- node[above,pos=.5] {Thread 1}
+                    ($(#2-base)+(\first+\harrsz*\eltsz-.5,.5)$);
             }
         }
     },
@@ -37,8 +61,9 @@
 
 
 \begin{tikzpicture}[font=\small]
-    \node[myarray={7}{none}] (cache) at (0,0) {};
-    \draw[arr,Col0] (.5,.5) -- node[above,pos=.5] {Thread 0} (4*\eltsz-.5,.5);
-    \draw[arr,Col1] (4*\eltsz+.5,.5) -- node[above,pos=.5] {Thread 1} (8*\eltsz-.5,.5);
+    \node[myarray={\tabsz}{fs}{\arrsz}{2}{1}] (cache) at (0,0) {\textbf{False sharing:}};
+
+    \node[myarray={\tabsz}{pad}{\harrsz}{2}{\harrsz}] (cache) at (0,-2) {\textbf{No false sharing (padding):}};
+
 \end{tikzpicture}
 % vim: et si sta lbr  sw=4 ts=4 spelllang=en_us
