@@ -59,7 +59,7 @@ Furthermore mapping threads and data structures in an adaptive way is even harde
 Therefore several tools were developed to automatically map threads and pages online~\cite{Diener14kMAF,Corbet12Toward}.
 
 Each socket of our hypothetical machine is composed of three level of caches as we can see in \fig{topo-NUMA}.
-When a thread need to access a piece of data, it will look for it in its L1 cache if the data is not there, it will go to the next level until we reach the main memory.
+When a thread need to access a piece of data, it will look for it in its L1 cache if the data is not there (cache miss), it will go to the next level until we reach the main memory.
 Caches works at the granularity of the \emph{cache line}, usually \SI{64}{bytes}.
 If a data is not in the cache, it will retrieve a whole line from the main memory.
 Inserting a new line mean evicting an other one.
@@ -99,10 +99,10 @@ At the opposite, in the second case where the data structure is correctly aligne
     \label{fig:false-sharing}
 \end{figure}
 
-False sharing is another classical issue that can easily occurs when writing parallel code.
-We present this issue through a simple example where two threads are working on a small array of $8$ doubles.
+Yet aligning correctly our data structures is not enough when for parallel code.
+Indeed if we  consider a simple example where two threads are working on a small array of $8$ doubles.
 As a double is usually coded on $8$ bytes, this array is exactly the size of one cache line.
-In our example the computation on each value of the array is independent thus we can divide it in two and each thread will  work on one half as illustrated in \fig{false-sharing}.
+In this example the computation on each value of the array is independent thus we can divide it in two and each thread will  work on one half as illustrated in \fig{false-sharing}.
 The first access will copy the whole array from the memory to all the caches of the thread that triggers it.
 When the second thread reads the array, it will copy it from the lower common cache to its private cache.
 If the threads are only reading it, no more memory access is required and the performance will be optimal.
@@ -116,21 +116,30 @@ The easiest way to fix such issues, consist in padding the data structure, which
 \begin{figure}[htb]
     \centering
     \input{tikz/mat-mult}
-    \caption{Example of non linear memory accesses: the naïve matrix multiplication}
+    \caption{Example of non linear memory accesses: the naive matrix multiplication}
     \label{fig:mat-mult}
 \end{figure}
 
-Not linear
-\begin{itemize}
-    \item Jump in memory => do not benefi from cache
-    \item Simple optim => invert loop
-\end{itemize}
+As soon as we work on data structures bigger and more complex than the one presented before, the order of the accesses starts to matter.
+For instance if we want to multiply two matrices of $8192*8192$ doubles, we can use a naive (sequential) algorithm that loops over the three matrices.
+\fig{mat-mult} depicts the memory access pattern of this algorithm.
+We can see that for the matrices $A$ and $C$, we loop over a whole row before going to the next column, while we go through $B$ column first.
+To understand why this patterns matters and how, we have to consider the memory representation of these matrices.
+As the memory address only posses one dimension, a matrix a contiguous block of memory.
+Usually a matrix is represented row first, which means that $A[i][j]$ is actually $A[i*N+j]$ where $N$ is the size of a row.
+This means that when we loop through a matrix row first, we scan linearly the address space, while if we do it column first, we jump of a size $N$ between two accesses.
+The first access to a row of $B$ will trigger a cache miss, thus the whole cache line will be fetched.
+Before we access the second element of this row, we will have to fetch one line of cache for each row of the matrix which means $8192*64=512$Kb which is often more than the size of the L2 cache.
+Therefore each access to $B$ will trigger at least a L2 cache miss resulting on a lot of traffic on the bus memory and some contention.
+With huge matrices, it may not even fit in the L3 cache resulting in contention in the memory bus.
+The simplest way to fix this issue (although it is not the optimal algorithm for the matrix multiplication) consists in swapping the two inner loop of the algorithm.
+Indeed the order of the operations does not change the results of the multiplication and this swap only change the order of the accesses concerning the matrix $B$.
 
-Cncl
-\begin{itemize}
-    \item Importance of visualizing pattern
-    \item Parenthesis: \gls{GPU} more complexe hierarchy, everything is mem oriented, code must be memory dependent, yet no tools to visualize mem pattern (yer)
-\end{itemize}
+To conclude, using efficiently the memory is challenging.
+Indeed, due to the organization of the memory by pages and cache lines, we must consider where and how our data structures are allocated.
+Furthermore the hierarchical organization of the memory and the cache must be correlated with the thread placement and data sharing.
+In the end of the day, the developer must consider the machine architecture and the memory access patterns over the address space, time and threads.
+Therefore visualizing the memory access pattern of an application is a great help to optimize it.
 
 \section{Existing Tools and Methodology}
 \label{sec:mem-tools}
