@@ -2,7 +2,7 @@
 \usepackage[acronym,nomain,toc]{glossaries}
 
 \makeglossaries
-\glossarystyle{altlistgroup}
+\renewcommand*{\glsclearpage}{}
 
 %
 % Accronyms: {{{1
@@ -146,3 +146,19 @@
 
 \newglossaryentry{Kameleon}{name=Kameleon,
     description={Kameleon is a tool to generate customized software appliances}}
+
+\newglossaryentry{MemAxes}{name=MemAxes,
+    description={MemAxes is a tool for visualizing memory access samples}}
+
+\newglossaryentry{Mitos}{name=Mitos,
+    description={Mitos is a library and a tool for collecting sampled memory performance data to view with MemAxes}}
+
+\newglossaryentry{MemProf}{name=MemProf,
+    description={MemProf is a memory profiler for NUMA machines based on AMD IBS}}
+
+\newglossaryentry{Memphis}{name=Memphis,
+    description={Memphis is a toolset for indentifiying problematic memory accesses}}
+
+
+\newglossaryentry{MemSpy}{name=Memspy,
+    description={MemSpy is a performance debugging tool for memory bottlenecks}}

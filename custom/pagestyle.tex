@@ -5,8 +5,8 @@
 \newcommand{\mycleartoleftpage}{
     \myclearpage
     \ifodd\value{page}
-    \null
-    \myclearpage
+        \leavevmode
+        \myclearpage
     \fi
 }
 % Clear double page before chapter

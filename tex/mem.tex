@@ -74,6 +74,8 @@ Such conflicts are resolved at the lower level of cache common to both threads.
 Therefore the farther the threads are, the more costly it will be to solve the conflict.
 Thus to optimize the performances of an application we must keep the threads working on the same data as close as possible.
 
+\DB{Peut être qu'il faudrais faire des mini expérience pour donner des temps d'execution sur ces examples}
+
 Finally, the cache prefecther try to detect memory access pattern to retrieve several line of cache at the same time from the main memory.
 This mechanism is particularity efficient with linear accesses.
 Yet, for sparse accesses it might evict more cache line then necessary.
@@ -174,9 +176,10 @@ Nevertheless, several methods can record a \emph{detailed} memory trace with a g
 Budanur et al.~\cite{Budanur11Memory} use an instrumentation based tool to collect all the memory accesses.
 They loose \emph{precision} by doing online compression and merging accesses into a higher level model, but this is necessary to reduce both the trace size and its overhead.
 Still, on a small matrix multiplication ($48*48$, 4 threads \gls{OpenMP}) they already slow the execution down by a factor of $50$.
-Other methods, implemented by several tools~\cite{Lachaize12MemProf,McCurdy10Memphis,Liu14Tool,Gimenez14Dissecting}, rely on hardware sampling such as AMD's \gls{IBS}~\cite{Drongowski07Instructionbased} or Intel \gls{PEBS}~\cite{Levinthal09Performance}.
- These methods provide \emph{incomplete} sampling: some parts of the memory can be accessed without being noticed by the tool if none of the associated instructions are part of the sampled instructions.
- Thus, it is possible that they ignore memory areas less frequently accessed, but in which optimization could take place.
+Another method consists in using hardware sampling tools such as AMD's \gls{IBS}~\cite{Drongowski07Instructionbased} or Intel \gls{PEBS}~\cite{Levinthal09Performance} to trace a subset of the memory accesses.
+This method is used by many several tools, including \gls{Memphis}~\cite{McCurdy10Memphis}, \gls{MemProf}~\cite{Lachaize12MemProf}, \gls{Mitos}~\cite{Gimenez14Dissecting}, and an \gls{HPCToolkit} extension~\cite{Liu14Tool}.
+This method provides \emph{incomplete} sampling: some parts of the memory can be accessed without being noticed by the tool if none of the associated instructions are part of the sampled instructions.
+Thus, it is possible that they ignore memory areas less frequently accessed, but in which optimization could take place.
 Applications sensitive to spurious performance degradation, such as interactive applications, could be hindered by these unnoticed accesses, despite their low frequency.
 
 To make things practical, these sampling mechanisms monitor what they name an events set given by an instruction type along with some predicates.
@@ -198,40 +201,22 @@ To conclude, existing memory trace collection tools are not able to collect trac
 
 \subsection{Memory traces visualization}
 
-The second difficulty of memory analysis is to present the information in such a way that the developer can use it to improve the application.
-Some of the tools previously mentioned only provide a textual output~\cite{Lachaize12MemProf,McCurdy10Memphis,Martonosi92MemSpy}.
-Even if these tools highlight the most relevant informations, it is hard to get an overview of the memory behavior from such output.
+Some memory oriented analysis tools such as \gls{MemProf}~\cite{Lachaize12MemProf}, \gls{Memphis}~\cite{McCurdy10Memphis} and \gls{MemSpy}~\cite{Martonosi92MemSpy} only provide a command line textual.
+Although these tools highlight relevant informations, it is hard to get an overview of the memory behavior from such output.
 The developer might be presented with a huge amount of information and thus able to differentiate normal behaviors from problematic ones nor identify memory patterns.
 
-Rewrite:
-\begin{itemize}
-    \item No notion of patterns
-        \begin{itemize}
-            \item De rose~\cite{DeRose01Hardware,DeRose02SIGMA,Bosch00Rivet}: correlate metrics (cache miss etc) with code and data structures
-            \item Weyers~\cite{Weyers14Visualization} / MemAxes~\cite{Gimenez14Dissecting}: Mem perf view from CPU, no notions of patterns
-            \item Add MemAxe visu from simu appli~\cite{Husain15Relating}
-                \begin{itemize}
-                    \item Interesting approach to localize issue both in code and addrspace
-                    \item Well suited for physicall simu
-                    \item Not for more generic applications
-                \end{itemize}
-        \end{itemize}
-    \item Small notion of patterns, extremly large grain
-        \begin{itemize}
-            \item Tao et al~\cite{Tao01Visualizing}: visu by page, still only count remote and local accesses
-            \item Liu et al~\cite{Liu13Datacentric,Liu14Tool}: Data centric visu: how much a thread access a data structure
-        \end{itemize}
-\end{itemize}
+Several studies~\cite{DeRose01Hardware,DeRose02SIGMA,Bosch00Rivet} relies on generic performance traces and present them in a data centric way.
+These studies relies on performance counters and derived metrics such as cache misses or memory bandwidth.
+From their point of view, data centric representation means that they correlate the metric values with source code and data structures.
+Weyers et al.~\cite{Weyers14Visualization} have a slightly different approach: they present the same kind of data but correlate them with the \gls{NUMA} architecture instead of the data structures.
+All these studies can help localizing the issue in the code and find the data structures involved in it.
+Yet, they are not able to present the memory patterns, thus the developer still have to figure them by itself to understand the nature of the issue.
 
-% Rewrite:
-%   De rose ?
-%   Weyers => CPU point of view, no patterns
-%   Tao et al => granularity page, no patterns
-% Other tools provide more advanced visualizations.
-% For instance, Tao et al.~\cite{Tao01Visualizing} propose a detailed view of each memory page, showing the number of remote and local accesses from each NUMA node.
-% Weyers et al.~\cite{Weyers14Visualization} depict the memory bandwidth between each pair of nodes, showing where the remote accesses occur.
-% Other tools~\cite{DeRose01Hardware,DeRose02SIGMA,Bosch00Rivet} provide several views of the execution, giving the ability to correlate them with the source code of applications, similar to traditional performance tools such as VTune.
-% Although all these tools can help developers understand the kind of performance issues they are facing, they do not give the reason \emph{why} a particular issue is happening, for instance by showing the distribution of memory accesses within data structures.
+A part of this limit is due to the fact that the previously cited tools work on generic traces instead of memory traces, thus they do not have the information required to identify access patterns.
+Liu et al~\cite{Liu13Datacentric,Liu14Tool} proposed an \gls{HPCToolkit} extension that allow to visualize the number of accesses done by each thread on a data structure.
+This visualizations gives already more information on data sharing, still the granularity is quite high, we cannot identify patterns inside the data structure nor pattern change over the time.
+Tao et al~\cite{Tao01Visualizing} proposed a more fine grain  visualization, showing for each page the number remote and local accesses.
+Yet, compared to the previous study they loose the notion of sharing.
 
 \begin{figure}[htb]
     \centering
@@ -241,41 +226,26 @@ Rewrite:
     \label{fig:memaxes}
 \end{figure}
 
-% Mem
-%MemAxes~\cite{Gimenez14Dissecting} is one of the most advanced NUMA-oriented visualization tools.
-%Figure~\ref{fig:memaxes} shows a screenshot of this tool on an example trace.
-%It shows the source code of the application (left upper side), the NUMA hierarchy of the machine (right upper side) and a \emph{parallel coordinate graph} (lower side) designed to help correlating information.
-%Although this visualization is designed to help understanding NUMA performance issues, it shows \emph{which} event occurs and \emph{where} it occurs, but does not tell directly \emph{why} it occurs.
-%The user still has to correlate several pieces of information to guess the source of a performance issue.
-%
-%Finally, the proposal of Liu et al.~\cite{Liu14Tool} is quite similar to the previous studies, but they also provide an \emph{address centric} visualization, which shows how much each thread accesses a data structure.
-%Such a visualization is a bit closer to providing the source of the performance issue, but it does not show how the accesses are distributed inside a structure, and how the structure is shared between the threads.
-
-\DB{Cncl: current tools unable to visualize access patterns}
+Finally, \gls{MemAxes}~\cite{Gimenez14Dissecting} uses memory samples (collected via \gls{PEBS}) and provide a unified view (\fig{memaxes} show a screenshot of that view) that correlate them with the \gls{NUMA} architecture and both code and data structures.
+Moreover Husain et al.~\cite{Husain15Relating} have recently added a layer to \gls{MemAxes} that enable to trace simulations and visualize the performance data directly on the simulated objects.
+Still, this visualization does not show sharing pattern or access patterns, it only helps identifying the lines of code and data structures responsible for the bad performances.
 
 \section{Conclusions}
 \label{sec:mem-cncl}
 
-\begin{itemize}
-    \item Trace collection
-        \begin{itemize}
-            \item Memory as a monolithic entity
-            \item More details => no precision (IBS, PEBS)
-            \item Complex methods involving HW modifs
-        \end{itemize}
-    \item Trace visu
-        \begin{itemize}
-            \item Text only
-            \item Memory as a monolith
-            \item Best granularity: page / remote access
-            \item Focus on memory from CPU (how much remote access from this part of the mem or CPU)
-            \item No way to visualize patterns
-        \end{itemize}
-    \item Cncl:
-        \begin{itemize}
-            \item Impossible to visualize patterns with existing tools
-            \item Need to design new tools
-        \end{itemize}
-\end{itemize}
+The memory subsystems have became more and more complex over the last few decades.
+As a result, the way a program allocate and access its memory have a significant impact on the performances.
+In the end a developer looking for performances must consider the memory access pattern of its application.
+Therefore a tool able to collect memory trace and show access and sharing pattern could be useful for performance optimization.
 
+Most existing memory trace collection tools consider the memory as a monolithic entity and only provides global information such as the bandwidth.
+Some tools provides more detailed memory traces.
+Still they rely either on  hardware based sampling in which case the resulting trace only shows a small subset of the memory, or on hardware modifications and are thus not usable by real life developers.
+
+When it comes to visualizing these traces, many techniques were developed to identify precisely in the code and data structures where performances are suboptimal.
+Yet, most of the existing tools are not able to show memory pattern from any kind.
+A few advanced tool allow to see the number of accesses per data structures and per threads or the number of remote accesses per pages.
+Still this is not enough information to understand precisely sharing patterns or memory access patterns.
+
+To conclude we need both to collect precise memory traces and to present them to the user in a comprehensive way that enable identification of sharing and access patterns.
 % vim: et si sta lbr  sw=4 ts=4 spelllang=en_us
