@@ -24,6 +24,36 @@ Cluster'16}
 
 \subsection{Goals and challenges}
 
+\DB{From Moca paper}
+
+Some tools see the memory as a set of pages, loosing information at a finer
+granularity. This approximation enable to trace memory accesses at a reduced
+cost. For instance, \gls{Tabarnac}~\cite{Beniamine15TABARNAC} uses a binary
+instrumentation (based on Intel's Pin~\cite{Luk05Pin}) and traps each
+memory access, but it only keeps one counter per page and per threads in order to
+reduce its overhead. While this approach provides a deeper insight about the
+memory use than hardware performance counters, it lacks temporal information.
+
+
+
+
+
+Finally, page faults interception can provide useful online information about memory usage.
+Such a mechanism has been used in several existing works : in parallel garbage collectors~\cite{Boehm91Mostly}, in memory checkpointing~\cite{Heo05Spaceefficient} or in the domain of virtualization to provide the hypervisor with information about the memory usage of the guest \gls{OS}~\cite{Jones06Geiger}.
+However, page faults only occur when caused by predetermined events in the system (copy-on-write, paging, ...).
+Thus, just intercepting existing page faults only provide an approximate view of the memory use.
+To improve this method, it is also possible to fake invalid pages at regular intervals in order to generate false page faults~\cite{Bae12Dynamic,Diener13CommunicationBased}.
+ These false page faults are just triggered during regular memory accesses, that would not have caused a page fault if the page were not faked as invalid.
+The advantage is that they create additional events for the monitoring tool to collect, thus more \emph{precision}, but the set of faked invalid pages has to be known and maintained by the monitoring tool.
+
+As a final note, tools close to our proposal do not use false page faults injection and only need to store the location of memory pages and the threads that access them.
+As a consequence, they require a relatively small data structure in memory for their own usage.
+In this study we present \gls{Moca}, a new \emph{complete} memory trace collection system, based on page fault interception and false page faults injection, able to capture \emph{precisely} the temporal evolution of memory accesses performed by a multithreaded application.
+To reach a satisfying \emph{precision}, our tool has to maintain in memory both the trace data and the set of faked invalid pages.
+Overall, storing and exploiting efficiently these data within the kernel space and outputting them in real time to the user space is a challenge and is the main contribution of our work.
+
+
+
 \subsection{Collection system design}
 
 \subsection{Post processing}

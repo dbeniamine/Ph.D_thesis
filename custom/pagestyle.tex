@@ -11,7 +11,7 @@
 }
 % Clear double page before chapter
 \let\oldchapter\chapter
-\renewcommand{\chapter}{\mycleartoleftpage\oldchapter}
+\renewcommand{\chapter}{\mycleartoleftpage\glsresetall\oldchapter}
 
 \let\oldfrontmatter\frontmatter
 % Set pagestyle according to matter

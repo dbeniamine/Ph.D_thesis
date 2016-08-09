@@ -141,116 +141,141 @@ Furthermore the hierarchical organization of the memory and the cache must be co
 In the end of the day, the developer must consider the machine architecture and the memory access patterns over the address space, time and threads.
 Therefore visualizing the memory access pattern of an application is a great help to optimize it.
 
-\section{Existing Tools and Methodology}
+\section{Existing tools}
 \label{sec:mem-tools}
 
-%% From Moca Paper, rewrite
-Most performance analyses are based on hardware performance counters, which are CPU
-register initially designed by CPU vendors to debug their prototypes. They contain
-the count of specific events such as branch prediction misses or cache misses.
-Theses counters are accessible directly  through the \texttt{Perf} driver
-since Linux kernel $2.6.31$ but they are CPU and vendor dependent. Thus, higher
-level libraries such as \emph{PAPI}~\cite{Weaver13PAPI} and
-\emph{Likwid}~\cite{Treibig10LIKWID} were developed to ease their use.
-In addition, these higher level libraries are able to derivate more abstract metrics. Several works propose to analyze memory 
-by looking solely at the information collected through these
-libraries~\cite{Majo13(Mis)understanding,
-Jiang14Understanding,Bosch00Rivet,Weyers14Visualization,Tao01Visualizing,DeRose01Hardware}.
-%
-Several generic tools have been designed on top of hardware performance counters
-to analyze and improve parallel applications performances, such as Intel's
-VTune~\cite{Reinders05VTune}, Performance Counter
-Monitor~(PCM)~%\cite{Intel2012b}
-, the HPCToolkit~\cite{Adhianto10HPCTOOLKIT},
-and AMD's CodeAnalyst~\cite{Drongowski08introduction}.
-%
-Although performance counters provide information about the memory use
-(bandwith, volume of data transferred \ldots),  they consider the memory as
-one huge entity and do not differentiate distinct addresses or at least
-distinct pages. Thus, these methods are not able to locate issues in the memory.
+Presenting memory access patterns to the user raises two challenges.
+The first one is to collect efficiently a detailed and precise trace without interfering with the normal execution.
+Collecting such traces is challenging as almost every instruction of a program triggers a memory access.
+Once this trace is collected, presenting it in a meaningful way to the user is also a challenge.
+Indeed such traces are spread over at least four dimensions: memory address space, time, threads, and cores.
+Furthermore they are potentially huge, and identifying relevant information is complex.
 
-Some tools see the memory as a set of pages, loosing information at a finer
-granularity. This approximation enable to trace memory accesses at a reduced
-cost. For instance, \gls{Tabarnac}~\cite{Beniamine15TABARNAC} uses a binary
-instrumentation (based on Intel's Pin~\cite{Luk05Pin}) and traps each
-memory access, but it only keeps one counter per page and per threads in order to
-reduce its overhead. While this approach provides a deeper insight about the
-memory use than hardware performance counters, it lacks temporal information.
+\subsection{Memory traces collections}
 
-Tracing all the memory accesses without information loss is nearly impossible as
-almost each instruction can trigger a memory access in addition to its fetch. Nevertheless, several methods
-can record a \emph{detailed} memory trace with a good \emph{precision}.
+To help the developer solve memory related issues, an ideal tool should provide enough data to build a map of the memory accesses locations over the time.
+Therefore, events in a memory trace should include information about time, space (at which address the event occurs), location (on which CPU it occurs) and nature of access (is this a read, a write, by which thread), we name such trace a \emph{detailed} trace.
+The trace has to be \emph{precise} enough, it should include a sufficiently large number of events in order to enable a sound analysis.
+Moreover, to ensure that a lack of precision does not compromise the analysis, such a trace should be \emph{complete}.
+We say that a trace is \emph{complete} at a given granularity if and only if the events it contains form a superset of the actual accesses.
+
+Most performance analyses are based on hardware performance counters, which are \gls{CPU} register initially designed by \gls{CPU} vendors to debug their prototypes.
+They contain the count of specific events such as branch prediction misses or cache misses.
+Theses counters are accessible directly  through the \gls{Perf} driver since Linux kernel $2.6.31$ but they are \gls{CPU} and vendor dependent.
+Thus, higher level libraries such as \gls{PAPI}~\cite{Weaver13PAPI} and \gls{Likwid}~\cite{Treibig10LIKWID} were developed to ease their use.
+In addition, these higher level libraries are able to derivate more abstract metrics.
+Several works propose to analyze memory  by looking solely at the information collected through these libraries~\cite{Majo13(Mis)understanding, Jiang14Understanding,Bosch00Rivet,Weyers14Visualization,Tao01Visualizing,DeRose01Hardware}.
+Several generic tools have been designed on top of hardware performance counters to analyze and improve parallel applications performances, such as Intel's \gls{VTune}~\cite{Reinders05VTune}, \gls{PCM}~\cite{Wilhalm12Intel}, the \gls{HPCToolkit}~\cite{Adhianto10HPCTOOLKIT}, and AMD's \gls{CodeAnalyst}~\cite{Drongowski08introduction}.
+Although performance counters provide information about the memory use (bandwith, volume of data transferred \ldots),  they consider the memory as one huge entity and do not differentiate distinct addresses or at least distinct pages.
+Thus, these methods are not able to locate issues in the memory.
+
+Tracing all the memory accesses without information loss is nearly impossible as almost each instruction can trigger a memory access in addition to its fetch.
+Nevertheless, several methods can record a \emph{detailed} memory trace with a good \emph{precision}.
+Budanur et al.~\cite{Budanur11Memory} use an instrumentation based tool to collect all the memory accesses.
+They loose \emph{precision} by doing online compression and merging accesses into a higher level model, but this is necessary to reduce both the trace size and its overhead.
+Still, on a small matrix multiplication ($48*48$, 4 threads \gls{OpenMP}) they already slow the execution down by a factor of $50$.
+Other methods, implemented by several tools~\cite{Lachaize12MemProf,McCurdy10Memphis,Liu14Tool,Gimenez14Dissecting}, rely on hardware sampling such as AMD's \gls{IBS}~\cite{Drongowski07Instructionbased} or Intel \gls{PEBS}~\cite{Levinthal09Performance}.
+ These methods provide \emph{incomplete} sampling: some parts of the memory can be accessed without being noticed by the tool if none of the associated instructions are part of the sampled instructions.
+ Thus, it is possible that they ignore memory areas less frequently accessed, but in which optimization could take place.
+Applications sensitive to spurious performance degradation, such as interactive applications, could be hindered by these unnoticed accesses, despite their low frequency.
+
+To make things practical, these sampling mechanisms monitor what they name an events set given by an instruction type along with some predicates.
+They can monitor several events sets at the same time but the number of monitored sets is limited by the hardware capabilities (number of available registers).
+Unfortunately, the number of existing events sets that relate to the memory hierarchy is large, because of its complexity.
+This makes difficult the task of tracing all the relevant memory accesses with just a single analysis.
+One way to lessen the impact of this limitation is to run several times the instrumentation and use advanced methods such as folding~\cite{Servat15Towards} to generate a more accurate summary trace.
+Nevertheless, this makes the instrumentation cost grow accordingly.
+Moreover, writing (and sometimes) using tools that relies on hardware mechanisms requires a deep knowledge of the processor.
+As processors evolve, such tools are hard to maintain and can quickly become outdated.
+We regard all these limitations as too constraining for a general purpose memory analysis tool.
+
+Other studies rely on hardware modifications either actually implemented or simulated~\cite{Bao08HMTT,Martonosi92MemSpy}.
+Although they are eventually able to collect more \emph{precise} traces efficiently, these techniques are limited to hardware developers.
+Indeed, to use these hardware extensions one has either to obtain (or build) a prototype or to use a suitable simulator.
+Such configuration is not realistic for general purpose memory analysis.
+
+To conclude, existing memory trace collection tools are not able to collect traces \emph{precise} and \emph{detailed} enough to present memory patterns to the end user.
+
+\subsection{Memory traces visualization}
+
+The second difficulty of memory analysis is to present the information in such a way that the developer can use it to improve the application.
+Some of the tools previously mentioned only provide a textual output~\cite{Lachaize12MemProf,McCurdy10Memphis,Martonosi92MemSpy}.
+Even if these tools highlight the most relevant informations, it is hard to get an overview of the memory behavior from such output.
+The developer might be presented with a huge amount of information and thus able to differentiate normal behaviors from problematic ones nor identify memory patterns.
+
+Rewrite:
+\begin{itemize}
+    \item No notion of patterns
+        \begin{itemize}
+            \item De rose~\cite{DeRose01Hardware,DeRose02SIGMA,Bosch00Rivet}: correlate metrics (cache miss etc) with code and data structures
+            \item Weyers~\cite{Weyers14Visualization} / MemAxes~\cite{Gimenez14Dissecting}: Mem perf view from CPU, no notions of patterns
+            \item Add MemAxe visu from simu appli~\cite{Husain15Relating}
+                \begin{itemize}
+                    \item Interesting approach to localize issue both in code and addrspace
+                    \item Well suited for physicall simu
+                    \item Not for more generic applications
+                \end{itemize}
+        \end{itemize}
+    \item Small notion of patterns, extremly large grain
+        \begin{itemize}
+            \item Tao et al~\cite{Tao01Visualizing}: visu by page, still only count remote and local accesses
+            \item Liu et al~\cite{Liu13Datacentric,Liu14Tool}: Data centric visu: how much a thread access a data structure
+        \end{itemize}
+\end{itemize}
+
+% Rewrite:
+%   De rose ?
+%   Weyers => CPU point of view, no patterns
+%   Tao et al => granularity page, no patterns
+% Other tools provide more advanced visualizations.
+% For instance, Tao et al.~\cite{Tao01Visualizing} propose a detailed view of each memory page, showing the number of remote and local accesses from each NUMA node.
+% Weyers et al.~\cite{Weyers14Visualization} depict the memory bandwidth between each pair of nodes, showing where the remote accesses occur.
+% Other tools~\cite{DeRose01Hardware,DeRose02SIGMA,Bosch00Rivet} provide several views of the execution, giving the ability to correlate them with the source code of applications, similar to traditional performance tools such as VTune.
+% Although all these tools can help developers understand the kind of performance issues they are facing, they do not give the reason \emph{why} a particular issue is happening, for instance by showing the distribution of memory accesses within data structures.
+
+\begin{figure}[htb]
+    \centering
+    \includegraphics[width=\linewidth]{memAxes.png}
+    \caption{Screenshot from MemAxes on the example data trace provided with the
+    tool.}
+    \label{fig:memaxes}
+\end{figure}
+
+% Mem
+%MemAxes~\cite{Gimenez14Dissecting} is one of the most advanced NUMA-oriented visualization tools.
+%Figure~\ref{fig:memaxes} shows a screenshot of this tool on an example trace.
+%It shows the source code of the application (left upper side), the NUMA hierarchy of the machine (right upper side) and a \emph{parallel coordinate graph} (lower side) designed to help correlating information.
+%Although this visualization is designed to help understanding NUMA performance issues, it shows \emph{which} event occurs and \emph{where} it occurs, but does not tell directly \emph{why} it occurs.
+%The user still has to correlate several pieces of information to guess the source of a performance issue.
 %
-Budanur et al.~\cite{Budanur11Memory} use an instrumentation based tool to
-collect all the memory accesses. They loose \emph{precision} by doing online compression and merging accesses
-into a higher level model, but this is necessary to reduce both the trace size and its overhead.
-Still, on a small matrix multiplication ($48*48$, 4 threads OpenMP) they already
-slow the execution down by a factor of $50$.
-% sampling:
-Other methods, implemented by several
-tools~\cite{Lachaize12MemProf,McCurdy10Memphis,Liu14Tool,Gimenez14Dissecting},
-rely on hardware sampling such as AMD's Instruction Based Sampling
-(IBS)~\cite{Drongowski07Instructionbased} or Intel Precise Event Based
-Sampling (PEBS)~\cite{Levinthal09Performance}.  These methods provide \emph{incomplete}
-sampling: some parts of the memory can be accessed without being noticed by
-the tool if none of the associated instructions are part of the sampled
-instructions.  Thus, it is possible that they ignore memory areas
-less frequently accessed, but in which optimization could take place.
-Applications sensitive to spurious performance
-degradation, such as interactive applications, could be hindered by these
-unnoticed accesses, despite their low frequency.
-%
-% Folding mechanisms: offtopic
-%
-% To make things practical, these sampling mechanisms monitor what they name an events set given by an instruction type along with some predicates.
-% They can monitor several events sets at the same time but the number of monitored sets is limited by the hardware capabilities (number of available
-% registers). Unfortunately, the number of existing events sets that relate to the memory hierarchy is large, because of its complexity.
-% This makes difficult the task of tracing all the relevant memory accesses with just a single analysis.
-% One way to lessen the impact of this limitation is to run several times the
-% instrumentation and use advanced methods such as
-% folding~\cite{Servat15Towards} to generate a more accurate summary trace.
-% Nevertheless, this makes the instrumentation cost grow accordingly.
-% Moreover, writing (and sometimes) using tools that relies on hardware mechanisms
-% requires a deep knowledge of the processor. As processors evolve,
-% such tools are hard to maintain and can quickly become outdated.
-% We regard all these limitations as too constraining for a general purpose
-% memory analysis tool.
+%Finally, the proposal of Liu et al.~\cite{Liu14Tool} is quite similar to the previous studies, but they also provide an \emph{address centric} visualization, which shows how much each thread accesses a data structure.
+%Such a visualization is a bit closer to providing the source of the performance issue, but it does not show how the accesses are distributed inside a structure, and how the structure is shared between the threads.
 
-Other studies rely on hardware modifications, either actual or
-simulated~\cite{Bao08HMTT,Martonosi92MemSpy}.  Although they are eventually
-able to collect more \emph{precise} traces efficiently, these techniques are limited
-to hardware developers. Indeed, to use these hardware extensions one has
-either to obtain (or build) a prototype or to use a suitable simulator. Such
-configuration is not realistic for general purpose memory analysis.
-
-Finally, page faults interception can provide useful online information about
-memory usage. Such a mechanism has been used in several existing works : in
-parallel garbage collectors~\cite{Boehm91Mostly}, in memory
-checkpointing~\cite{Heo05Spaceefficient} or in the domain of virtualization to
-provide the hypervisor with information about the memory usage of the guest
-OS~\cite{Jones06Geiger}. However, page faults only occur when caused by
-predetermined events in the system (copy-on-write, paging, ...). Thus, just intercepting existing page
-faults only provide an approximate view of the memory use. To improve this method,
-it is also possible to fake invalid
-pages at regular intervals in order to generate false
-page faults~\cite{Bae12Dynamic,Diener13CommunicationBased}.  These false page
-faults are just triggered during regular memory accesses, that would not have
-caused a page fault if the page were not faked as invalid. The advantage is
-that they create additional events for the monitoring tool to collect, thus
-more \emph{precision}, but the set of faked invalid pages has to be known and
-maintained by the monitoring tool.
-
-As a final note, tools close to our proposal do not use false page faults injection and only need to store the location of memory pages and the threads that access them.
-As a consequence, they require a relatively small data structure in memory for their own usage.
-In this study we present \gls{Moca}, a new \emph{complete} memory trace collection system, based on page
-fault interception and false page faults injection, able to capture \emph{precisely} the temporal evolution of memory accesses performed by a multithreaded
-application.
-To reach a satisfying \emph{precision}, our tool has to maintain in memory both the trace data and
-the set of faked invalid pages. Overall, storing and exploiting efficiently these data within the kernel space and outputting them in real time to the user space
-is a challenge and is the main contribution of our work.
+\DB{Cncl: current tools unable to visualize access patterns}
 
 \section{Conclusions}
 \label{sec:mem-cncl}
 
-Need global info / temporal evolution
+\begin{itemize}
+    \item Trace collection
+        \begin{itemize}
+            \item Memory as a monolithic entity
+            \item More details => no precision (IBS, PEBS)
+            \item Complex methods involving HW modifs
+        \end{itemize}
+    \item Trace visu
+        \begin{itemize}
+            \item Text only
+            \item Memory as a monolith
+            \item Best granularity: page / remote access
+            \item Focus on memory from CPU (how much remote access from this part of the mem or CPU)
+            \item No way to visualize patterns
+        \end{itemize}
+    \item Cncl:
+        \begin{itemize}
+            \item Impossible to visualize patterns with existing tools
+            \item Need to design new tools
+        \end{itemize}
+\end{itemize}
+
 % vim: et si sta lbr  sw=4 ts=4 spelllang=en_us
