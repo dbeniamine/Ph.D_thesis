@@ -1,7 +1,7 @@
 %!TEX encoding=UTF-8 Unicode
-
-\definecolor{ColG}{HTML}{1B9E77}
-\definecolor{ColB}{HTML}{D95F02}
+%Palette PurOr 4 Col
+\definecolor{ColG}{HTML}{5E3C99}
+\definecolor{ColB}{HTML}{FDB863}
 
 \newcommand{\colg}[1]{\textcolor{ColG}{#1}}
 \newcommand{\colb}[1]{\textcolor{ColB}{#1}}
@@ -49,8 +49,8 @@
 
     \begin{pgfonlayer}{bg}
         \node[myarray={2}{ColG,dashed}{0}{invb},txtnode] (d0) at (\balign,0) {};
-        \draw[fill=ColB,dashed] (0,\vshift) rectangle ($(0,\vshift)+(\balign,1)$);
-        \draw[fill=ColB,dashed] (\balign+\eltsz*2,\vshift) rectangle (4*\eltsz,1+\vshift);
+        \draw[pattern=north east lines, pattern color=ColB,dashed] (0,\vshift) rectangle ($(0,\vshift)+(\balign,1)$);
+        \draw[pattern=north east lines, pattern color=ColB,dashed] (\balign+\eltsz*2,\vshift) rectangle (4*\eltsz,1+\vshift);
     \end{pgfonlayer}
 
     \node[txtnode] (bf0) at ($(bad-base)+(0,-.5)$)
