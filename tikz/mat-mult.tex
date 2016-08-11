@@ -11,6 +11,7 @@
 
 \tikzstyle{PrimaryA}   = [-latex,very thick]
 \tikzstyle{SecondaryA} = [-latex,very thick,dashed]
+\tikzstyle{SwapA} = [latex-latex, thick,dotted]
 
 \newcommand{\coli}[1]{\textcolor{ColI}{#1}}
 \newcommand{\colj}[1]{\textcolor{ColJ}{#1}}
@@ -72,6 +73,12 @@
             \end{varwidth}%
         };
 
+        \coordinate (cj) at (.7,8.7);
+        \coordinate (cjint) at (.2,8.7);
+        \coordinate (ckint) at (.2,8.3);
+        \coordinate (ck) at (.7,8.3);
+        \path[draw,SwapA] (cj) .. controls (cjint) and (ckint) ..(ck);
+
         \node[matgrid={A}{5}] at (0,0){};
         \node[matgrid={B}{5}] at (6,6){};
         \node[matgrid={C}{5}] at (6,0){};
@@ -86,8 +93,10 @@
         \draw[SecondaryA,ColI] (mA-0N) -- node [left]  {\textbf{i}} (mA-00);
 
         %% B
-        \draw[PrimaryA,ColK]   (mB-0N) -- node [left]  {\textbf{k}} (mB-00);
-        \draw[SecondaryA,ColJ] (mB-0N) -- node [above] {\textbf{j}} (mB-NN);
+        \draw[PrimaryA,ColK]   (mB-0N) -- node(bk) [left]  {\textbf{k}} (mB-00);
+        \draw[SecondaryA,ColJ] (mB-0N) -- node(bj) [above] {\textbf{j}} (mB-NN);
+
+        \draw[SwapA] (bj.south) edge[out=-90,in=0] (bk.east);
 
         %% C
         \draw[PrimaryA,ColJ]   (mC-0N) -- node [above] {\textbf{j}} (mC-NN);

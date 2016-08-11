@@ -12,10 +12,14 @@
 
 \tikzstyle{arr}   = [-latex,thick]
 \tikzstyle{txtnode} = [anchor=west]
+\tikzstyle{mybrace} = [decorate,decoration={brace, mirror,amplitude=1em},thick]
+\tikzstyle{mydash} = [dashed, dash pattern=on 1pt off 2pt]
 
 \def\eltsz{3}
 \def\vshift{-1.5}
-\def\balign{.4}
+\def\balign{.6}
+\pgfmathparse{\balign*\eltsz}
+\edef\balignsz{\pgfmathresult}
 \def\nlines{2}
 \pgfmathparse{\nlines-\balign}
 \edef\resid{\pgfmathresult}
@@ -45,33 +49,28 @@
 
 
 \begin{tikzpicture}[font=\small]
-    \node[myarray={4}{none}{1}{bad},txtnode] (bad) at (0,0) {\colb{Bad alignment:}};
+    \node[myarray={4}{none}{1}{bad},txtnode] (bad) at (0,0) {\colb{\textbf{Bad alignment:}}};
 
     \begin{pgfonlayer}{bg}
-        \node[myarray={2}{ColG,dashed}{0}{invb},txtnode] (d0) at (\balign,0) {};
-        \draw[pattern=north east lines, pattern color=ColB,dashed] (0,\vshift) rectangle ($(0,\vshift)+(\balign,1)$);
-        \draw[pattern=north east lines, pattern color=ColB,dashed] (\balign+\eltsz*2,\vshift) rectangle (4*\eltsz,1+\vshift);
+        \node[myarray={2}{ColG,mydash}{0}{invb},txtnode] (d0) at (\balignsz,0) {};
+        \path[pattern=north east lines, pattern color=ColB] (0,\vshift) rectangle ($(0,\vshift)+(\balignsz,1)$);
+        \path[pattern=north east lines, pattern color=ColB] (\balignsz+\eltsz*2,\vshift) rectangle (4*\eltsz,1+\vshift);
     \end{pgfonlayer}
 
-    \node[txtnode] (bf0) at ($(bad-base)+(0,-.5)$)
-    {Fetch 0: \colg{\resid~useful lines} / \colb{\balign~useless lines}};
-    \node[txtnode] (bf1) at ($(bad-base)+(6,-.5)$)
-    {Fetch 1: \colg{\balign~useful lines} / \colb{\resid~useless lines}};
-
-    \draw[arr] (bf0.south west) -- (bad-base);
-    \draw[arr] (bf1.south west) -- ($(bad-base)+(6,0)$);
+    \draw[mybrace] (0,\vshift) -- (2*\eltsz,\vshift) node [midway,below=1em]
+        {Fetch 0: \colg{\resid~useful lines} / \colb{\balign~useless lines}};
+    \draw[mybrace] (2*\eltsz,\vshift) -- (4*\eltsz,\vshift) node [midway,below=1em]
+        {Fetch 1: \colg{\balign~useful lines} / \colb{\resid~useless lines}};
 
     %% Good alignment
-    \node[myarray={4}{none}{1}{good},txtnode] (good) at (0,-3) {\colg{Good alignment:}};
+        \node[myarray={4}{none}{1}{good},txtnode] (good) at (0,-3) {\colg{\textbf{Good alignment:}}};
 
     \begin{pgfonlayer}{bg}
-        \node[myarray={2}{ColG,dashed}{0}{invg},txtnode] (d1) at (0,-3) {};
+        \node[myarray={2}{ColG,mydash}{0}{invg},txtnode] (d1) at (0,-3) {};
     \end{pgfonlayer}
 
-    \node[txtnode] (gf0) at ($(good-base)+(0,-.5)$)
-    {Fetch 0: \colg{2~useful lines} / \colb{0~useless lines}};
-
-    \draw[arr] (gf0.south west) -- (good-base);
+    \draw[mybrace] (0,\vshift-3) -- (2*\eltsz,\vshift-3) node [midway,below=1em]
+        {Fetch 0: \colg{2~useful lines} / \colb{0~useless lines}};
 
 \end{tikzpicture}
 % vim: et si sta lbr  sw=4 ts=4 spelllang=en_us

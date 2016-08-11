@@ -31,19 +31,22 @@
                 \coordinate (#2-base) at ($(this.west)+(0,\vshift)$);
                 % Create array
                 \foreach \i in {0,...,#1}{
-                    \draw[fill=none] ($(#2-base)+(\eltsz*\i,0)$) rectangle
+                    \draw[fill=none,dashed,dash pattern=on 1pt off 2pt] ($(#2-base)+(\eltsz*\i,0)$) rectangle
                         ($(#2-base)+(\eltsz*\i+\eltsz,1)$);
                 }
                 % Cache lines
-                \foreach \l in {0,...,2}{
+                \foreach \l in {0,...,1}{
                     \node[anchor=south] at ($(#2-base)+(\eltsz*\l*\arrsz,1)$) {\l};
+                    \draw[fill=none] ($(#2-base)+(\eltsz*\arrsz*\l,0)$) rectangle
+                        ($(#2-base)+(\eltsz*\l*\arrsz+\eltsz*\arrsz,1)$);
                 }
+                \node[anchor=south] at ($(#2-base)+(\eltsz*2*\arrsz,1)$) {2};
                 % Grey padding:
                 \begin{pgfonlayer}{bg}
                 \foreach \step in {1,...,#4}{
                     \pgfmathtruncatemacro{\pad}{(\step-1)*(#5+\harrsz)}
                     \pgfmathtruncatemacro{\first}{\eltsz*(#3+\pad)}
-                    \draw[hatch] ($(#2-base)+(\first,0)$) rectangle
+                    \path[hatch] ($(#2-base)+(\first,0)$) rectangle
                             ($(#2-base)+(\first+\harrsz*\eltsz,0+1)$);
                 }
                 \end{pgfonlayer}
