@@ -1,26 +1,232 @@
 %!TEX encoding=UTF-8 Unicode
 \chapter{Collecting Memory Traces}
 
+\begin{itemize}
+    \item Memory traces two challenges
+        \begin{itemize}
+            \item Collection:
+                \begin{itemize}
+                    \item Detail
+                    \item Precise,
+                    \item Complete
+                \end{itemize}
+            \item Visu
+        \end{itemize}
+    \item First attempt: no time Data / NUMA oriented
+    \item Second attempt more precise, only colelction discussed here
+    \item Contributions:
+        \begin{itemize}
+            \item \gls{Tabarnac}
+                \begin{itemize}
+                    \item Paper at VPA'15~\cite{Beniamine15TABARNAC}
+                    \item Dev free software: \url{https://github.com/dbeniamine/Tabarnac}
+                    \item Collaboration with UFRGS
+                    \item Results also presented at LICIA'16
+                \end{itemize}
+            \item \gls{Moca}
+                \begin{itemize}
+                    \item Two research reports~\cite{Beniamine15Memory,Beniamine16Moca}
+                    \item Article submitted at PMBS'16
+                    \item Dev free software: \url{https://github.com/dbeniamine/Moca}
+                \end{itemize}
+        \end{itemize}
+\end{itemize}
+
+
 \section{Tabarnac: Global view of the memory usage}
 
-\DB{TABARNAC + visu (trivial), contribution presented at VPA'15}
+\acrfull{Tabarnac} is our first attempt to collect memory traces and use them for performance optimizations.
+As previous work~\cite{Beniamine13Cartographier} showed how difficult it is to capture \emph{complete} memory traces with temporal information, this tools focuses on the global behavior.
+Furthermore it aims specifically at improving \gls{NUMA} related performance issues.
 
-\subsection{Design}
+\subsection{Trace collection}
 
-\subsubsection{Goals}
+\begin{itemize}
+    \item Goal: Identify by page sharing pattern
+    \item Based on Numalyze~\cite{Diener15Characterizing}
+        \begin{itemize}
+            \item Collect same information
+            \item Use it online, no modifications at code level
+        \end{itemize}
+    \item Pin instrumentation
+    \item Granularity Page / thread
+    \item Per structure informations
+        \begin{itemize}
+            \item Stack detection (heuristic)
+            \item Replace malloc
+            \item Static binary analyze
+        \end{itemize}
+    \item Lock free: two counters (Read/Write) per thread and page
+    \item Few dependencies / simple usage, run separated from plot
+\end{itemize}
 
-\subsubsection{Collection}
+\DB{From VPA paper}
+\gls{Tabarnac}: Tools for Analyzing the Behavior of Applications Running on NUMA
+ArChitecture is divided into two parts: the instrumentation tool, which collects information about
+memory accesses, and the visualization, which presents a meaningful
+interpretation of the trace.
+In this section, we discuss the implementation of both parts.
 
-\subsubsection{Visualisation}
+%\subsection{Collecting Memory Access Information}
+%\label{sec:design-impl}
+
+\begin{algorithm}
+    \begin{algorithmic}
+        \Function{mem\_access}{unsigned long address, int threadId, char type}
+            \State uint64\_t page = address >> page\_bits;
+            \State accesses[threadId][page][type]++;
+        \EndFunction
+    \end{algorithmic}
+    \caption{Handling of memory accesses by Tabarnac.}
+    \label{alg:tabarnac}
+\end{algorithm}
+
+\acrfull{Tabarnac} data collection aims at providing information on how data structure
+are accessed, therefore, it needs to collect fine-grained information. To do so,
+we instrument memory access and collect the number of access per page by thread
+and type (Read/Write). The information is stored on a per-thread basis, as
+shown in \alg{tabarnac}, making the code completely lock-free, as well
+as minimizing the amount of false sharing between threads.
+
+The instrumentation uses the Pin dynamic binary instrumentation
+tool~\cite{Luk05Pin}. Although it is an Intel technology, it works also on AMD
+processors.
+Previous versions of Pin also support Intel Itanium~(IA64) and ARM architectures.
+
+Before running the application, \gls{Tabarnac} retrieves static memory allocation
+information. %using the \texttt{libelfg0} library.
+Dynamic allocations are intercepted at runtime and structure names
+are extracted using the debug information provided by the compiler.
+%\texttt{malloc} replacement. If the application is
+%compiled with debug flags (\texttt{-g}), the structure names that are malloced can be extracted from the source
+%code.
+Finally, each time a thread is created, we compute its
+stack bounds and create a virtual structure named \texttt{Stack\#N} where
+$N$ is the thread~ID. Only structures that are bigger than one page (usually
+$4$Kib in current x86\_64 architectures) are recorded as our
+analysis granularity is the memory page. The data structure information (name,
+size and address) are only used to generate the visualization, after the end
+of the instrumentation.
+The memory access tracing is based on the earlier numalize tool~\cite{Diener15Characterizing}, which only collected statistics about memory accesses to pages, without information about data structure or stacks.
+
+%For each access, we store the type (read or write), the memory page that was
+%accessed, and the thread ID responsible of it.
+%\caption{Code that is executed on each memory access.}
+%\label{fig:code}
+%\end{figure}
+
+
+%After tracing finishes, %we generate three \texttt{csv} files.  The first
+%contains the list of pages and the number of reads and writes per thread. The
+%second contains the list of structures with their names, sizes and start
+%addresses, the last file contains the stacks size and addresses.  Then, a
+%a script which reads the trace, retrieves the page / data structure mapping
+%and generates the final visualization presented in the next subsection.
+
+% not relevant I'd say:
+% \gls{Tabarnac} have very few dependencies and can be installed easily. If all the R
+% library required to generate the visualization are not present, our tool is
+% able to install them automatically. By default \gls{Tabarnac} generate the memory
+% trace and the visualization, but the user can also choose to only generate the
+% memory trace or the visualization. This is useful for people who cannot
+% install R on the machine used to generate the trace. Moreover it allows the
+% user to customize the plots generate by the R script.
+
+%\subsection{Visualization}
+%\label{sec:design-visu}
+
+\begin{figure}[htb]
+    \centering
+    \begin{subfigure}{.49\linewidth}
+        \includegraphics[width=\linewidth]{tabarnac/example_sz}
+        \caption{Structures size.}
+        \label{fig:example_sz}
+    \end{subfigure}
+    \begin{subfigure}{.49\linewidth}
+        \includegraphics[width=\linewidth]{tabarnac/example_rw}
+        \caption{Number of accesses per structures.}
+        \label{fig:example_rw}
+    \end{subfigure}
+    \caption{Global views of the memory usage.}
+    \label{fig:example_plot1}
+\end{figure}
+
+\subsection{Visualization}
+
+Once the data collection phase is done,
+\gls{Tabarnac} generates the visualization (as an HTML page), providing a summary
+of the trace through several plots\footnote{A full example of \gls{Tabarnac}'s output is available at:\\\small
+    \url{http://dbeniamine.github.io/Tabarnac/examples}.}.
+The visualization aims at showing \emph{why} performances issues related
+to memory occur, it therefore shows several plots helping to understand the
+importance of each data structure and how it is accessed.
+Each plot is introduced by an explanation
+of its presentation, what common issues it can help to understand and provides
+suggestions on how to fix these issues.  The visualization starts with a small
+introduction, summarizing the main principles while developing for NUMA
+machines, and shows the hardware topology of the analyzed machine extracted
+with Hwloc~\cite{Broquedis10hwloc}.
+
+
+After the introduction, the visualization focuses on the usage of data structures. Some
+structures are not displayed if less than $0.01\%$ of the total accesses happen on them. This is
+done to make the output more readable by focusing on the most important structures.
+%However, it is possible to ask
+%\gls{Tabarnac} not to ignore structures in the second case for a more detailed view.
+
+The first series of plots presents information concerning the relative
+importance of the data structures. It consists of two plots, showing first the
+size of each data structure, as in Figure~\ref{fig:example_sz}, then the
+number of reads and writes in each structure (Figure~\ref{fig:example_rw}). These plots give a
+general idea of the structures used by the parallel application.
+Moreover, knowing the read/write behavior is very
+useful as it determines the possible optimizations. For instance, structures
+written only during initialization (or very rarely) can be relatively easily
+duplicated, such that each NUMA node works on a local copy.
+
+\begin{figure}[htb]
+    \centering
+    \begin{subfigure}{.49\linewidth}
+        \includegraphics[width=\linewidth]{tabarnac/example_ft}
+        \caption{First touch distribution.}
+        \label{fig:example_ft}
+    \end{subfigure}
+    \begin{subfigure}{.49\linewidth}
+        \includegraphics[width=\linewidth]{tabarnac/example_dist}
+        \caption{Per thread access distribution.}
+        \label{fig:example_dist}
+    \end{subfigure}
+    \caption{Per structure views.}
+    \label{fig:example_by_structs}
+\end{figure}
+
+The second series of plots is the most important one. It
+shows for each page of each structure
+which thread was responsible for the first touch
+(Figure~\ref{fig:example_ft}). This information is important as the
+default policy for \emph{Linux} and most other operating systems is to map a page as close as possible to the first
+thread accessing it. If the first touch distribution does not fit the actual
+access distribution, the default mapping performed by \emph{Linux} might not be
+efficient. To address this issue, the developer can either correct the first
+touch or do some manual data mapping to ensure better memory access locality and balance
+during the execution.
+
+Finally, \gls{Tabarnac} shows the density of accesses performed by each thread and
+the global distribution. In the example shown in Figure~\ref{fig:example_dist}, each
+horizontal line represents the number of accesses to one page, there is one
+line per thread and one for the average number of accesses. Moreover, for each
+thread the average number of accesses to the structure is displayed.
+Darker lines indicate more memory accesses to the page. This visualization gives an easy way
+to understand the data sharing between threads, as well as the balance between pages and
+threads. These plots can be used to identify inefficient memory access behaviors and to
+determine the best NUMA mapping policy.
 
 \subsection{Case study}
 
-\subsection{Results and discussion}
+\Input{tabarnac-expe}
 
-\DB{Global overview, not enough, need temporal info, contribution submitted at
-Cluster'16}
 
-\section{Moca: Detailed traces}
+\section{Moca: Collecting fine grain traces}
 
 \subsection{Goals and challenges}
 
