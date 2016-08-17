@@ -1,9 +1,13 @@
 %!TEX encoding=UTF-8 Unicode
 %!TEX root=../thesis.tex
 
+To evaluate \gls{Tabarnac}, we present two examples on benchmark optimization done with \gls{Tabarnac}.
+For each benchmark, we compare the speedup obtained with \gls{Tabarnac} to the one obtaine by \gls{NUMA} mapping tools.
+Furthermore we evaluated the overhead of \gls{Tabarnac}
+
 \subsubsection{Experimental Setup}
 
-This section briefly discusses our experimental setup for the evaluation of \gls{Tabarnac}.
+%This section briefly discusses our experimental setup for the evaluation of \gls{Tabarnac}.
 % and presents relevant information on the experimental environment.
 %presents the hardware architecture, the mapping policies to which we compare
 %pour propositions, and the other relevant environment informations.
@@ -36,80 +40,32 @@ This section briefly discusses our experimental setup for the evaluation of \gls
     \caption{Hardware configuration of our evaluation system.}
     \label{tab:hw}
 \end{table}
+\DB{Redo table}
 
-We used two NUMA machines for our experiments, \texttt{Turing} and
-\texttt{Idfreeze}. The second machine was only used to compare the
-instrumentation overhead on Intel and AMD machines, all the other experiments
-ran on \texttt{Turing}. The hardware details are
-summarized in Table~\ref{tab:hw}. \texttt{Turing} runs version $3.13$ of the
-Linux kernel, while \texttt{Idfreeze} runs version $3.2$.
+We used two NUMA machines for our experiments, \texttt{Turing} and \texttt{Idfreeze}.
+The second machine was only used to compare the instrumentation overhead on Intel and AMD machines, all the other experiments ran on \texttt{Turing}.
+The hardware details are summarized in Table~\ref{tab:hw}.
+\texttt{Turing} runs version $3.13$ of the Linux kernel, while \texttt{Idfreeze} runs version $3.2$.
 
-%\texttt{Turing} is composed of $4$ Intel Xeon X7550
-%processors (Nehalem microarchitecture~\cite{Intel2010}). Each processor has its own memory controller and therefore forms a NUMA node. The hardware details are summarized in Table~\ref{tab:Turing}.
-%The machine runs version 3.13 of the Linux kernel.
-%
-%\texttt{Idfreeze} is composed of $4$ AMD Opteron $6174$
+\DB{Distribute traces}
+We evaluate the following applications with \gls{Tabarnac} in this paper: the \emph{IS} benchmark from the \gls{NPB} and \emph{Ondes3D}.
+They were chosen to demonstrate different memory access behaviors with different strategies to improve them.
 
-%Boths machines are composed of $4$ processors.  Each processor has its own memory
-%controller and therefore forms a NUMA node.
-%
-%\begin{table}[htb]
-%    \centering
-%    \caption{Hardware configuration of our evaluation system.}
-%    \label{tab:Turing}
-%    \footnotesize
-%        \begin{tabular}{lccccc}
-%            \toprule
-%            \multirow{2}{1.5cm}{System total} & Nodes & Threads & Freq & Memory \\
-%            \cmidrule(lr){2-5}
-%                & $4$   & $64$ & $2.00$Ghz & $128$Gib \\
-%            \midrule
-%            \multirow{2}{1.5cm}{Per NUMA node} & Cores & Threads & L3 Cache & Memory \\
-%           \cmidrule(lr){2-5}
-%            & $8$ & $16$ & $18$Mib & $32$Gib  \\
-%            \bottomrule
-%        \end{tabular}
-%\end{table}
-
-
-%\subsection{Applications}
-
-%We evaluate the following applications with \gls{Tabarnac} in this paper: %a \emph{matrix multiplication},
-%the \emph{IS} benchmark and \emph{Ondes3D}.
-%They were chosen to demonstrate different memory access behaviors with different strategies to improve them.
-
-%The \emph{matrix multiplication} is a well-known algorithm that we use to verify the accuracy of \gls{Tabarnac}, as well as to discuss the performance improvements that can be achieved.
-%The \emph{matrix multiplication} is implemented with Pthreads, while \emph{IS} and \emph{Ondes3D} use OpenMP for parallelization.
-
-All applications use OpenMP for parallelization, they were compiled with
-\texttt{gcc}, version 4.6.3, with the \texttt{-O2} optimization flag.  Both
-analysis and performance evaluation are performed with $64$ threads,
-which is the maximum number of threads that our main evaluation machine
-(\texttt{Turing}) can execute in parallel.
+All applications use OpenMP for parallelization, they were compiled with \texttt{gcc}, version 4.6.3, with the \texttt{-O2} optimization flag.
+Both analysis and performance evaluation are performed with $64$ threads, which is the maximum number of threads that our main evaluation machine (\texttt{Turing}) can execute in parallel.
 %The \emph{matrix multiplication} performance was evaluated with
 %matrices of size $4096 \times 4096$ doubles and $8192 \times 8192$, resulting on
 %a memory usage of $128$Mib and $512Mib$ per matrix.
 %\subsection{Mapping Policies}
 
-In the performance evaluation, we compare the following three traditional
-mapping policies to the version modified using the knowledge provided by \gls{Tabarnac}.
-The \emph{original Linux kernel} is our baseline for the experiments. We use an unmodified Linux kernel, version 3.13, with the first-touch policy. The NUMA Balancing mechanism is disabled in this baseline.
+In the performance evaluation, we compare the following three traditional mapping policies to the version modified using the knowledge provided by \gls{Tabarnac}.
+The \emph{original Linux kernel} is our baseline for the experiments. We use an unmodified Linux kernel, version 3.13, with the first-touch policy.
+The NUMA Balancing mechanism is disabled in this baseline.
 The \emph{interleave} policy is performed with the help of the \texttt{numactl} tool~\cite{Kleen05NUMA}.
 We also compare our results to the recently introduced \emph{NUMA Balancing} technique~\cite{Corbet12Toward}, which is executed with its default configuration.
 
 For the plots presenting speedups, each configuration was executed at least 10 times. Each point shows the arithmetic mean of all runs.
 The error bars in those plots represent the standard error.
-
-
-\subsection{Analysis and Results}
-
-This section presents the results of our analysis.
-For each application, we show its memory access behavior, discuss strategies to optimize this behavior and present the performance improvements that can be achieved.
-
-% In this section, we analyze several benchmarks using \gls{Tabarnac}, we discuss
-% their memory access distribution. Using this analysis we propose some
-% optimizations and we evaluate them by comparing it to automatic data mapping
-% tools.
 
 % \subsubsection{Matrix Multiplication}
 % 
@@ -237,114 +193,90 @@ For each application, we show its memory access behavior, discuss strategies to 
 \subsubsection{Ondes3D}
 \label{sec:exp-ondes3d}
 
-\emph{Ondes3D} is the main numerical kernel of the Ondes3D
-application~\cite{Dupros08Exploiting}. It simulates the propagation of seismic waves
-using a finite-differences numerical method. Ondes3D has a memory usage of
-$11.3$Gib with the parameters used for the performance evaluation, and $0.7$Gib
-for the analysis.
+\emph{Ondes3D} is the main numerical kernel of the Ondes3D application~\cite{Dupros08Exploiting}.
+It simulates the propagation of seismic waves using a finite-differences numerical method.
+Ondes3D has a memory usage of $11.3$Gib with the parameters used for the performance evaluation, and $0.7$Gib for the analysis.
 
 \begin{figure}[htb]
     \centering
-
-    %\subfigure[Original access distribution.]{
-    %    \includegraphics[width=.45\linewidth] {tabarnac/ondes3d_vz0_dist_orig}
-    %    \label{fig:ondes3d-behaviour-vz0-orig}
-    %}
-    %\subfigure[Access distribution after modifications.]{
-    %    \includegraphics[width=.45\linewidth] {tabarnac/ondes3d_vz0_dist_modif}
-    %    \label{fig:ondes3d-behaviour-vz0-modif}
-    %}
-    \begin{subfigure}{.49\linewidth}
+    \begin{subfigure}{.45\linewidth}
+        \includegraphics[width=\linewidth] {tabarnac/ondes3d_vz0_dist_orig}
+        \caption{Access distribution}
+        \label{fig:ondes3d-behaviour-vz0-orig}
+    \end{subfigure}
+    \newline
+    \begin{subfigure}{.4\linewidth}
         \includegraphics[width=\linewidth] {tabarnac/ondes3d_vz0_ft_orig}
         \caption{Original first-touch.}
         \label{fig:ondes3d-ft-vz0-orig}
     \end{subfigure}
-    \begin{subfigure}{.49\linewidth}
+    \begin{subfigure}{.4\linewidth}
         \includegraphics[width=\linewidth] {tabarnac/ondes3d_vz0_ft_modif}
         \caption{Improved first-touch.}
         \label{fig:ondes3d-ft-vz0-modif}
     \end{subfigure}
-    \caption{First-touch for structure
+    \caption{Access distribution and first-touch for structure
         \texttt{vz0} from \emph{Ondes3D}.} %Original version on the left,
     %modified on the right.}
     \label{fig:ondes3d}
 \end{figure}
 
-The analysis of the accesses distribution in \emph{Ondes3D} (not displayed
-here) shows that each
-structure seems to be well distributed between the threads. %, as we can see for
-%structure \texttt{vz0} in Figure~\ref{fig:ondes3d-behaviour-vz0-orig}.
-However, for all structures,
-thread~$0$ is responsible for all first accesses, as we can see for \texttt{vz0} in
-Figure~\ref{fig:ondes3d-ft-vz0-orig}. Due to
-this pattern, if we run \emph{Ondes3D} without any improved mapping policy, every page will be
-mapped to the NUMA node that executes the thread~$0$, resulting in mostly remote
-accesses for the other threads. An easy fix is to perform the initialization
-in parallel and to pin each thread on a different core, or to use the
-interleave policy.
-Such a modification results in the first touch distribution shown in
-Figure~\ref{fig:ondes3d-ft-vz0-modif}, which is now distributed among all the threads.
+The analysis of the accesses distribution in \emph{Ondes3D} shows that each structure seems to be well distributed between the threads, as we can see for structure \texttt{vz0} in Figure~\ref{fig:ondes3d-behaviour-vz0-orig}.
+However, for all structures, thread~$0$ is responsible for all first accesses, as we can see for \texttt{vz0} in Figure~\ref{fig:ondes3d-ft-vz0-orig}.
+Due to this pattern, if we run \emph{Ondes3D} without any improved mapping policy, every page will be mapped to the \gls{NUMA} node that executes the thread~$0$, resulting in mostly remote
+accesses for the other threads.
+An easy fix is to perform the initialization in parallel and to pin each thread on a different core.
+Such a modification results in the first touch distribution shown in Figure~\ref{fig:ondes3d-ft-vz0-modif}, which is now distributed among all the threads.
 
 \begin{figure}[htb]
     \centering
-    \includegraphics[scale=.6]{tabarnac/ondes3d_exectime}
+    \includegraphics[width=.7\linewidth]{tabarnac/ondes3d_exectime}
     \caption{Speedup for \emph{Ondes3D} compared to the baseline.}
     \label{fig:ondes-res}
 \end{figure}
 
-We compare the performance of the modified version (\emph{First Touch}) to the
-original (\emph{Base})
-version, running on the normal OS, with \emph{NUMA Balancing} activated and with an
-\emph{Interleave} policy. Figure~\ref{fig:ondes-res} present the results of this
-evaluation. We can see that all methods improve the execution time compared to the OS, but
-NUMA Balancing provides less than $30\%$ speedup, while the static mappings
-(Interleave and the modified code) increase performance by $60\%$.
-%This is due to the training time described in Section~\ref{sec:soa-mapping}.
-Indeed,
-with \emph{NUMA Balancing}, all pages are initially mapped by the OS to the NUMA node
-of thread~$0$, and
-are only moved later on, after many remote accesses have already occurred,
-losing some optimization opportunities. This is a case where static mapping can be substantially better than automated
-tools. The \emph{Interleave} policy provides a similar speedup as
-\emph{First Touch} since it distributes the pages over the NUMA nodes at the beginning of
-the execution, but our tool shows clearly the cause of the performances issue.
+We compare the performance of the modified version (\emph{First Touch}) to the original (\emph{Base}) version, running on the normal OS, with \emph{NUMA Balancing} activated and with an \emph{Interleave} policy that aims at reducing the impact of remote accesses.
+Figure~\ref{fig:ondes-res} present the results of this evaluation.
+We can see that all methods improve the execution time compared to the \gls{OS}, but \emph{NUMA Balancing} provides less than $30\%$ speedup, while the static mappings (Interleave and the modified code) increase performance by $60\%$.
+Indeed, with \emph{NUMA Balancing}, all pages are initially mapped by the \gls{OS} to the \gls{NUMA} node of thread~$0$, and are only moved later on, after many remote accesses have already occurred, losing some optimization opportunities.
+This is a case where static mapping can be substantially better than automated tools.
+The \emph{Interleave} policy provides a similar speedup as \emph{First Touch} since it distributes the pages over the \gls{NUMA} nodes at the beginning of the execution, but our tool shows clearly the cause of the performances issue.
 % Nevertheless, the interleave version only maps the data no the
 % threads, therefore the performances might drop if the OS does not map them
 % ``correctly'' while the modified version proposes a thread mapping that ensures better
 % data locality.
-
 
 \subsubsection{The IS Benchmark}
 
 \begin{figure*}[!htb]
     \centering
 
-    \begin{subfigure}{.29\linewidth}
+    \begin{subfigure}{.32\linewidth}
         \caption{\texttt{key\_array} (original).}
         \includegraphics[width=\linewidth]  {tabarnac/is_b_kba_orig}
         \label{fig:is-behaviour-orig-kba}
     \end{subfigure}
-    \begin{subfigure}{.29\linewidth}
+    \begin{subfigure}{.32\linewidth}
         \caption{\texttt{key\_buff2} (original).}
         \includegraphics[width=\linewidth]  {tabarnac/is_b_kb2_orig}
         \label{fig:is-behaviour-orig-kb2}
     \end{subfigure}
-    \begin{subfigure}{.29\linewidth}
+    \begin{subfigure}{.32\linewidth}
         \caption{\texttt{key\_buff1} (original).}
         \includegraphics[width=\linewidth]  {tabarnac/is_b_kb1_orig}
         \label{fig:is-behaviour-orig-kb1}
     \end{subfigure}
-    \begin{subfigure}{.29\linewidth}
+    \begin{subfigure}{.32\linewidth}
         \caption{\texttt{key\_array} (modified).}
         \includegraphics[width=\linewidth] {tabarnac/is_b_kba_modif}
         \label{fig:is-behaviour-modif-kba}
     \end{subfigure}
-    \begin{subfigure}{.29\linewidth}
+    \begin{subfigure}{.32\linewidth}
         \caption{\texttt{key\_buff2} (modified).}
         \includegraphics[width=\linewidth] {tabarnac/is_b_kb2_modif}
         \label{fig:is-behaviour-modif-kb2}
     \end{subfigure}
-    \begin{subfigure}{.29\linewidth}
+    \begin{subfigure}{.32\linewidth}
         \caption{\texttt{key\_buff1} (modified).}
         \includegraphics[width=\linewidth] {tabarnac/is_b_kb1_modif}
         \label{fig:is-behaviour-modif-kb1}
@@ -360,7 +292,7 @@ the execution, but our tool shows clearly the cause of the performances issue.
 %\tod{i suggest removing the next 2 phrases:}
 We executed \gls{Tabarnac} on the benchmarks %written in \texttt{C}
 from the OpenMP
-implementation of the NAS Parallel Benchmark suite~(NPB)~\cite{Jin99NPBOpenMP}.
+implementation of the \gls{NPB}~\cite{Jin99NPBOpenMP}.
 %\tod{there are just 2...}
 % David: Actually we tried also some fortran NPB but I didn't insist on
 % getting the good structure names as the access patterns were ``good''
@@ -472,72 +404,74 @@ the application down.
 
 
 
-%   \subsection{Overhead Analysis}
-%   
-%   Our last experiment aims at evaluating the instrumentation cost of \gls{Tabarnac}. To do so, we
-%   executed all of the NAS Parallel Benchmarks in class \emph{B} with $64$
-%   threads on both evaluation systems and compared the original execution time to the execution time with instrumentation enabled.
-%   
-%   \begin{figure}[!htb]
-%       \centering
-%       \includegraphics[scale=.68]{tabarnac/tool-ovh.pdf}
-%       \caption{\gls{Tabarnac}'s instrumentation overhead.}
-%       \label{fig:ovh}
-%   \end{figure}
-%   
-%   %\begin{table}
-%   %    \centering
-%   %    \begin{tabular}{lrrrrr}
-%   %        \toprule
-%   %        %\multirow{2}{*}{Machine}
-%   %         & \multicolumn{5}{c}{Benchmark (CLASS)} \\
-%   %        \cmidrule(lr){2-6}
-%   %            &\texttt{DC} (A) &\texttt{SP} (B)&\texttt{CG} (B)&\texttt{MG} (B)&\texttt{FT} (B) \\
-%   %        \cmidrule(lr){2-6}
-%   %        \texttt{Turing} &$26.26$ & $7.37$ &$9.75 $ &$16.23$ &$19.17$ \\
-%   %        \texttt{Idfreeze} &$4.30$  & $4.07$  &  $19.92$ &   $30.66$ &    $60.54$ \\
-%   %        \midrule
-%   %        \midrule
-%   %                &\texttt{EP} (B)&\texttt{IS} (B)&\texttt{UA} (B)&\texttt{LU} (B)&\texttt{BT} (B)\\
-%   %        \cmidrule(lr){2-6}
-%   %        \texttt{Turing} &$22.56$ &$27.28$ &$29.65$ &$32.13$ &$33.13$ \\
-%   %        \texttt{Idfreeze} & $13.64$ &$31.32$ & $37.17$ &  $40.05$ &   $54.22$ \\
-%   %        \bottomrule
-%   %    \end{tabular}
-%   %    \caption{Slowdown factor of \gls{Tabarnac} instrumentation for the 10 NAS Parallel
-%   %        Benchmarks on both machines.}
-%   %    \label{tab:ovh}
-%   %\end{table}
-%   
-%   As we can see in Figure~\ref{fig:ovh}, on the Intel machine,
-%   the instrumentation slows the execution down by a factor from $10$ to $30$.
-%   On the AMD machine, the overhead is almost always higher, and for
-%   pathological cases, is two to three times slower than on
-%   the Intel machine.
-%   %On most benchmarks, the instrumentation is $10$ to $50\%$ slower on
-%   %AMD than on Intel processor. For the pathological cases (\texttt{FT} and
-%   %\texttt{BT}) the instrumentation can be two or three time slower on AMD.
-%   Although this overhead is not negligible, we have to consider the fact that often we can instrument
-%   smaller versions of the applications, as we focus on the general behavior.
-%   Moreover our method is more precise than sampling and
-%   thus one run is often enough. Finally, as our
-%   analysis is designed to be used during the development phase and at runtime in an
-%   automated tool, we consider that this overhead is acceptable.
-%   
-%   \subsection{Summary of Results}
-%   
-%   Our experiments have highlighted the fact that although automated tools such
-%   as NUMA Balancing can be efficient, in some cases they result in
-%   performance losses. Moreover, although simple static mapping policies
-%   can result in substantial improvements, the best policy depends on the memory
-%   accesses behavior of the parallel application. Therefore, it is necessary to understand this behavior to
-%   select the most appropriate mapping policy.
-%   
-%   Our tools and methodology enables developers and users to achieve performance improvements in two ways. First, by
-%   providing a deep understanding of the memory access behavior, it enables the user to
-%   find the best mapping policy. Second, this knowledge can be used to
-%   identify and fix inefficient memory behavior. Our experiments showed that both
-%   situations result in significant performance gains.
+\subsubsection{Overhead Analysis}
+
+Our last experiment aims at evaluating the instrumentation cost of \gls{Tabarnac}. To do so, we
+executed all of the NAS Parallel Benchmarks in class \emph{B} with $64$
+threads on both evaluation systems and compared the original execution time to the execution time with instrumentation enabled.
+
+\begin{figure}[!htb]
+    \centering
+    \includegraphics[scale=.68]{tabarnac/tool-ovh.pdf}
+    \caption{\gls{Tabarnac}'s instrumentation overhead.}
+    \label{fig:ovh}
+\end{figure}
+
+%\begin{table}
+%    \centering
+%    \begin{tabular}{lrrrrr}
+%        \toprule
+%        %\multirow{2}{*}{Machine}
+%         & \multicolumn{5}{c}{Benchmark (CLASS)} \\
+%        \cmidrule(lr){2-6}
+%            &\texttt{DC} (A) &\texttt{SP} (B)&\texttt{CG} (B)&\texttt{MG} (B)&\texttt{FT} (B) \\
+%        \cmidrule(lr){2-6}
+%        \texttt{Turing} &$26.26$ & $7.37$ &$9.75 $ &$16.23$ &$19.17$ \\
+%        \texttt{Idfreeze} &$4.30$  & $4.07$  &  $19.92$ &   $30.66$ &    $60.54$ \\
+%        \midrule
+%        \midrule
+%                &\texttt{EP} (B)&\texttt{IS} (B)&\texttt{UA} (B)&\texttt{LU} (B)&\texttt{BT} (B)\\
+%        \cmidrule(lr){2-6}
+%        \texttt{Turing} &$22.56$ &$27.28$ &$29.65$ &$32.13$ &$33.13$ \\
+%        \texttt{Idfreeze} & $13.64$ &$31.32$ & $37.17$ &  $40.05$ &   $54.22$ \\
+%        \bottomrule
+%    \end{tabular}
+%    \caption{Slowdown factor of \gls{Tabarnac} instrumentation for the 10 NAS Parallel
+%        Benchmarks on both machines.}
+%    \label{tab:ovh}
+%\end{table}
+
+As we can see in Figure~\ref{fig:ovh}, on the Intel machine,
+the instrumentation slows the execution down by a factor from $10$ to $30$.
+On the AMD machine, the overhead is almost always higher, and for
+pathological cases, is two to three times slower than on
+the Intel machine.
+%On most benchmarks, the instrumentation is $10$ to $50\%$ slower on
+%AMD than on Intel processor. For the pathological cases (\texttt{FT} and
+%\texttt{BT}) the instrumentation can be two or three time slower on AMD.
+Although this overhead is not negligible, we have to consider the fact that often we can instrument
+smaller versions of the applications, as we focus on the general behavior.
+Moreover our method is more precise than sampling and
+thus one run is often enough. Finally, as our
+analysis is designed to be used during the development phase and at runtime in an
+automated tool, we consider that this overhead is acceptable.
+
+
+\subsection{Analysis and Results}
+
+Our experiments have highlighted the fact that although automated tools such
+as NUMA Balancing can be efficient, in some cases they result in
+performance losses. Moreover, although simple static mapping policies
+can result in substantial improvements, the best policy depends on the memory
+accesses behavior of the parallel application. Therefore, it is necessary to understand this behavior to
+select the most appropriate mapping policy.
+
+Our tools and methodology enables developers and users to achieve performance improvements in two ways. First, by
+providing a deep understanding of the memory access behavior, it enables the user to
+find the best mapping policy. Second, this knowledge can be used to
+identify and fix inefficient memory behavior. Our experiments showed that both
+situations result in significant performance gains.
 
 
 \DB{Global overview, not enough, need temporal info, contribution published VPA'15}
+% vim: et si sta lbr  sw=4 ts=4 spelllang=en_us

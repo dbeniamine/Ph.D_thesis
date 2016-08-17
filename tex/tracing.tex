@@ -35,7 +35,7 @@ On \gls{NUMA} machines, optimizing memory performances often means reducing the 
 Indeed, to optimize the performances a memory page must be mapped to a physical memory bank as close as possible to the threads that actually uses it.
 Remote accesses are extremely slow and must therefore be limited to the minimum possible.
 Therefore to optimize memory performances on \gls{NUMA} system, it is required to know how much each page is accessed by each thread.
-\acrful{Tabarnac} is designed to collect specifically this information.
+\gls{Tabarnac} is designed to collect specifically this information.
 
 \begin{algorithm}[htb]
     \begin{algorithmic}
@@ -75,6 +75,21 @@ Moreover it allows the user to customize the plots generate by the \gls{R} scrip
 
 \subsection{Visualization}
 
+Once the data collection phase is done, \gls{Tabarnac} uses a \gls{R-markdown} script to generate the visualization (as an HTML page).
+This visualization provides a summary of the trace through several plots\footnote{
+    A full example of \gls{Tabarnac}'s output is available at:\\ \url{http://dbeniamine.github.io/Tabarnac/examples}.}.
+It aims at showing how pages are shared inside each data structures.
+Therefore, it provides two types of plots, the first aims at showing the importance of each data structure.
+While the second describe the sharing patterns inside these data structures.
+Each plot is introduced by an explanation of its presentation, what common issues it can help to understand and provides suggestions on how to fix these issues.
+The visualization starts with a small introduction, summarizing the main principles while developing for \gls{NUMA} machines, and shows the hardware topology of the analyzed machine extracted
+with Hwloc~\cite{Broquedis10hwloc}.
+
+After the introduction, the visualization focuses on the usage of data structures.
+Some structures are not displayed if less than $0.01\%$ of the total accesses happen on them.
+This is done to make the output more readable by focusing on the most important structures.
+However, it is possible to ask \gls{Tabarnac} not to ignore these structures for a more detailed view.
+
 \begin{figure}[htb]
     \centering
     \begin{subfigure}{.49\linewidth}
@@ -91,36 +106,12 @@ Moreover it allows the user to customize the plots generate by the \gls{R} scrip
     \label{fig:example_plot1}
 \end{figure}
 
-Once the data collection phase is done,
-\gls{Tabarnac} generates the visualization (as an HTML page), providing a summary
-of the trace through several plots\footnote{A full example of \gls{Tabarnac}'s output is available at:\\\small
-    \url{http://dbeniamine.github.io/Tabarnac/examples}.}.
-The visualization aims at showing \emph{why} performances issues related
-to memory occur, it therefore shows several plots helping to understand the
-importance of each data structure and how it is accessed.
-Each plot is introduced by an explanation
-of its presentation, what common issues it can help to understand and provides
-suggestions on how to fix these issues.  The visualization starts with a small
-introduction, summarizing the main principles while developing for NUMA
-machines, and shows the hardware topology of the analyzed machine extracted
-with Hwloc~\cite{Broquedis10hwloc}.
-
-
-After the introduction, the visualization focuses on the usage of data structures. Some
-structures are not displayed if less than $0.01\%$ of the total accesses happen on them. This is
-done to make the output more readable by focusing on the most important structures.
-%However, it is possible to ask
-%\gls{Tabarnac} not to ignore structures in the second case for a more detailed view.
-
-The first series of plots presents information concerning the relative
-importance of the data structures. It consists of two plots, showing first the
-size of each data structure, as in Figure~\ref{fig:example_sz}, then the
-number of reads and writes in each structure (Figure~\ref{fig:example_rw}). These plots give a
-general idea of the structures used by the parallel application.
-Moreover, knowing the read/write behavior is very
-useful as it determines the possible optimizations. For instance, structures
-written only during initialization (or very rarely) can be relatively easily
-duplicated, such that each NUMA node works on a local copy.
+The first series of plots presents information concerning the relative importance of the data structures.
+It consists of two plots, showing first the size of each data structure, as in Figure~\ref{fig:example_sz}, then the number of reads and writes in each structure (Figure~\ref{fig:example_rw}).
+These plots give a general idea of the structures used by the parallel application.
+Moreover, knowing the read/write behavior is very useful as it determines the possible optimizations.
+For instance, small data structures written only during initialization (or very rarely) can be relatively easily
+duplicated, such that each \gls{NUMA} node works on a local copy.
 
 \begin{figure}[htb]
     \centering
@@ -134,30 +125,22 @@ duplicated, such that each NUMA node works on a local copy.
         \caption{Per thread access distribution.}
         \label{fig:example_dist}
     \end{subfigure}
-    \caption{Per structure views.}
+    \caption{Per structure view of the memory usage.}
     \label{fig:example_by_structs}
 \end{figure}
 
-The second series of plots is the most important one. It
-shows for each page of each structure
-which thread was responsible for the first touch
-(Figure~\ref{fig:example_ft}). This information is important as the
-default policy for \emph{Linux} and most other operating systems is to map a page as close as possible to the first
-thread accessing it. If the first touch distribution does not fit the actual
-access distribution, the default mapping performed by \emph{Linux} might not be
-efficient. To address this issue, the developer can either correct the first
-touch or do some manual data mapping to ensure better memory access locality and balance
-during the execution.
+The second series of plots is the most important one.
+It shows for each page of each structure which thread was responsible for the first touch (Figure~\ref{fig:example_ft}).
+This information is important as the default policy for \gls{Linux} and most other operating systems is to map a page as close as possible to the first thread accessing it.
+If the first touch distribution does not fit the actual access distribution, the default mapping performed by \gls{Linux} might not be efficient.
+To address this issue, the developer can either correct the first touch or do some manual data mapping to ensure better memory access locality and balance during the execution.
 
-Finally, \gls{Tabarnac} shows the density of accesses performed by each thread and
-the global distribution. In the example shown in Figure~\ref{fig:example_dist}, each
-horizontal line represents the number of accesses to one page, there is one
-line per thread and one for the average number of accesses. Moreover, for each
-thread the average number of accesses to the structure is displayed.
-Darker lines indicate more memory accesses to the page. This visualization gives an easy way
-to understand the data sharing between threads, as well as the balance between pages and
-threads. These plots can be used to identify inefficient memory access behaviors and to
-determine the best NUMA mapping policy.
+Finally, \gls{Tabarnac} shows the density of accesses performed by each thread and the global distribution.
+In the example shown in Figure~\ref{fig:example_dist}, each horizontal line represents the number of accesses to one page, there is one line per thread and one for the average number of accesses.
+Moreover, for each thread the average number of accesses to the structure is displayed.
+Darker lines indicate more memory accesses to the page. This visualization gives an easy way to understand the data sharing between threads, as well as the balance between pages and
+threads.
+These plots can be used to identify inefficient memory access behaviors and to determine the best \gls{NUMA} mapping policy.
 
 \subsection{Case study}
 
