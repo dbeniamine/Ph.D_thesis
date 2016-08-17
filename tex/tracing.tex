@@ -1,39 +1,29 @@
 %!TEX encoding=UTF-8 Unicode
 \chapter{Collecting Memory Traces}
 
-\begin{itemize}
-    \item Memory traces two challenges
-        \begin{itemize}
-            \item Collection:
-                \begin{itemize}
-                    \item Detail
-                    \item Precise,
-                    \item Complete
-                \end{itemize}
-            \item Visu
-        \end{itemize}
-    \item First attempt: no time Data / NUMA oriented
-    \item Second attempt more precise, only colelction discussed here
-    \item Contributions:
-        \begin{itemize}
-            \item \gls{Tabarnac}
-                \begin{itemize}
-                    \item Paper at VPA'15~\cite{Beniamine15TABARNAC}
-                    \item Dev free software: \url{https://github.com/dbeniamine/Tabarnac}
-                    \item Collaboration with UFRGS
-                    \item Results also presented at LICIA'16
-                \end{itemize}
-            \item \gls{Moca}
-                \begin{itemize}
-                    \item Two research reports~\cite{Beniamine15Memory,Beniamine16Moca}
-                    \item Article submitted at PMBS'16
-                    \item Dev free software: \url{https://github.com/dbeniamine/Moca}
-                \end{itemize}
-        \end{itemize}
-\end{itemize}
+Memory traces are useful to understand and optimize the memory usage of an application.
+Still, collecting such a trace is challenging as there is no hardware help comparable to performance counters to do it non intrusively.
+Therefore, memory trace collection tools must work at the \gls{OS} or software level.
+
+In this chapter we present our main contributions that consists in two different memory trace collection tools.
+The first tool, called \gls{Tabarnac}, uses an instrumentation library to obtain a global overview of the memory usage.
+It is designed specifically to inspect \gls{NUMA} relate issues, has a low overhead and lock free design.
+This tool also provides simple yet meaningful visualizations.
+\gls{Tabarnac} was published at \gls{VPA} 2015 a \gls{SC} workshop~\cite{Beniamine15TABARNAC}.
+Furthermore it is distributed as a free software under the \gls{GPL} license: \url{https://github.com/dbeniamine/Tabarnac}.
+This work is the result of a collaboration with M. Diener and P.O.A Navaux from the informatica team of the \gls{UFRGS}, Porto Alegre, Brazil.
+The second tool, \gls{Moca}, addresses the challenge of collecting \emph{complete} memory traces with temporal information.
+It relies on an \gls{OS} level mechanism called page fault interception and injection.
+This work is the subject of two Inria research reports~\cite{Beniamine15Memory,Beniamine16Moca} and has been submitted at \gls{PMBS} 2016, a \gls{SC} workshop.
+As the previous tool, \gls{Moca} is distributed under the \gls{GPL} license: \url{https://github.com/dbeniamine/Moca}.
+
+This chapter presents first the design and usage of \gls{Tabarnac} through a use case and discuss the obtain results and the limits in \sect{Tabarnac}.
+Then we present the challenged raised \gls{Moca} and how it addresses them in \sect{Moca}.
+Finally we provide an extensive comparison of our tools against state of the art memory trace tools in \sect{Tools-Comp}.
 
 
 \section{Tabarnac: Global view of the memory usage}
+\label{sec:Tabarnac}
 
 \acrfull{Tabarnac} is our first attempt to collect memory traces and use them for performance optimizations.
 As previous work~\cite{Beniamine13Cartographier} showed how difficult it is to capture \emph{complete} memory traces with temporal information, this tools focuses on the global behavior.
@@ -41,36 +31,13 @@ Furthermore it aims specifically at improving \gls{NUMA} related performance iss
 
 \subsection{Trace collection}
 
-\begin{itemize}
-    \item Goal: Identify by page sharing pattern
-    \item Based on Numalyze~\cite{Diener15Characterizing}
-        \begin{itemize}
-            \item Collect same information
-            \item Use it online, no modifications at code level
-        \end{itemize}
-    \item Pin instrumentation
-    \item Granularity Page / thread
-    \item Per structure informations
-        \begin{itemize}
-            \item Stack detection (heuristic)
-            \item Replace malloc
-            \item Static binary analyze
-        \end{itemize}
-    \item Lock free: two counters (Read/Write) per thread and page
-    \item Few dependencies / simple usage, run separated from plot
-\end{itemize}
+On \gls{NUMA} machines, optimizing memory performances often means reducing the number of remote accesses.
+Indeed, to optimize the performances a memory page must be mapped to a physical memory bank as close as possible to the threads that actually uses it.
+Remote accesses are extremely slow and must therefore be limited to the minimum possible.
+Therefore to optimize memory performances on \gls{NUMA} system, it is required to know how much each page is accessed by each thread.
+\acrful{Tabarnac} is designed to collect specifically this information.
 
-\DB{From VPA paper}
-\gls{Tabarnac}: Tools for Analyzing the Behavior of Applications Running on NUMA
-ArChitecture is divided into two parts: the instrumentation tool, which collects information about
-memory accesses, and the visualization, which presents a meaningful
-interpretation of the trace.
-In this section, we discuss the implementation of both parts.
-
-%\subsection{Collecting Memory Access Information}
-%\label{sec:design-impl}
-
-\begin{algorithm}
+\begin{algorithm}[htb]
     \begin{algorithmic}
         \Function{mem\_access}{unsigned long address, int threadId, char type}
             \State uint64\_t page = address >> page\_bits;
@@ -78,62 +45,35 @@ In this section, we discuss the implementation of both parts.
         \EndFunction
     \end{algorithmic}
     \caption{Handling of memory accesses by Tabarnac.}
-    \label{alg:tabarnac}
+    \label{alg:Tabarnac}
 \end{algorithm}
 
-\acrfull{Tabarnac} data collection aims at providing information on how data structure
-are accessed, therefore, it needs to collect fine-grained information. To do so,
-we instrument memory access and collect the number of access per page by thread
-and type (Read/Write). The information is stored on a per-thread basis, as
-shown in \alg{tabarnac}, making the code completely lock-free, as well
-as minimizing the amount of false sharing between threads.
+\gls{Tabarnac} is based on Numalyze~\cite{Diener15Characterizing} instrumentation which rely on the \gls{Pin}~\cite{Luk05Pin} library.
+This instrumentation is lock free by design: it traps on each memory accesses but only maintain two counters per pages and per threads, as details in \alg{Tabarnac}.
+Numalyze was originally designed to estimate the efficiency of adaptive page mapping tools.
+Indeed, such tools uses partial traces to decide online where to map memory pages.
+Comparing the mapping obtained with a partial trace to the one obtained with the complete trace collected by Numalyze helps deciding the minimum size of partial trace required to decide on a page mapping.
+We proposed to used theses traces for offline, interactive analysis.
+Furthermore, as page number are not really meaningful for humans, we added contextual information to Numalyze traces.
+Indeed, \gls{Tabarnac} also collects data structure information by three different means.
+First, each time a thread is created, it compute its stack bounds and create a virtual structure named \texttt{Stack\#N} where $N$ is the thread~Id.
+Then every time a binary file is loaded (main file or shared library), it inspect the binary, looking for static data structures.
+Finally it intercept every call the \texttt{malloc} functions family, keeping track of data structures big enough.
+Only structures that are bigger than one page (usually $4$Kib in current x86\_64 architectures) are recorded as our analysis granularity is the memory page. The data structure information (name, size and address) are only used to generate the visualization, after the end of the instrumentation.
+The name detection of malloc'ed data structure is heuristic and based on source code analysis.
 
-The instrumentation uses the Pin dynamic binary instrumentation
-tool~\cite{Luk05Pin}. Although it is an Intel technology, it works also on AMD
-processors.
-Previous versions of Pin also support Intel Itanium~(IA64) and ARM architectures.
+After tracing finishes, the tool generate three \texttt{csv} files.
+The first contains the list of pages and the number of reads and writes per thread.
+The second contains the list of structures with their names, sizes and start addresses, the last file contains the stacks size and addresses.
+Then, a script which reads the trace, retrieves the page / data structure mapping and generates the final visualization presented in the next subsection.
 
-Before running the application, \gls{Tabarnac} retrieves static memory allocation
-information. %using the \texttt{libelfg0} library.
-Dynamic allocations are intercepted at runtime and structure names
-are extracted using the debug information provided by the compiler.
-%\texttt{malloc} replacement. If the application is
-%compiled with debug flags (\texttt{-g}), the structure names that are malloced can be extracted from the source
-%code.
-Finally, each time a thread is created, we compute its
-stack bounds and create a virtual structure named \texttt{Stack\#N} where
-$N$ is the thread~ID. Only structures that are bigger than one page (usually
-$4$Kib in current x86\_64 architectures) are recorded as our
-analysis granularity is the memory page. The data structure information (name,
-size and address) are only used to generate the visualization, after the end
-of the instrumentation.
-The memory access tracing is based on the earlier numalize tool~\cite{Diener15Characterizing}, which only collected statistics about memory accesses to pages, without information about data structure or stacks.
+\gls{Tabarnac} only depends on \gls{Pin} for the trace collection and \gls{R} for the visualization, and can be installed easily.
+If all the R library required to generate the visualization are not present, it is able to install them automatically.
+By default \gls{Tabarnac} generate the memory trace and the visualization, but the user can also choose to only generate the memory trace or the visualization.
+This is useful for people who cannot install \gls{R} on the machine used to generate the trace.
+Moreover it allows the user to customize the plots generate by the \gls{R} script.
 
-%For each access, we store the type (read or write), the memory page that was
-%accessed, and the thread ID responsible of it.
-%\caption{Code that is executed on each memory access.}
-%\label{fig:code}
-%\end{figure}
-
-
-%After tracing finishes, %we generate three \texttt{csv} files.  The first
-%contains the list of pages and the number of reads and writes per thread. The
-%second contains the list of structures with their names, sizes and start
-%addresses, the last file contains the stacks size and addresses.  Then, a
-%a script which reads the trace, retrieves the page / data structure mapping
-%and generates the final visualization presented in the next subsection.
-
-% not relevant I'd say:
-% \gls{Tabarnac} have very few dependencies and can be installed easily. If all the R
-% library required to generate the visualization are not present, our tool is
-% able to install them automatically. By default \gls{Tabarnac} generate the memory
-% trace and the visualization, but the user can also choose to only generate the
-% memory trace or the visualization. This is useful for people who cannot
-% install R on the machine used to generate the trace. Moreover it allows the
-% user to customize the plots generate by the R script.
-
-%\subsection{Visualization}
-%\label{sec:design-visu}
+\subsection{Visualization}
 
 \begin{figure}[htb]
     \centering
@@ -150,8 +90,6 @@ The memory access tracing is based on the earlier numalize tool~\cite{Diener15Ch
     \caption{Global views of the memory usage.}
     \label{fig:example_plot1}
 \end{figure}
-
-\subsection{Visualization}
 
 Once the data collection phase is done,
 \gls{Tabarnac} generates the visualization (as an HTML page), providing a summary
@@ -227,6 +165,7 @@ determine the best NUMA mapping policy.
 
 
 \section{Moca: Collecting fine grain traces}
+\label{sec:Moca}
 
 \subsection{Goals and challenges}
 
@@ -269,6 +208,7 @@ Overall, storing and exploiting efficiently these data within the kernel space a
 \subsection{Discussion}
 
 \section{Tools Comparison}
+\label{sec:Tools-Comp}
 
 \subsection{Tools analysis}
 

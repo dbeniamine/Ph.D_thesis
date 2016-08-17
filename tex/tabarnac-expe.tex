@@ -111,9 +111,8 @@ For each application, we show its memory access behavior, discuss strategies to 
 % optimizations and we evaluate them by comparing it to automatic data mapping
 % tools.
 
-% \subsection{Matrix Multiplication}
-% \label{sec:exp-mat}
-
+% \subsubsection{Matrix Multiplication}
+% 
 % The first benchmark presented is based on a naive matrix multiplication,
 % computing $C=A \times B$. Our aim here is not to provide a kernel competing with the
 % state of the art, but to show how \gls{Tabarnac} can help to improve such
@@ -130,27 +129,31 @@ For each application, we show its memory access behavior, discuss strategies to 
 % modifying the algorithm.
 % The optimized implementation of the matrix multiplication uses a non-recursive block
 % decomposition.
-
-
-
+% 
+% 
+% 
 % \begin{figure}[htb]
 %     \centering
-%     \subfigure[Structure B (naive version).]{
-%         \includegraphics[width=.45\linewidth] {tabarnac/mat_B_modulo}
+%     \begin{subfigure}{.49\linewidth}
+%         \caption{Structure B (naive version).}
+%         \includegraphics[width=\linewidth] {tabarnac/mat_B_modulo}
 %         \label{fig:matrix-B-naive}
-%     }
-%     \subfigure[Structure C (naive version).]{
-%         \includegraphics[width=.45\linewidth] {tabarnac/mat_C_modulo}
+%     \end{subfigure}
+%     \begin{subfigure}{.49\linewidth}
+%         \caption{Structure C (naive version).}
+%         \includegraphics[width=\linewidth] {tabarnac/mat_C_modulo}
 %         \label{fig:matrix-C-naive}
-%     }
-%     \subfigure[Structure B (block version).]{
-%         \includegraphics[width=.45\linewidth] {tabarnac/mat_B_bloc}
+%     \end{subfigure}
+%     \begin{subfigure}{.49\linewidth}
+%         \caption{Structure B (block version).}
+%         \includegraphics[width=\linewidth] {tabarnac/mat_B_bloc}
 %         \label{fig:matrix-B-bloc}
-%     }
-%     \subfigure[Structure C (block version).]{
-%         \includegraphics[width=.45\linewidth] {tabarnac/mat_C_bloc}
+%     \end{subfigure}
+%     \begin{subfigure}{.49\linewidth}
+%         \caption{Structure C (block version).}
+%         \includegraphics[width=\linewidth] {tabarnac/mat_C_bloc}
 %         \label{fig:matrix-C-bloc}
-%     }
+%     \end{subfigure}
 %     \caption{Per-thread access distribution on data structures B and C for the
 %     matrix multiplication.}
 %     \label{fig:matrix-analysis}
@@ -171,22 +174,24 @@ For each application, we show its memory access behavior, discuss strategies to 
 % nodes. Another solution is to create local copies of \texttt{A} and
 % \texttt{B} on each node as these matrices are only read. Finally, we can modify
 % the algorithm to improve the locality, which means using the block algorithm.
-
-% %\begin{figure}[htb]
-% %    \centering
-% %    \subfigure[Structure B (block version).]{
-% %        \includegraphics[height=.24\textheight] {tabarnac/mat_B_bloc}
-% %        \label{fig:matrix-B-bloc}
-% %    }
-% %    \subfigure[Structure C (block version).]{
-% %        \includegraphics[height=.24\textheight] {tabarnac/mat_C_bloc}
-% %        \label{fig:matrix-C-bloc}
-% %    }
-% %    \caption{By thread access distribution on data structures A and B for the
-% %    block matrix multiplication.}
-% %    \label{fig:matrix-bloc}
-% %\end{figure}
-
+% 
+% \begin{figure}[htb]
+%     \centering
+%     \begin{subfigure}{.49\linewidth}
+%         \caption{Structure B (block version).}
+%         \includegraphics[width=\linewidth] {tabarnac/mat_B_bloc}
+%         \label{fig:matrix-B-bloc}
+%     \end{subfigure}
+%     \begin{subfigure}{.49\linewidth}
+%         \caption{Structure C (block version).}
+%         \includegraphics[width=\linewidth] {tabarnac/mat_C_bloc}
+%         \label{fig:matrix-C-bloc}
+%     \end{subfigure}
+%     \caption{By thread access distribution on data structures A and B for the
+%     block matrix multiplication.}
+%     \label{fig:matrix-bloc}
+% \end{figure}
+% 
 % As we can see in Figures~\ref{fig:matrix-B-bloc}~and~\ref{fig:matrix-C-bloc}, the block algorithm improves the page
 % locality compared to the naive implementation. In our algorithm, structures \texttt{B}
 % and \texttt{C} are not divided the same way, resulting in two different access patterns. For structure \texttt{B} (Figure~\ref{fig:matrix-B-bloc}), the pages still
@@ -197,23 +202,23 @@ For each application, we show its memory access behavior, discuss strategies to 
 % suitable for NUMA machines. We can easily put each part of \texttt{C} (and
 % \texttt{A}) on a NUMA node and map the threads using them to this node, while matrix
 % \texttt{B} can be distributed using an interleave policy.
-
+% 
 % To evaluate the performance improvements of the proposed modifications, we compare the execution
 % time of both versions of the code (naive and block) with the mapping suggested by \gls{Tabarnac} to the original Linux kernel (base), and to NUMA Balancing.
 % For the naive version, the interleave policy is identical to \gls{Tabarnac} and is therefore not shown separately.
 % We use bigger matrix for the block version than for the naive one as this
 % algorithm is designed to benefit from cache and thus reduce the impact of NUMA
 % mapping policy.
-
-
+% 
+% 
 % \begin{figure}[htb]
 %     \centering
-%     \includegraphics[width=.7\linewidth]{tabarnac/mat_time}
+%     \includegraphics[width=\linewidth]{tabarnac/mat_time}
 %     \caption{Speedup of the matrix multiplication for size $4096 \times 4096$
 %     doubles (naive) and size $8192 \times 8192$ doubles (block).}
 %     \label{fig:matrix-res}
 % \end{figure}
-
+% 
 % Figure~\ref{fig:matrix-res} shows the experimental results of the matrix multiplication. We can see that for
 % the naive algorithm, NUMA Balancing is already quite efficient and results in a $40\%$
 % speedup. However, using the \gls{Tabarnac} policy avoids the runtime overhead and
@@ -221,7 +226,7 @@ For each application, we show its memory access behavior, discuss strategies to 
 % matrix $4$ times bigger, all policies provide similar execution times, as this
 % algorithm is designed to fit in the caches of the system, such that the NUMA
 % policy should not influence the results.
-
+% 
 % This example shows
 % how \gls{Tabarnac} can help improving an application by highlighting an inefficient
 % memory access behavior. This knowledge can be used two different ways, and always
@@ -467,73 +472,72 @@ the application down.
 
 
 
-\subsection{Overhead Analysis}
-\label{sec:expe-overhead}
-
-Our last experiment aims at evaluating the instrumentation cost of \gls{Tabarnac}. To do so, we
-executed all of the NAS Parallel Benchmarks in class \emph{B} with $64$
-threads on both evaluation systems and compared the original execution time to the execution time with instrumentation enabled.
-
-\begin{figure}[!htb]
-    \centering
-    \includegraphics[scale=.68]{tabarnac/tool-ovh.pdf}
-    \caption{\gls{Tabarnac}'s instrumentation overhead.}
-    \label{fig:ovh}
-\end{figure}
-
-%\begin{table}
-%    \centering
-%    \begin{tabular}{lrrrrr}
-%        \toprule
-%        %\multirow{2}{*}{Machine}
-%         & \multicolumn{5}{c}{Benchmark (CLASS)} \\
-%        \cmidrule(lr){2-6}
-%            &\texttt{DC} (A) &\texttt{SP} (B)&\texttt{CG} (B)&\texttt{MG} (B)&\texttt{FT} (B) \\
-%        \cmidrule(lr){2-6}
-%        \texttt{Turing} &$26.26$ & $7.37$ &$9.75 $ &$16.23$ &$19.17$ \\
-%        \texttt{Idfreeze} &$4.30$  & $4.07$  &  $19.92$ &   $30.66$ &    $60.54$ \\
-%        \midrule
-%        \midrule
-%                &\texttt{EP} (B)&\texttt{IS} (B)&\texttt{UA} (B)&\texttt{LU} (B)&\texttt{BT} (B)\\
-%        \cmidrule(lr){2-6}
-%        \texttt{Turing} &$22.56$ &$27.28$ &$29.65$ &$32.13$ &$33.13$ \\
-%        \texttt{Idfreeze} & $13.64$ &$31.32$ & $37.17$ &  $40.05$ &   $54.22$ \\
-%        \bottomrule
-%    \end{tabular}
-%    \caption{Slowdown factor of \gls{Tabarnac} instrumentation for the 10 NAS Parallel
-%        Benchmarks on both machines.}
-%    \label{tab:ovh}
-%\end{table}
-
-As we can see in Figure~\ref{fig:ovh}, on the Intel machine,
-the instrumentation slows the execution down by a factor from $10$ to $30$.
-On the AMD machine, the overhead is almost always higher, and for
-pathological cases, is two to three times slower than on
-the Intel machine.
-%On most benchmarks, the instrumentation is $10$ to $50\%$ slower on
-%AMD than on Intel processor. For the pathological cases (\texttt{FT} and
-%\texttt{BT}) the instrumentation can be two or three time slower on AMD.
-Although this overhead is not negligible, we have to consider the fact that often we can instrument
-smaller versions of the applications, as we focus on the general behavior.
-Moreover our method is more precise than sampling and
-thus one run is often enough. Finally, as our
-analysis is designed to be used during the development phase and at runtime in an
-automated tool, we consider that this overhead is acceptable.
-
-\subsection{Summary of Results}
-
-Our experiments have highlighted the fact that although automated tools such
-as NUMA Balancing can be efficient, in some cases they result in
-performance losses. Moreover, although simple static mapping policies
-can result in substantial improvements, the best policy depends on the memory
-accesses behavior of the parallel application. Therefore, it is necessary to understand this behavior to
-select the most appropriate mapping policy.
-
-Our tools and methodology enables developers and users to achieve performance improvements in two ways. First, by
-providing a deep understanding of the memory access behavior, it enables the user to
-find the best mapping policy. Second, this knowledge can be used to
-identify and fix inefficient memory behavior. Our experiments showed that both
-situations result in significant performance gains.
+%   \subsection{Overhead Analysis}
+%   
+%   Our last experiment aims at evaluating the instrumentation cost of \gls{Tabarnac}. To do so, we
+%   executed all of the NAS Parallel Benchmarks in class \emph{B} with $64$
+%   threads on both evaluation systems and compared the original execution time to the execution time with instrumentation enabled.
+%   
+%   \begin{figure}[!htb]
+%       \centering
+%       \includegraphics[scale=.68]{tabarnac/tool-ovh.pdf}
+%       \caption{\gls{Tabarnac}'s instrumentation overhead.}
+%       \label{fig:ovh}
+%   \end{figure}
+%   
+%   %\begin{table}
+%   %    \centering
+%   %    \begin{tabular}{lrrrrr}
+%   %        \toprule
+%   %        %\multirow{2}{*}{Machine}
+%   %         & \multicolumn{5}{c}{Benchmark (CLASS)} \\
+%   %        \cmidrule(lr){2-6}
+%   %            &\texttt{DC} (A) &\texttt{SP} (B)&\texttt{CG} (B)&\texttt{MG} (B)&\texttt{FT} (B) \\
+%   %        \cmidrule(lr){2-6}
+%   %        \texttt{Turing} &$26.26$ & $7.37$ &$9.75 $ &$16.23$ &$19.17$ \\
+%   %        \texttt{Idfreeze} &$4.30$  & $4.07$  &  $19.92$ &   $30.66$ &    $60.54$ \\
+%   %        \midrule
+%   %        \midrule
+%   %                &\texttt{EP} (B)&\texttt{IS} (B)&\texttt{UA} (B)&\texttt{LU} (B)&\texttt{BT} (B)\\
+%   %        \cmidrule(lr){2-6}
+%   %        \texttt{Turing} &$22.56$ &$27.28$ &$29.65$ &$32.13$ &$33.13$ \\
+%   %        \texttt{Idfreeze} & $13.64$ &$31.32$ & $37.17$ &  $40.05$ &   $54.22$ \\
+%   %        \bottomrule
+%   %    \end{tabular}
+%   %    \caption{Slowdown factor of \gls{Tabarnac} instrumentation for the 10 NAS Parallel
+%   %        Benchmarks on both machines.}
+%   %    \label{tab:ovh}
+%   %\end{table}
+%   
+%   As we can see in Figure~\ref{fig:ovh}, on the Intel machine,
+%   the instrumentation slows the execution down by a factor from $10$ to $30$.
+%   On the AMD machine, the overhead is almost always higher, and for
+%   pathological cases, is two to three times slower than on
+%   the Intel machine.
+%   %On most benchmarks, the instrumentation is $10$ to $50\%$ slower on
+%   %AMD than on Intel processor. For the pathological cases (\texttt{FT} and
+%   %\texttt{BT}) the instrumentation can be two or three time slower on AMD.
+%   Although this overhead is not negligible, we have to consider the fact that often we can instrument
+%   smaller versions of the applications, as we focus on the general behavior.
+%   Moreover our method is more precise than sampling and
+%   thus one run is often enough. Finally, as our
+%   analysis is designed to be used during the development phase and at runtime in an
+%   automated tool, we consider that this overhead is acceptable.
+%   
+%   \subsection{Summary of Results}
+%   
+%   Our experiments have highlighted the fact that although automated tools such
+%   as NUMA Balancing can be efficient, in some cases they result in
+%   performance losses. Moreover, although simple static mapping policies
+%   can result in substantial improvements, the best policy depends on the memory
+%   accesses behavior of the parallel application. Therefore, it is necessary to understand this behavior to
+%   select the most appropriate mapping policy.
+%   
+%   Our tools and methodology enables developers and users to achieve performance improvements in two ways. First, by
+%   providing a deep understanding of the memory access behavior, it enables the user to
+%   find the best mapping policy. Second, this knowledge can be used to
+%   identify and fix inefficient memory behavior. Our experiments showed that both
+%   situations result in significant performance gains.
 
 
 \DB{Global overview, not enough, need temporal info, contribution published VPA'15}
