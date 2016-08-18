@@ -1,0 +1,152 @@
+\pgfdeclarelayer{background}
+\pgfdeclarelayer{bg1}
+\pgfdeclarelayer{foreground}
+\pgfsetlayers{background,bg1,main,foreground}
+
+\definecolor{logcolor}{HTML}{FDAE61}
+\definecolor{moncolor}{HTML}{FF000A}
+\definecolor{pfcolor} {HTML}{3B8ECC}
+\definecolor{callcolor}{HTML}{FFFFBF}
+\definecolor{dtcolorL}{HTML}{ABD9E9}
+\colorlet{dtcolor}{dtcolorL!25}
+
+\tikzstyle{handler} = [rectangle, draw, fill=callcolor,
+text width=4em, text badly centered]
+\tikzstyle{handlerI} = [diamond, text badly centered]
+\tikzstyle{data} = [rectangle, draw, fill=dtcolor,
+text width=4em, text centered, rounded corners]
+\tikzstyle{Chunk} = [rectangle, draw,rounded corners]
+\tikzstyle{dataL} = [rectangle, draw, fill=dtcolorL,
+text width=4em, text centered, rounded corners]
+\tikzstyle{entity} = [draw, ellipse, text centered,
+text width=5em]
+\tikzstyle{line} = [very thick,align=center]
+\tikzstyle{pf} = [fill=pfcolor,solid]
+\tikzstyle{log} = [fill=logcolor,dotted]
+\tikzstyle{mon} = [fill=moncolor,dashed]
+\tikzstyle{monA} = [-latex,line,dashed,moncolor]
+\tikzstyle{pfA} =  [-latex,line,solid,pfcolor]
+\tikzstyle{pfAI} =  [line,solid,pfcolor]
+\tikzstyle{logA} = [-latex,dotted,line,logcolor]
+
+\tikzset{
+  basic box/.style = {
+    shape = rectangle,
+    draw,
+    rounded corners},
+  filled box/.style = {
+    shape = rectangle,
+    draw  = #1,
+    fill  = #1,
+    rounded corners},
+  header node/.style = {
+    %Minimum Width = header nodes,
+    font          = \strut\large\ttfamily,
+    text depth    = +0pt,
+    fill          = #1,
+    draw},
+    header/.style n args={2}{%
+    inner ysep = +1.5em,
+    append after command = {
+      \pgfextra{\let\TikZlastnode\tikzlastnode}
+      node [header node=#2] (header-\TikZlastnode) at (\TikZlastnode.north) {#1}
+      %node %[span = (\TikZlastnode)(header-\TikZlastnode)]
+       % at (fit bounding box) (h-\TikZlastnode) {}
+    }
+  },
+  footer node/.style = {
+    %Minimum Width = header nodes,
+    font          = \strut\large\ttfamily,
+    text depth    = +0pt,
+    fill          = #1,
+    draw},
+    footer/.style n args={2}{%
+    inner ysep = +1.5em,
+    append after command = {
+      \pgfextra{\let\TikZlastnode\tikzlastnode}
+      node [header node=#2] (header-\TikZlastnode) at (\TikZlastnode.south) {#1}
+      %node %[span = (\TikZlastnode)(header-\TikZlastnode)]
+       % at (fit bounding box) (h-\TikZlastnode) {}
+    }
+  },
+  hv/.style = {to path = {-|(\tikztotarget)\tikztonodes}},
+  vh/.style = {to path = {|-(\tikztotarget)\tikztonodes}},
+  fat blue line/.style = {ultra thick, blue}
+}
+
+
+
+\begin{tikzpicture}[font=\small,scale=.73, each node/.style={minimum width=1em}]
+    % Node placement
+    \begin{pgfonlayer}{foreground}
+        \node [Chunk] (ch3) at (0,0)        {Chunk3 empty};
+        \node [Chunk] (ch2) at (0,-1)       {Chunk2 current};
+        \node [Chunk] (ch1) at (0,-2)       {Chunk1 ending};
+        \node [Chunk] (ch0) at (0,-3)       {Chunk0 completed};
+        \node [Chunk] (cur) at (2.5,-1.5)   {current};
+
+        \draw [line,->] (cur.north) |- (ch2.east);
+    \end{pgfonlayer}
+
+    \node [fit=(cur) (ch0) (ch1) (ch2) (ch3),filled box=dtcolor,
+    header={Trace (1 Task)}{dtcolor!50}] (Tr) {};
+
+    \node [data] (PfL) at (5,-1) {False Page fault map};
+    \node [data] (TL)  at (8,-1) {Tasks map};
+
+
+    \node[handler] (Flh) at (1,-5.5) {Read callback};
+    \node[handler] (PfH) at (7.5,-4.5) {page fault handler};
+
+
+    \node[entity,log] (F) at (0.9,-8) {Logging Process (userspace)};
+    \node[entity,mon] (M) at (5.5,-8) {Monitor thread (kernel)};
+
+
+    \begin{pgfonlayer}{background}
+        \node[fit=(F) (M) (cur) (Flh) (PfH) (Tr) (PfL)(TL),header={Moca}{white},basic box] (Moca) {};
+    \end{pgfonlayer}
+
+    \node[entity,text width=5.5em,pf] (T) at (7,-12) {Tasks\\(user/kernel\\thread/process)};
+
+    \node [dataL] (pgt)  at (5,-14.5)     {Page table (kernel)};
+    \node [dataL] (proc) at (2,-14.5)     {/proc file (kernel)};
+    \node [dataL] (file) at (-1,-14.5)     {File (userspace)};
+
+    \begin{pgfonlayer}{background}
+        \node[fit=(file) (proc) (pgt) (T),footer={Linux}{white} ,basic box=red,
+        %below=1.5em of Moca
+    ] (Linux) {};
+    \end{pgfonlayer}
+
+    % Edges
+
+    %% Loging process
+    \path[logA] (F.south) edge[in=140,out=270] node[right] {read} (proc.west);
+    \path[logA] (proc.north) edge[in=-20,out=120]  node[pos=.2,right] {triggers} (Flh.east);
+    \path[logA] (Flh.north) edge[out=90,in=270] node[pos=.2,left] {read write} (ch0.south);
+
+    \path[logA] (Flh.west) edge[in=100,out=230] node[pos=.1,left] {write} (file.north);
+
+    % Page faults
+    \path[pfA] (T)   edge[out=70,in=-70] node[pos=.05,right] {triggers} ($(PfH.south)+(1,0)$);
+
+    \coordinate (inv) at (5.25,0.5);
+    \path[pfAI] (PfH.north) edge[out=135,in=0] (inv);
+    \path[pfA]  (inv)     edge[out=180,in=20] node[pos=.1,above] {write} ($(ch2.east)+(0,0.2)$);
+
+    \path[pfA] (PfH.north) edge node[right] {read \\ (write)} (TL.south);
+    \path[pfA] (PfH.north) edge[out=160,in=310] node[pos=.8,right] {read} ($(PfL.south)+(0.2,0)$);
+
+    \coordinate (inv2) at ($(M.south)-(0,0.5)$);
+    \path[pfAI] ($(PfH.south)+(0.5,0)$) edge[out=-60,in=0] (inv2);
+    \path[pfA] (inv2) edge[out=180,in=120] node[pos=.35,right] {read\\write} (pgt.north);
+
+    %Monitor
+    \path[monA] (M.north) edge[out=70,in=290] node[pos=.2,right] {write} (PfL.south);
+    \path[monA] (M.north) edge[out=110,in=-30] node[pos=.6,left] {write} (cur.east);
+    \path[monA] (M)  edge[out=-130,in=110] node[pos=.8,left] {write} ($(pgt.north)-(.6,0)$);
+
+    \path[monA] (M.north) edge[out=170,in=-10] node[pos=.5,left] {read} (ch1.east);
+\end{tikzpicture}
+

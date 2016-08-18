@@ -1,0 +1,72 @@
+%!TEX encoding=UTF-8 Unicode
+
+\tikzstyle{decision} = [diamond, draw, fill=orange!30,
+text width=4.5em, text badly centered, node distance=3cm, inner sep=0pt]
+\tikzstyle{mblock} = [rectangle, draw, fill=blue!25,
+text width=5em, text centered, rounded corners, node distance=3cm, minimum height=4em]
+\tikzstyle{lblock} = [rectangle, draw, fill=blue!10,
+text width=5em, text centered, rounded corners, node distance=3cm, minimum height=4em]
+\tikzstyle{line} = [draw, -latex']
+\tikzstyle{cloud} = [draw, ellipse,fill=orange, node distance=3cm,
+minimum height=2em]
+
+\newcommand*{\StrikeThruDistance}{0.15cm}%
+%\newcommand*{\StrikeThru}{\StrikeThruDistance,\StrikeThruDistance}%
+\tikzset{strike thru arrow/.style={
+        decoration={markings, mark=at position 0.5 with {
+            \draw [black, very thick,solid,-]
+                    ++ (-\StrikeThruDistance,-\StrikeThruDistance)
+                    -- ( \StrikeThruDistance, \StrikeThruDistance);
+            \draw [black, very thick,solid,-]
+                    ++ ( \StrikeThruDistance,-\StrikeThruDistance)
+                    -- ( -\StrikeThruDistance, \StrikeThruDistance);
+                } },
+                    postaction={decorate},
+                                    }
+        }
+
+    \begin{tikzpicture}[scale=0.75]
+        % \draw (0,0) grid (10,-15);
+    % Place nodes
+        \node [cloud] (OS)   at (0,0){LINUX};
+        \node [cloud] (MOCA) at (6,0) {Moca};
+
+        \node [lblock]   (pf)  at (0,-3) {Pagefault (task, @)};
+        \node [decision] (mon) at (8,-3) {Is task monitored};
+
+        \node [decision] (shou) at (4,-5) {Should we monitor it};
+        \node [lblock]   (hpf)  at (0,-8) {Handle page fault};
+
+        \node [mblock] (Add1) at (4,-8) {Monitor (task)};
+        \node [mblock] (Add)  at (8,-8) {Add to chunk (task,@)};
+
+        \node [decision] (sfix)     at (8,-11) {Is it a false page fault};
+        \node [lblock]   (resume)   at (0,-14.5){Resume execution};
+
+        \node [mblock]   (fix)      at (8,-14.5) {Fix false page fault (task,@)};
+
+        %% for paths
+        \coordinate (inv) at (2,-1);
+        \coordinate (inv1) at (2,-8);
+
+
+    % Draw edges
+        \draw  (pf.south) -- ($(pf.south)+(0,-.5)$) -| (inv.south);
+        \path [line] (inv.south) -| node [pos=.2,below] {page fault handler} (mon.north);
+        \draw [->, strike thru arrow,dashed] (pf) -- (hpf);
+        \path [line] (hpf) -- (resume);
+        \path [line] (mon.west) -| node [pos=.3,above] {no} (shou.north);
+        \path [line] (mon) -- node [left] {yes} (Add);
+        \draw (shou.west) -|  node [pos=.75, left] {no} (inv1.south);
+        \path [line] (shou) -- node [left] {yes} (Add1);
+        \path [line] (Add1) -- (Add);
+        \path [line] (Add) -- (sfix);
+        \draw  (sfix.west) -| node [pos=.3,above] {no} (inv1.south);
+        \path [line] (inv1.south) |- (hpf.east);
+        \path [line] (sfix) -- node [left] {yes} (fix);
+        \path [line] (fix) -- (resume);
+    \end{tikzpicture}
+
+
+% vim: et si sta lbr  sw=4 ts=4 spelllang=en_us
+
