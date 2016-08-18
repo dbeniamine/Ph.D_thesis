@@ -5,17 +5,19 @@ Memory traces are useful to understand and optimize the memory usage of an appli
 Still, collecting such a trace is challenging as there is no hardware help comparable to performance counters to do it non intrusively.
 Therefore, memory trace collection tools must work at the \gls{OS} or software level.
 
-In this chapter we present our main contributions that consists in two different memory trace collection tools.
-The first tool, called \gls{Tabarnac}, uses an instrumentation library to obtain a global overview of the memory usage.
+In this chapter we present our main contributions that consists in two different memory trace collection tools:
+\begin{itemize}
+    \item The first tool, called \gls{Tabarnac}, uses an instrumentation library to obtain a global overview of the memory usage.
 It is designed specifically to inspect \gls{NUMA} relate issues, has a low overhead and lock free design.
 This tool also provides simple yet meaningful visualizations.
 \gls{Tabarnac} was published at \gls{VPA} 2015 a \gls{SC} workshop~\cite{Beniamine15TABARNAC}.
 Furthermore it is distributed as a free software under the \gls{GPL} license: \url{https://github.com/dbeniamine/Tabarnac}.
 This work is the result of a collaboration with M. Diener and P.O.A Navaux from the informatica team of the \gls{UFRGS}, Porto Alegre, Brazil.
-The second tool, \gls{Moca}, addresses the challenge of collecting \emph{complete} memory traces with temporal information.
+    \item The second tool, \gls{Moca}, addresses the challenge of collecting \emph{complete} memory traces with temporal information.
 It relies on an \gls{OS} level mechanism called page fault interception and injection.
 This work is the subject of two Inria research reports~\cite{Beniamine15Memory,Beniamine16Moca} and has been submitted at \gls{PMBS} 2016, a \gls{SC} workshop.
 As the previous tool, \gls{Moca} is distributed under the \gls{GPL} license: \url{https://github.com/dbeniamine/Moca}.
+\end{itemize}
 
 This chapter presents first the design and usage of \gls{Tabarnac} through a use case and discuss the obtain results and the limits in \sect{Tabarnac}.
 Then we present the challenged raised \gls{Moca} and how it addresses them in \sect{Moca}.
