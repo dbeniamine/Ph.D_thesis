@@ -34,7 +34,7 @@ Before discussing these efforts, we need to present more precisely the \gls{SOFA
 \begin{figure}[htb]
     \centering
     \input{tikz/simu-pipeline}
-    \caption[The simulation loop]{The simulation loop}
+    \caption{The simulation loop.}
     \label{fig:simu-pipeline}
 \end{figure}
 
@@ -49,7 +49,7 @@ Hence many algorithms  were developed to compute them efficiently,  each algorit
 \begin{figure}[htb]
     \centering
     \includegraphics[width=\textwidth]{Sofa-graph}
-    \caption[Example of SOFA scene graph]{SOFA representation of a scene with two objects: a liver and a
+    \caption[Example of SOFA scene graph.]{SOFA representation of a scene with two objects: a liver and a
         heart. Each node of the scene can embed its own set of solvers and
         visual representations.\\
         Image from SOFA documentation~\cite{SOFA16Sofa}.}
@@ -211,7 +211,7 @@ Designing an experiment consists in translating a high level questions into an \
 \begin{figure}[htb]
     \centering
     \input{tikz/exp-pipeline}
-    \caption{Experimental workflow}
+    \caption{Experimental workflow.}
     \label{fig:exp-pipeline}
 \end{figure}
 
@@ -327,7 +327,7 @@ Finally, before distributing an experimental trace, we write a small \texttt{Rea
                     \State
                 \EndProgram
             \end{algorithmic}
-            \caption{Dependent runs}
+            \caption{Dependent runs.}
             \label{alg:dependent-runs}
         \end{algorithm}%
     \end{minipage}
@@ -354,7 +354,7 @@ Finally, before distributing an experimental trace, we write a small \texttt{Rea
                     \EndFunction
                 \EndProgram
             \end{algorithmic}
-            \caption{Independent runs}
+            \caption{Independent runs.}
             \label{alg:independent-runs}
         \end{algorithm}
     \end{minipage}
@@ -480,7 +480,7 @@ Therefore while the compared functions are similar in terms of role in the simul
 \begin{figure}[htb]
     \centering
     \includegraphics[width=\textwidth]{SOFA_perfctr.pdf}
-    \caption[SOFA likwid results]{Differences of bandwidth and data volume, from L2 cache to main memory, between sequential and parallel execution of \gls{SOFA} on two different simulation scenes.
+    \caption[SOFA likwid results.]{Differences of bandwidth and data volume, from L2 cache to main memory, between sequential and parallel execution of \gls{SOFA} on two different simulation scenes.
         \\
         For both bandwidth and data volume, the value is normalized to the mean value of the corresponding sequential execution.
         \\

@@ -39,7 +39,7 @@ The hardware details are summarized in \tbl{turing-hw}.
 \texttt{Turing} runs version $3.13$ of the Linux kernel, while \texttt{Idfreeze} runs version $3.2$.
 
 \DB{Distribute traces}
-We evaluate the following applications with \gls{Tabarnac} in this paper: the \IS benchmark from the \gls{NPB} and \emph{Ondes3D}.
+We evaluate the following applications with \gls{Tabarnac} in this paper: the \IS benchmark from the \gls{NPB} and \texttt{Ondes3D}.
 They were chosen to demonstrate different memory access behaviors with different strategies to improve them.
 
 All applications use OpenMP for parallelization, they were compiled with \texttt{gcc}, version 4.6.3, with the \texttt{-O2} optimization flag.
@@ -184,7 +184,7 @@ The error bars in those plots represent the standard error.
 \subsubsection{Ondes3D}
 \label{sec:exp-ondes3d}
 
-\emph{Ondes3D} is the main numerical kernel of the Ondes3D application~\cite{Dupros08Exploiting}.
+\texttt{Ondes3D} is the main numerical kernel of the Ondes3D application~\cite{Dupros08Exploiting}.
 It simulates the propagation of seismic waves using a finite-differences numerical method.
 Ondes3D has a memory usage of $11.3$Gib with the parameters used for the performance evaluation, and $0.7$Gib for the analysis.
 
@@ -207,14 +207,14 @@ Ondes3D has a memory usage of $11.3$Gib with the parameters used for the perform
         \label{fig:ondes3d-ft-vz0-modif}
     \end{subfigure}
     \caption{Access distribution and first-touch for structure
-        \texttt{vz0} from \emph{Ondes3D}.} %Original version on the left,
+        \texttt{vz0} from \texttt{Ondes3D}.} %Original version on the left,
     %modified on the right.}
     \label{fig:ondes3d}
 \end{figure}
 
-The analysis of the accesses distribution in \emph{Ondes3D} shows that each structure seems to be well distributed between the threads, as we can see for structure \texttt{vz0} in \fig{ondes3d-behaviour-vz0-orig}.
+The analysis of the accesses distribution in \texttt{Ondes3D} shows that each structure seems to be well distributed between the threads, as we can see for structure \texttt{vz0} in \fig{ondes3d-behaviour-vz0-orig}.
 However, for all structures, thread~$0$ is responsible for all first accesses, as we can see for \texttt{vz0} in \fig{ondes3d-ft-vz0-orig}.
-Due to this pattern, if we run \emph{Ondes3D} without any improved mapping policy, every page will be mapped to the \gls{NUMA} node that executes the thread~$0$, resulting in mostly remote
+Due to this pattern, if we run \texttt{Ondes3D} without any improved mapping policy, every page will be mapped to the \gls{NUMA} node that executes the thread~$0$, resulting in mostly remote
 accesses for the other threads.
 An easy fix is to perform the initialization in parallel and to pin each thread on a different core.
 Such a modification results in the first touch distribution shown in \fig{ondes3d-ft-vz0-modif}, which is now distributed among all the threads.
@@ -222,7 +222,7 @@ Such a modification results in the first touch distribution shown in \fig{ondes3
 \begin{figure}[htb]
     \centering
     \includegraphics[width=\linewidth]{tabarnac/ondes3d_exectime}
-    \caption{Speedup for \emph{Ondes3D} compared to the baseline.}
+    \caption[Speedup for \texttt{Ondes3D}.]{Speedup for \texttt{Ondes3D} compared to the baseline.}
     \label{fig:ondes-res}
 \end{figure}
 
@@ -273,7 +273,7 @@ Still, \gls{Tabarnac} helped identifying and solving the issue.
         \label{fig:is-behaviour-modif-kb1}
     \end{subfigure}
 
-    \caption{Memory access distribution for the main structures of
+    \caption[Memory access distribution of \IS.]{Memory access distribution for the main structures of
         \IS. Original behavior on the top, modified on
     the bottom.}
     \label{fig:is-behaviour}
@@ -340,7 +340,7 @@ As we map threads manually, interleave and \gls{NUMA} Balancing are not relevant
 \begin{figure}[htb]
     \centering
     \includegraphics[width=\linewidth]{tabarnac/is_exectime}
-    \caption{Speedup for \IS (class D) compared to the baseline.}
+    \caption[Speedup for \IS.]{Speedup for \IS (class D) compared to the baseline.}
 \label{fig:is-res}
 \end{figure}
 
@@ -360,7 +360,7 @@ To do so, we executed all of the \gls{NPB} in class \emph{B} with $64$ threads o
 \begin{figure}[htb]
     \centering
     \includegraphics[width=\linewidth]{tabarnac/tool-ovh.pdf}
-    \caption{\gls{Tabarnac}'s instrumentation overhead.}
+    \caption{Tabarnac's instrumentation overhead.}
     \label{fig:ovh}
 \end{figure}
 
