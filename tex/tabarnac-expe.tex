@@ -361,10 +361,10 @@ To do so, we executed all of the \gls{NPB} in class \emph{B} with $64$ threads o
     \centering
     \includegraphics[width=\linewidth]{tabarnac/tool-ovh.pdf}
     \caption{Tabarnac's instrumentation overhead.}
-    \label{fig:ovh}
+    \label{fig:ovh-tabarnac}
 \end{figure}
 
-As we can see in \fig{ovh}, on the Intel machine, the instrumentation slows the execution down by a factor from $10$ to $30$.
+As we can see in \fig{ovh-tabarnac}, on the Intel machine, the instrumentation slows the execution down by a factor from $10$ to $30$.
 On the AMD machine, the overhead is almost always higher, and for pathological cases, is two to three times slower than on the Intel machine.
 On most benchmarks, the instrumentation is $10$ to \SI{50}{\%} slower on AMD than on Intel processor.
 For the pathological cases (\texttt{FT} and \texttt{BT}) the instrumentation can be two or three time slower on AMD.

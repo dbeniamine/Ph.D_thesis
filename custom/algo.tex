@@ -1,5 +1,12 @@
 %!TEX encoding=UTF-8 Unicode
 \usepackage{algorithm}
+
+% Count algorithms by chapter
+\makeatletter 
+\renewcommand\thealgorithm{\thechapter.\arabic{algorithm}} 
+\@addtoreset{algorithm}{chapter} 
+\makeatother
+
 \usepackage{algpseudocode}
 \usepackage{varwidth} % for algorithm in tikz node
 
@@ -11,6 +18,10 @@
 \algblockdefx[Program]{Program}{EndProgram}%
     [1]{\texttt{#1:}}%
     {}
+
+\algnewcommand\Callp[2]{\textproc{#1}(#2)}%
+
+% Listings
 
 \usepackage{listings}
 

@@ -176,12 +176,14 @@ Furthermore they are potentially huge, and identifying relevant information is c
 
 \subsection{Memory traces collections}
 
-\DB{Make definition clear here}
 To help the developer solve memory related issues, an ideal tool should provide enough data to build a map of the memory accesses locations over the time.
-Therefore, events in a memory trace should include information about time, space (at which address the event occurs), location (on which CPU it occurs) and nature of access (is this a read, a write, by which thread), we name such trace a \emph{detailed} trace.
-The trace has to be \emph{precise} enough, it should include a sufficiently large number of events in order to enable a sound analysis.
-Moreover, to ensure that a lack of precision does not compromise the analysis, such a trace should be \emph{complete}.
-We say that a trace is \emph{complete} at a given granularity if and only if the events it contains form a superset of the actual accesses.
+Therefore it must have the following properties:
+\label{def:traces}
+\begin{itemize}
+    \item  \textbf{Detailed:}  a memory trace is \emph{detailed} if it includes information about time, space (at which address the event occurs), location (on which CPU it occurs) and nature of access (is this a read, a write, by which thread).
+    \item \textbf{Precise:} to be \emph{precise} enough, a trace should include a sufficiently large number of events in order to enable a sound analysis.
+    \item \textbf{Complete:} We say that a trace is \emph{complete} at a given granularity if and only if the events it contains form a superset of the actual accesses.
+\end{itemize}
 
 Several studies propose to analyze memory  by looking solely at the information collected through \gls{PAPI} and \gls{Likwid} libraries~\cite{Majo13(Mis)understanding, Jiang14Understanding,Bosch00Rivet,Weyers14Visualization,Tao01Visualizing,DeRose01Hardware}.
 Generic tools have been designed on top of hardware performance counters to analyze and improve parallel applications performances, such as Intel's \gls{VTune}~\cite{Reinders05VTune}, \gls{PCM}~\cite{Wilhalm12Intel}, the \gls{HPCToolkit}~\cite{Adhianto10HPCTOOLKIT}, and AMD's \gls{CodeAnalyst}~\cite{Drongowski08introduction}.
