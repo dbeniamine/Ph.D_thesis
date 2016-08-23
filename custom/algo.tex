@@ -2,13 +2,14 @@
 \usepackage{algorithm}
 
 % Count algorithms by chapter
-\makeatletter 
-\renewcommand\thealgorithm{\thechapter.\arabic{algorithm}} 
-\@addtoreset{algorithm}{chapter} 
-\makeatother
+% \makeatletter 
+% \renewcommand\thealgorithm{\thechapter.\arabic{algorithm}} 
+% \@addtoreset{algorithm}{chapter} 
+% \makeatother
 
 \usepackage{algpseudocode}
 \usepackage{varwidth} % for algorithm in tikz node
+
 
 %\algblockdefx[]{Function}{EndFunction}
 %[2]{\algorithmicfunction\ \textproc{#1}{(#2)}}%
@@ -24,6 +25,17 @@
 % Listings
 
 \usepackage{listings}
+
+\makeatletter
+\def\ext@algorithm{lol}% algorithm captions will be written to the .lol file
+% share the list making commands and redefine the heading
+\AtBeginDocument{%
+  \let\l@algorithm\l@lstlisting
+  \let\c@algorithm\c@lstlisting
+  \let\thealgorithm\thelstlisting
+  \renewcommand{\lstlistlistingname}{List of Algorithms and listings}%
+}
+\makeatother
 
 %\renewcommand*\thelstnumber{\arabic{lstnumber}}
 

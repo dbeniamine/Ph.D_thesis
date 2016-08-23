@@ -11,7 +11,11 @@
 }
 % Clear double page before chapter
 \let\oldchapter\chapter
-\renewcommand{\chapter}{\mycleartoleftpage\glsresetall\oldchapter}
+\renewcommand{\chapter}{%
+    \mycleartoleftpage\glsresetall% Clear double page
+    \addtocontents{lol}{\protect\addvspace{10pt}}% New line in list of listings
+    \oldchapter
+}
 
 \let\oldfrontmatter\frontmatter
 % Set pagestyle according to matter

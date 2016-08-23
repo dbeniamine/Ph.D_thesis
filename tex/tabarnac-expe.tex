@@ -304,7 +304,7 @@ On the other hand, \texttt{key\_buff2} (\fig{is-behaviour-orig-kb2}) is complete
 We can see that almost all accesses occur in pages in the middle of the structure (from page $500$ to $1500$), and those pages are shared by all threads.
 This means that the number of access per page  for each thread follows a Gaussian distribution centered in the middle of the structure.
 
-\lstinputlisting[caption=\IS code responsible for the Gaussian distribution of memory accesses to the \texttt{key\_buff1} structure., label=lst:is, float=!h]{code/is.c}
+\lstinputlisting[caption={[Original IS code.]\IS code responsible for the distribution of memory accesses to the \texttt{key\_buff1} structure.}, label=lst:is, float=htb]{code/is.c}
 
 We can identify the source of this pattern in the \IS source code.
 Indeed, all the accesses to \texttt{key\_buff1} are linear, except in one \gls{OpenMP} parallel loop where they depend on the value of except the ones shown in \lstr{is}\footnote{
@@ -312,7 +312,7 @@ Indeed, all the accesses to \texttt{key\_buff1} are linear, except in one \gls{O
     In the original version, the arrays \texttt{key\_buff1} (resp. \texttt{key\_buff2}) are accessed via a generic pointer called \texttt{key\_buff\_ptr} (resp. \texttt{key\_buff\_ptr2}).
     }, Line~\ref{lst:is-gaus-end}, which depend on the values of \texttt{key\_buff2}.
 
-\begin{lstlisting}[float=!h,caption=Optimization for \IS., label=lst:is-modif]
+    \begin{lstlisting}[caption={Modified IS code.}, label=lst:is-modif,float=htb]
 #pragma omp for schedule(static,NUM_BUCKETS/
     (2*omp_get_num_threads()))
 \end{lstlisting}
