@@ -39,6 +39,8 @@ Remote accesses are extremely slow and must therefore be limited to the minimum 
 Therefore to optimize memory performances on \gls{NUMA} system, it is required to know how much each page is accessed by each thread.
 \gls{Tabarnac} is designed to collect specifically this information.
 
+\subsubsection{Trace collection}
+
 \begin{algorithm}[htb]
     \begin{algorithmic}
         \Function{mem\_access}{unsigned long address, int threadId, char type}
@@ -75,7 +77,7 @@ By default \gls{Tabarnac} generate the memory trace and the visualization, but t
 This is useful for people who cannot install \gls{R} on the machine used to generate the trace.
 Moreover it allows the user to customize the plots generate by the \gls{R} script.
 
-%\subsection{Visualization}
+\subsubsection{Visualization}
 
 Once the data collection phase is done, \gls{Tabarnac} uses a \gls{R-markdown} script to generate the visualization (as an HTML page).
 This visualization provides a summary of the trace through several plots\footnote{
@@ -144,7 +146,7 @@ Darker lines indicate more memory accesses to the page. This visualization gives
 threads.
 These plots can be used to identify inefficient memory access behaviors and to determine the best \gls{NUMA} mapping policy.
 
-\subsection{Case study}
+\subsection{Experimental validation}
 
 \Input{tabarnac-expe}
 
@@ -157,7 +159,7 @@ This approximation enable to trace memory accesses at a reduced cost.
 Still, it only keeps one counter per page and per threads in order to reduce its overhead.
 While this approach provides a deeper insight about the memory use than hardware performance counters, it lacks temporal information.
 
-\subsection{Page faults interception}
+\subsection{Background knowledge}
 
 Page faults interception can provide useful online information about memory usage.
 Such a mechanism has been used in several existing works : in parallel garbage collectors~\cite{Boehm91Mostly}, in memory checkpointing~\cite{Heo05Spaceefficient} or in the domain of virtualization to provide the hypervisor with information about the memory usage of the guest \gls{OS}~\cite{Jones06Geiger}.
@@ -173,7 +175,7 @@ As a consequence, they require a relatively small data structure in memory for t
 To reach a satisfying \emph{precision}, \gls{Moca} has to maintain in memory both the trace data and the set of faked invalid pages.
 Overall, storing and exploiting efficiently these data within the kernel space and outputting them in real time to the user space is a challenge and is the main contribution of our work.
 
-%\subsection{Design}
+\subsection{Design}
 
 \gls{Moca} consist of a Linux kernel module that can be loaded at runtime,  a script in charge of both loading this module with the proper parameters and launching the monitored application on the user behalf and an optional library able retrieve data structures information.
 It neither relies on architecture specific technologies such as \gls{AMD} \gls{IBS} or \gls{Intel} \gls{PEBS}, nor on architecture dependent kernel code, kernel patch or kernel modifications.
@@ -192,7 +194,7 @@ It also intercepts all calls to \texttt{malloc} family functions and names these
 Our context library is lightweight, the added cost is the cost of a regular execution added to a small constant overhead for each binary opened and each allocation performed.
 Thus the overhead of using \gls{Moca} and the library is basically \gls{Moca} overhead plus one time the normal execution time.
 
-\subsection{Trace collection}
+\subsubsection{Page faults interception and injection}
 
 \gls{Moca} collects \emph{complete} traces in the sense that the exact set of pages accessed by the application is deduced from the collected events at all times during the execution.
 Thus, it is \emph{complete} at the page granularity.
@@ -225,7 +227,7 @@ Furthermore, the remaining memory accesses, which are collected, are trapped usi
 Both are lightweight mechanisms, which means that the overall instrumentation overhead of \gls{Moca} is likely to be low.
 Indeed, instrumentation based methods often work at a high granularity, collecting few information, in order to keep their naturally high overhead in control.
 
-\subsection{Data management}
+\subsubsection{Internal design}
 
 In this section we present in details how the main components of \gls{Moca} interact and how \gls{Moca} addresses the management of data it collects within the kernel space.
 During the execution, \gls{Moca} needs to store three kinds of information:
@@ -378,14 +380,14 @@ To avoid that, \gls{Moca} stores for each CPU the last address that faulted, and
 %user. Nevertheless, reasonable defaults have been defined from the experimental study
 %detailed in section~\ref{sec:expe-param}.
 
-\section{Tools Comparison}
+\subsection{Experimental validation}
 \label{sec:Tools-Comp}
 
 We compare \gls{Moca} and \gls{Tabarnac} to other existing memory analysis tools.
 In a first time, we present their main differences in terms of portability and capabilities.
 Then, we present two sequences of quantitative experiments, one that outlines the importance of the default parameters chosen for our \gls{Moca} and the other that compares the precision and performance of all the tools.
 
-\subsection{Methodology}
+\subsubsection{Experimental methodology}
 
 Our main experiments were run on  machines from \gls{Grid5000} \texttt{Edel}
 cluster (Intel machines).

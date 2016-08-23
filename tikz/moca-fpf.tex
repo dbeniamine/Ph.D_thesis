@@ -1,19 +1,37 @@
 %!TEX encoding=UTF-8 Unicode
 
-\tikzstyle{decision} = [diamond, draw, fill=orange!30,
-text width=4.5em, text badly centered, node distance=3cm, inner sep=0pt]
-\tikzstyle{mblock} = [rectangle, draw, fill=blue!25,
-text width=5em, text centered, rounded corners, node distance=3cm, minimum height=4em]
-\tikzstyle{lblock} = [rectangle, draw, fill=blue!10,
-text width=5em, text centered, rounded corners, node distance=3cm, minimum height=4em]
-\tikzstyle{line} = [draw, -latex']
-\tikzstyle{cloud} = [draw, ellipse,fill=orange, node distance=3cm,
-minimum height=2em]
+\tikzstyle{decision} = [rectangle, draw, fill=orange!30,text centered,
+text width=6.5em]
+\tikzstyle{mblock} = [rectangle, draw, fill=blue!25,text centered, rounded corners, node distance=3cm, minimum height=3em]
+\tikzstyle{lblock} = [rectangle, draw, fill=blue!10, text centered, rounded corners, node distance=3cm, minimum height=3em]
+\tikzstyle{line} = [draw, -latex,thick]
+
+\tikzset{
+  basic box/.style = {
+    shape = rectangle,
+    draw,
+    rounded corners},
+  header node/.style = {
+    %Minimum Width = header nodes,
+    font          = \strut\large\ttfamily,
+    text depth    = +0pt,
+    fill          = #1,
+    draw},
+    header/.style n args={2}{%
+    inner ysep = +2em,
+    append after command = {
+      \pgfextra{\let\TikZlastnode\tikzlastnode}
+      node [header node=#2] (header-\TikZlastnode) at (\TikZlastnode.north) {#1}
+      %node %[span = (\TikZlastnode)(header-\TikZlastnode)]
+       % at (fit bounding box) (h-\TikZlastnode) {}
+    }
+  },
+}
 
 \newcommand*{\StrikeThruDistance}{0.15cm}%
 %\newcommand*{\StrikeThru}{\StrikeThruDistance,\StrikeThruDistance}%
 \tikzset{strike thru arrow/.style={
-        decoration={markings, mark=at position 0.5 with {
+        decoration={markings, mark=at position 0.4 with {
             \draw [black, very thick,solid,-]
                     ++ (-\StrikeThruDistance,-\StrikeThruDistance)
                     -- ( \StrikeThruDistance, \StrikeThruDistance);
@@ -25,46 +43,63 @@ minimum height=2em]
                                     }
         }
 
-    \begin{tikzpicture}[scale=0.75]
-        % \draw (0,0) grid (10,-15);
-    % Place nodes
-        \node [cloud] (OS)   at (0,0){LINUX};
-        \node [cloud] (MOCA) at (6,0) {Moca};
+    \begin{tikzpicture}[scale=0.8]
 
-        \node [lblock]   (pf)  at (0,-3) {Pagefault (task, @)};
-        \node [decision] (mon) at (8,-3) {Is task monitored};
+        \node [lblock]   (pf)  at (0,0) {PageFault(task, @)};
+        \node [mblock]   (pfi) at (10,0) {InterceptPageFault(task,@)};
 
-        \node [decision] (shou) at (4,-5) {Should we monitor it};
-        \node [lblock]   (hpf)  at (0,-8) {Handle page fault};
+        \node [decision] (mon) at (10,-2) {Is task monitored ?};
 
-        \node [mblock] (Add1) at (4,-8) {Monitor (task)};
-        \node [mblock] (Add)  at (8,-8) {Add to chunk (task,@)};
+        \node [decision] (shou) at (5,-3) {Should we monitor it ?};
+        \node [lblock]   (hpf)  at (0,-5) {HandleFault(task,@)};
 
-        \node [decision] (sfix)     at (8,-11) {Is it a false page fault};
-        \node [lblock]   (resume)   at (0,-14.5){Resume execution};
+        \node [mblock] (Add1) at (5,-5) {Monitor(task)};
+        \node [mblock] (Add)  at (10,-5) {AddToChunk(task,@)};
 
-        \node [mblock]   (fix)      at (8,-14.5) {Fix false page fault (task,@)};
+        \node [decision] (sfix)     at (10,-7) {Is it a false page fault ?};
+        \node [lblock]   (resume)   at (0,-9){Resume execution};
 
-        %% for paths
-        \coordinate (inv) at (2,-1);
-        \coordinate (inv1) at (2,-8);
+        \node [mblock]   (fix)      at (10,-9) {FixFalsePageFault(task,@)};
 
+        \node[fit=(pfi) (shou) (fix),header={Moca}{white},basic box] (Moca) {};
+        \node[fit=(pf) (hpf) (resume),header={Linux}{white},basic box] (OS) {};
 
-    % Draw edges
-        \draw  (pf.south) -- ($(pf.south)+(0,-.5)$) -| (inv.south);
-        \path [line] (inv.south) -| node [pos=.2,below] {page fault handler} (mon.north);
-        \draw [->, strike thru arrow,dashed] (pf) -- (hpf);
+        \path [line] (pf.south) -- ($(pf.south)+(0,-.4)$) --
+            ($(pf.south)+(5,-.4)$)  -- ($(pfi.north)+(-5,.4)$) --
+            ($(pfi.north)+(0,.4)$) -- (pfi.north);
+
+        \draw [-latex, strike thru arrow,dashed] (pf) -- (hpf);
+
+        \path [line] (pfi.south) -- (mon.north);
+
         \path [line] (hpf) -- (resume);
-        \path [line] (mon.west) -| node [pos=.3,above] {no} (shou.north);
-        \path [line] (mon) -- node [left] {yes} (Add);
-        \draw (shou.west) -|  node [pos=.75, left] {no} (inv1.south);
-        \path [line] (shou) -- node [left] {yes} (Add1);
-        \path [line] (Add1) -- (Add);
-        \path [line] (Add) -- (sfix);
-        \draw  (sfix.west) -| node [pos=.3,above] {no} (inv1.south);
-        \path [line] (inv1.south) |- (hpf.east);
-        \path [line] (sfix) -- node [left] {yes} (fix);
-        \path [line] (fix) -- (resume);
+
+        \path [line] (mon.south) -- node [pos=.2,right] {Yes} (Add.north);
+
+        \path [line] (mon.west) -- node [pos=.2,above] {No} ($(mon)+(-5,0)$)
+        -- (shou.north);
+
+        \path [line] (shou.west)  -- node [pos=.9,above] {No} ($(shou)+(-2.25,0)$)
+        -- ($(shou)+(-2.25,-.5)$) -- ($(hpf)+(0,1.5)$) -- (hpf.north);
+
+        \path [line] (shou.south) -- node [right] {Yes} (Add1.north);
+
+        \path [line] (Add1.south) -- ($(Add1.south)+(0,-.5)$)
+        -- ($(Add1.south)+(2,-.5)$) -- ($(Add.north)+(-3,1)$)
+        -- ($(Add.north)+(0,1)$) -- (Add.north);
+
+        \path [line] (Add.south) -- (sfix);
+
+        \path [line] (sfix.west) -- node [pos=.1,above] {No}
+        ($(sfix)+(-7.25,0)$) -- ($(sfix)+(-7.25,3.5)$)
+        -- ($(hpf)+(0,1.5)$) -- (hpf.north);
+
+        \path [line] (sfix.south) -- node [right] {Yes} (fix.north);
+
+        \path [line] (fix.south) -- ($(fix.south)+(0,-.5)$)
+        -- ($(fix.south)+(-7.25,-.5)$) -- ($(fix)+(-7.25,1.5)$)
+        -- ($(resume)+(0,1.5)$) --(resume.north);
+
     \end{tikzpicture}
 
 

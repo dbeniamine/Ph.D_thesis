@@ -246,7 +246,7 @@ Finally while repeating the whole experiment requires access to the experimental
 
 Implementing such an experimental plan is not trivial, we describe here how we design, implement and distribute our plans.
 
-\subsubsection{Construction of an experimental plan:}
+\subsubsection{Construction of an experimental plan}
 
 In \gls{HPC}, an experiment usually consist in testing the execution time or the exactitude of an application or a tool that uses an application as an input (scheduler, simulator, analysis tool \ldots).
 For both we need to find a set of \emph{benchmarks} to conduct our experiments, but the signification of this term is slightly different for the two cases.
@@ -279,7 +279,7 @@ From this set we can design some data visualizations.
 Furthermore using this set we can complete the plots with some text describing these expected results.
 Such information will stop us from trying to explain a posteriori results that infirm our hypothesis.
 
-\subsubsection{Automation and documentation:}
+\subsubsection{Automation and documentation}
 
 It is crucial that any step of the experiment from the deployment of the environment to the final analysis is properly scripted in a language that can be understood by other developers.
 Any manual step can make the experiment impossible to repeat and an obscure code might make it difficult to change some parameters without breaking the whole experiment.
@@ -378,7 +378,7 @@ Each run consists of three step: a pre-command that can set specific environment
 The first and last steps are not mandatory, yet any environment change must be restored on the last step.
 Each of the commands executed by these 3 steps are logged before execution.
 
-\subsubsection{Distribution:}
+\subsubsection{Distribution}
 
 The experimental plan is mostly composed of source code, thus it can easily be distributed using a \gls{VCS}.
 As it often depends of external programs, it is preferable to use \gls{VCS} which manage dependencies and patches such as \gls{Git} or mercurial.

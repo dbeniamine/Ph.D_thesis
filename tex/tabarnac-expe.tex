@@ -5,7 +5,7 @@ To evaluate \gls{Tabarnac}, we present two examples on benchmark optimization do
 For each benchmark, we compare the speedup obtained with \gls{Tabarnac} to the one obtaine by \gls{NUMA} mapping tools.
 Furthermore we evaluated the overhead of \gls{Tabarnac}
 
-\subsubsection{Experimental Setup}
+\subsubsection{Experimental methodology}
 
 %This section briefly discusses our experimental setup for the evaluation of \gls{Tabarnac}.
 % and presents relevant information on the experimental environment.
@@ -238,7 +238,7 @@ Still, \gls{Tabarnac} helped identifying and solving the issue.
 % ``correctly'' while the modified version proposes a thread mapping that ensures better
 % data locality.
 
-\subsubsection{The IS Benchmark}
+\subsubsection{The \IS benchmark}
 
 \begin{figure}[htb]
     \centering
@@ -352,7 +352,7 @@ We can see that both interleave and \gls{NUMA} Balancing are not suitable for th
 The \emph{Cyclic-Split} version provides more than \SI{20}{\%} of speedup with a very small code modification.
 This example shows how analyzing an application's memory behavior can lead to significant execution time improvement on an already optimized application where automatic techniques can actually slow the application down.
 
-\subsubsection{Overhead Analysis}
+\subsubsection{Tracing overhead}
 
 Finally,  we evaluate the instrumentation cost of \gls{Tabarnac}.
 To do so, we executed all of the \gls{NPB} in class \emph{B} with $64$ threads on both evaluation systems and compared the original execution time to the execution time with instrumentation enabled.
@@ -373,7 +373,7 @@ Moreover our method is more precise than sampling and thus one run is often enou
 Finally, as our analysis is designed to be used during the development phase and at runtime in an automated tool, we consider that this overhead is acceptable.
 
 
-\subsubsection{Analysis and Results}
+\subsection{Results and discussion}
 
 Our experiments have highlighted the fact that although automated tools such as \gls{NUMA} Balancing can be efficient, in some cases they result in performance losses.
 Moreover, although simple static mapping policies can result in substantial improvements, the best policy depends on the memory accesses behavior of the parallel application.
