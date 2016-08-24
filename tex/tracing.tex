@@ -2,26 +2,28 @@
 \chapter{Collecting Memory Traces}
 
 Memory traces are useful to understand and optimize the memory usage of an application.
+An ideal trace should provide enough information to build a map of the memory accesses over the time.
+To do so it must be \emph{detailed}, \emph{precise} and \emph{complete} as defined in~\ref{def:traces}.
 Still, collecting such a trace is challenging as there is no hardware help comparable to performance counters to do it non intrusively.
 Therefore, memory trace collection tools must work at the \gls{OS} or software level.
 
 In this chapter we present our main contributions that consists in two different memory trace collection tools:
 \begin{itemize}
-    \item The first tool, called \gls{Tabarnac}, uses an instrumentation library to obtain a global overview of the memory usage.
-It is designed specifically to inspect \gls{NUMA} relate issues, has a low overhead and lock free design.
-This tool also provides simple yet meaningful visualizations.
-\gls{Tabarnac} was published at \gls{VPA} 2015 a \gls{SC} workshop~\cite{Beniamine15TABARNAC}.
-Furthermore it is distributed as a free software under the \gls{GPL} license: \url{https://github.com/dbeniamine/Tabarnac}.
-This work is the result of a collaboration with M. Diener and P.O.A Navaux from the informatica team of the \gls{UFRGS}, Porto Alegre, Brazil.
+    \item The first one, called \gls{Tabarnac}, uses a low overhead and lock free design instrumentation library to obtain a global overview of the memory usage.
+        It is designed specifically to inspect \gls{NUMA} related issues.
+        This tool also provides simple yet meaningful visualizations.
+        \gls{Tabarnac} was published at \gls{VPA} 2015 a \gls{SC} workshop~\cite{Beniamine15TABARNAC}.
+        Furthermore it is distributed as a free software under the \gls{GPL} license: \url{https://github.com/dbeniamine/Tabarnac}.
+        This work is the result of a collaboration with M. Diener and P.O.A Navaux from the informatica team of the \gls{UFRGS}, Porto Alegre, Brazil.
     \item The second tool, \gls{Moca}, addresses the challenge of collecting \emph{detailed}, \emph{precise} and \emph{complete} memory traces (as defined in \ref{def:traces}) with temporal information.
-It relies on an \gls{OS} level mechanism called page fault interception and injection.
-This work is the subject of two Inria research reports~\cite{Beniamine15Memory,Beniamine16Moca} and has been submitted at \gls{PMBS} 2016, a \gls{SC} workshop.
-As the previous tool, \gls{Moca} is distributed under the \gls{GPL} license: \url{https://github.com/dbeniamine/Moca}.
+        It relies on an \gls{OS} level mechanism called page fault interception and injection.
+        This work is the subject of two Inria research reports~\cite{Beniamine15Memory,Beniamine16Moca} and has been submitted at \gls{PMBS} 2016, a \gls{SC} workshop.
+        As the previous tool, \gls{Moca} is distributed under the \gls{GPL} license: \url{https://github.com/dbeniamine/Moca}.
 \end{itemize}
 
-This chapter presents first the design and usage of \gls{Tabarnac} through a use case and discuss the obtain results, its overhead and limits in \sect{Tabarnac}.
-Then we present the challenged raised \gls{Moca} and how it addresses them in \sect{Moca}.
-Finally we provide an extensive comparison of our tools against state of the art memory trace tools in \sect{Tools-Comp}.
+This chapter presents first the design and usage of \gls{Tabarnac} through a use case and discuss the obtained results, its overhead and limits in \sect{Tabarnac}.
+Then we present \gls{Moca} design and an extensive experimental validation in \sect{Moca}.
+Finally we provide our conclusions on memory traces collection in \sect{Tools-Comp}.
 
 
 \section{Tabarnac: Global view of the memory usage}
@@ -35,11 +37,17 @@ Furthermore it aims specifically at improving \gls{NUMA} related performance iss
 
 On \gls{NUMA} machines, optimizing memory performances often means reducing the number of remote accesses.
 Indeed, to optimize the performances a memory page must be mapped to a physical memory bank as close as possible to the threads that actually uses it.
-Remote accesses are extremely slow and must therefore be limited to the minimum possible.
 Therefore to optimize memory performances on \gls{NUMA} system, it is required to know how much each page is accessed by each thread.
 \gls{Tabarnac} is designed to collect specifically this information.
 
 \subsubsection{Trace collection}
+
+\gls{Tabarnac} is based on \gls{Numalyze}~\cite{Diener15Characterizing} instrumentation which rely on the \gls{Pin}~\cite{Luk05Pin} library.
+This instrumentation is lock free by design: it traps on each memory accesses but only maintain one counter per pages and per threads, as detailed in.
+Adaptive \gls{NUMA} mapping tools collect similar traces but uses them online to decide whether they should a memory page from a node to another.
+\gls{Numalyze} was originally designed to estimate the efficiency of such tools.
+Indeed, adaptive tools works with partial traces as they need to decide of page migration before the end of the execution.
+Thus, comparing the mapping obtained with a partial trace to the one obtained with the complete trace helps deciding the minimum size of partial trace required to decide on a page mapping.
 
 \begin{algorithm}[htb]
     \begin{algorithmic}
@@ -52,39 +60,36 @@ Therefore to optimize memory performances on \gls{NUMA} system, it is required t
     \label{alg:Tabarnac}
 \end{algorithm}
 
-\gls{Tabarnac} is based on Numalyze~\cite{Diener15Characterizing} instrumentation which rely on the \gls{Pin}~\cite{Luk05Pin} library.
-This instrumentation is lock free by design: it traps on each memory accesses but only maintain two counters per pages and per threads, as details in \alg{Tabarnac}.
-Numalyze was originally designed to estimate the efficiency of adaptive page mapping tools.
-Indeed, such tools uses partial traces to decide online where to map memory pages.
-Comparing the mapping obtained with a partial trace to the one obtained with the complete trace collected by Numalyze helps deciding the minimum size of partial trace required to decide on a page mapping.
-We proposed to used theses traces for offline, interactive analysis.
-Furthermore, as page number are not really meaningful for humans, we added contextual information to Numalyze traces.
-Indeed, \gls{Tabarnac} also collects data structure information by three different means.
-First, each time a thread is created, it compute its stack bounds and create a virtual structure named \texttt{Stack\#N} where $N$ is the thread~Id.
-Then every time a binary file is loaded (main file or shared library), it inspect the binary, looking for static data structures.
-Finally it intercept every call the \texttt{malloc} functions family, keeping track of data structures big enough.
-Only structures that are bigger than one page (usually $4$Kib in current x86\_64 architectures) are recorded as our analysis granularity is the memory page. The data structure information (name, size and address) are only used to generate the visualization, after the end of the instrumentation.
-The name detection of malloc'ed data structure is heuristic and based on source code analysis.
 
-After tracing finishes, the tool generate three \texttt{csv} files.
+We proposed to expand these traces and use them for offline analysis.
+While \gls{Numalyze} only collects one counter per page and per thread, our instrumentation also differentiate reads and writes, as shown in \alg{Tabarnac}.
+This distinction is important for memory analysis as reads and writes do not have the same impact on performances.
+Furthermore, an easy way to reduce the number of remote accesses produced by a data structure is to duplicate it and map a copy to each node, but this optimization is only useful to mostly read data structures.
+Moreover as page numbers are not really meaningful for humans, we added contextual information to \gls{Numalyze} traces.
+Indeed, \gls{Tabarnac} also collects data structure information by three different means.
+First: each time a thread is created, it compute its stack bounds and create a virtual structure named \texttt{Stack\#N} where $N$ is the thread~Id.
+Then every time a binary file is loaded (main file or shared library), it inspect the binary, looking for static data structures.
+Finally it intercept every call the \texttt{malloc} functions family, keeping track of allocated data structures.
+Only structures that are bigger than one page (usually $4$Kib in current x86\_64 architectures) are recorded as our analysis granularity is the memory page.i
+The data structure informations (name, size and address) are only used to generate the visualization, after the end of the instrumentation.
+The name detection of allocated data structure is heuristic and based on source code analysis.
+
+At the end of the execution, the tool generate three \texttt{csv} files.
 The first contains the list of pages and the number of reads and writes per thread.
 The second contains the list of structures with their names, sizes and start addresses, the last file contains the stacks size and addresses.
-Then, a script which reads the trace, retrieves the page / data structure mapping and generates the final visualization presented in the next subsection.
+Then, a \gls{R-markdown} script which reads the trace, retrieves the page to data structure mapping and generates the final visualization presented.
 
-\gls{Tabarnac} only depends on \gls{Pin} for the trace collection and \gls{R} for the visualization, and can be installed easily.
+\gls{Tabarnac} only depends on \gls{Pin} for the trace collection and \gls{R} for the visualization, and can thus be installed easily.
 If all the R library required to generate the visualization are not present, it is able to install them automatically.
-By default \gls{Tabarnac} generate the memory trace and the visualization, but the user can also choose to only generate the memory trace or the visualization.
-This is useful for people who cannot install \gls{R} on the machine used to generate the trace.
-Moreover it allows the user to customize the plots generate by the \gls{R} script.
+By default \gls{Tabarnac} generate both the memory trace and the visualization, but the user can also do the trace and visualization separately on different machines.
 
 \subsubsection{Visualization}
 
 Once the data collection phase is done, \gls{Tabarnac} uses a \gls{R-markdown} script to generate the visualization (as an HTML page).
 This visualization provides a summary of the trace through several plots\footnote{
-    A full example of \gls{Tabarnac}'s output is available at:\\ \url{http://dbeniamine.github.io/Tabarnac/examples}.}.
+    Full examples of \gls{Tabarnac}'s output are available at:\\ \url{http://dbeniamine.github.io/Tabarnac/examples}.}.
 It aims at showing how pages are shared inside each data structures.
-Therefore, it provides two types of plots, the first aims at showing the importance of each data structure.
-While the second describe the sharing patterns inside these data structures.
+Therefore, it provides two types of plots, the first aims at showing the importance of each data structure, while the second describe the sharing patterns inside these data structures.
 Each plot is introduced by an explanation of its presentation, what common issues it can help to understand and provides suggestions on how to fix these issues.
 The visualization starts with a small introduction, summarizing the main principles while developing for \gls{NUMA} machines, and shows the hardware topology of the analyzed machine extracted
 with Hwloc~\cite{Broquedis10hwloc}.
@@ -92,7 +97,7 @@ with Hwloc~\cite{Broquedis10hwloc}.
 After the introduction, the visualization focuses on the usage of data structures.
 Some structures are not displayed if less than $0.01\%$ of the total accesses happen on them.
 This is done to make the output more readable by focusing on the most important structures.
-However, it is possible to ask \gls{Tabarnac} not to ignore these structures for a more detailed view.
+However, it is possible to ask \gls{Tabarnac} not to ignore them for a more detailed view.
 
 \begin{figure}[htb]
     \centering
@@ -144,7 +149,7 @@ In the example shown in Figure~\ref{fig:example_dist}, each horizontal line repr
 Moreover, for each thread the average number of accesses to the structure is displayed.
 Darker lines indicate more memory accesses to the page. This visualization gives an easy way to understand the data sharing between threads, as well as the balance between pages and
 threads.
-These plots can be used to identify inefficient memory access behaviors and to determine the best \gls{NUMA} mapping policy.
+These plots can be used to identify inefficient memory sharing and to determine the best \gls{NUMA} mapping policy.
 
 \subsection{Experimental validation}
 

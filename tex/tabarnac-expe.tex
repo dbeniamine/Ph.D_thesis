@@ -3,7 +3,7 @@
 
 To evaluate \gls{Tabarnac}, we present two examples on benchmark optimization done with \gls{Tabarnac}.
 For each benchmark, we compare the speedup obtained with \gls{Tabarnac} to the one obtaine by \gls{NUMA} mapping tools.
-Furthermore we evaluated the overhead of \gls{Tabarnac}
+We also evaluate the overhead of \gls{Tabarnac} on each of the \gls{NPB}.
 
 \subsubsection{Experimental methodology}
 
@@ -17,12 +17,14 @@ Furthermore we evaluated the overhead of \gls{Tabarnac}
     \begin{tabular}{lccccc}
         \toprule
         & \multicolumn{5}{c}{\textbf{Totals}}\\
+        \cmidrule(lr){2-6}
         & Nodes & Threads & Vendor & Model & Memory \\
         \cmidrule(lr){2-6}
         \texttt{Turing}   & $4$ & $64$ & Intel & Xeon X7550   & \SI{128}{Gib} \\
         \texttt{Idfreeze} & $8$ & $48$ & AMD   & Opteron 6174 & \SI{256}{Gib}\\
         \midrule
         & \multicolumn{5}{c}{\textbf{Per node}}\\
+        \cmidrule(lr){2-6}
         & Cores & Threads & Frequency & L3 Cache & Memory \\
         \cmidrule(lr){2-6}
         \texttt{Turing}   & $8$ & $16$ & \SI{2.00}{Ghz}& \SI{18}{Mib} & \SI{32}{Gib} \\
@@ -38,8 +40,7 @@ The second machine was only used to compare the instrumentation overhead on Inte
 The hardware details are summarized in \tbl{turing-hw}.
 \texttt{Turing} runs version $3.13$ of the Linux kernel, while \texttt{Idfreeze} runs version $3.2$.
 
-\DB{Distribute traces}
-We evaluate the following applications with \gls{Tabarnac} in this paper: the \IS benchmark from the \gls{NPB} and \texttt{Ondes3D}.
+We evaluated the following applications with \gls{Tabarnac} in this paper: the \IS benchmark from the \gls{NPB} and \Ondes.
 They were chosen to demonstrate different memory access behaviors with different strategies to improve them.
 
 All applications use OpenMP for parallelization, they were compiled with \texttt{gcc}, version 4.6.3, with the \texttt{-O2} optimization flag.
@@ -55,8 +56,11 @@ The NUMA Balancing mechanism is disabled in this baseline.
 The \emph{interleave} policy is performed with the help of the \texttt{numactl} tool~\cite{Kleen05NUMA}.
 We also compare our results to the recently introduced \emph{NUMA Balancing} technique~\cite{Corbet12Toward}, which is executed with its default configuration.
 
-For the plots presenting speedups, each configuration was executed at least 10 times. Each point shows the arithmetic mean of all runs.
+For the plots presenting speedups, each configuration was executed at least $10$ times.
+Each point shows the arithmetic mean of all runs.
 The error bars in those plots represent the standard error.
+
+\DB{Distribute traces}
 
 % \subsubsection{Matrix Multiplication}
 % 
@@ -184,9 +188,9 @@ The error bars in those plots represent the standard error.
 \subsubsection{Ondes3D}
 \label{sec:exp-ondes3d}
 
-\texttt{Ondes3D} is the main numerical kernel of the Ondes3D application~\cite{Dupros08Exploiting}.
+\Ondes is the main numerical kernel of the Ondes3D application~\cite{Dupros08Exploiting}.
 It simulates the propagation of seismic waves using a finite-differences numerical method.
-Ondes3D has a memory usage of $11.3$Gib with the parameters used for the performance evaluation, and $0.7$Gib for the analysis.
+\Ondes has a memory usage of \SI{11.3}{Gib} with the parameters used for the performance evaluation, and \SI{0.7}{Gi}b for the analysis.
 
 \begin{figure}[htb]
     \centering
@@ -196,33 +200,33 @@ Ondes3D has a memory usage of $11.3$Gib with the parameters used for the perform
         \label{fig:ondes3d-behaviour-vz0-orig}
     \end{subfigure}
     \newline
-    \begin{subfigure}{.4\linewidth}
+    \begin{subfigure}{.45\linewidth}
         \includegraphics[width=\linewidth] {tabarnac/ondes3d_vz0_ft_orig}
         \caption{Original first-touch.}
         \label{fig:ondes3d-ft-vz0-orig}
     \end{subfigure}
-    \begin{subfigure}{.4\linewidth}
+    \begin{subfigure}{.45\linewidth}
         \includegraphics[width=\linewidth] {tabarnac/ondes3d_vz0_ft_modif}
         \caption{Improved first-touch.}
         \label{fig:ondes3d-ft-vz0-modif}
     \end{subfigure}
     \caption{Access distribution and first-touch for structure
-        \texttt{vz0} from \texttt{Ondes3D}.} %Original version on the left,
+        \texttt{vz0} from \Ondes.} %Original version on the left,
     %modified on the right.}
     \label{fig:ondes3d}
 \end{figure}
 
-The analysis of the accesses distribution in \texttt{Ondes3D} shows that each structure seems to be well distributed between the threads, as we can see for structure \texttt{vz0} in \fig{ondes3d-behaviour-vz0-orig}.
+The analysis of the accesses distribution in \Ondes shows that each structure seems to be well distributed between the threads, as we can see for structure \texttt{vz0} in \fig{ondes3d-behaviour-vz0-orig}.
 However, for all structures, thread~$0$ is responsible for all first accesses, as we can see for \texttt{vz0} in \fig{ondes3d-ft-vz0-orig}.
-Due to this pattern, if we run \texttt{Ondes3D} without any improved mapping policy, every page will be mapped to the \gls{NUMA} node that executes the thread~$0$, resulting in mostly remote
+Due to this pattern, if we run \Ondes without any improved mapping policy, every page will be mapped to the \gls{NUMA} node that executes the thread~$0$, resulting in mostly remote
 accesses for the other threads.
 An easy fix is to perform the initialization in parallel and to pin each thread on a different core.
 Such a modification results in the first touch distribution shown in \fig{ondes3d-ft-vz0-modif}, which is now distributed among all the threads.
 
 \begin{figure}[htb]
     \centering
-    \includegraphics[width=\linewidth]{tabarnac/ondes3d_exectime}
-    \caption[Speedup for \texttt{Ondes3D}.]{Speedup for \texttt{Ondes3D} compared to the baseline.}
+    \includegraphics[width=.7\linewidth]{tabarnac/ondes3d_exectime}
+    \caption[Speedup for \Ondes.]{Speedup for \Ondes compared to the baseline.}
     \label{fig:ondes-res}
 \end{figure}
 
@@ -232,53 +236,10 @@ We can see that all methods improve the execution time compared to the \gls{OS},
 Indeed, with \emph{NUMA Balancing}, all pages are initially mapped by the \gls{OS} to the \gls{NUMA} node of thread~$0$, and are only moved later on, after many remote accesses have already occurred, losing some optimization opportunities.
 This is a case where static mapping can be substantially better than automated tools.
 The \emph{Interleave} policy provides a similar speedup as \emph{First Touch} since it distributes the pages over the \gls{NUMA} nodes at the beginning of the execution.
-Still, \gls{Tabarnac} helped identifying and solving the issue.
-% Nevertheless, the interleave version only maps the data no the
-% threads, therefore the performances might drop if the OS does not map them
-% ``correctly'' while the modified version proposes a thread mapping that ensures better
-% data locality.
+In the end, for this example, using a classic static policy would have been enough to fix the performance issue, yet \gls{Tabarnac} helped understanding and fixing it in a definitive way.
 
 \subsubsection{The \IS benchmark}
 
-\begin{figure}[htb]
-    \centering
-    \begin{subfigure}{.32\linewidth}
-        \includegraphics[width=\linewidth]  {tabarnac/is_b_kba_orig}
-        \caption{\texttt{key\_array} (original).}
-        \label{fig:is-behaviour-orig-kba}
-    \end{subfigure}
-    \begin{subfigure}{.32\linewidth}
-        \includegraphics[width=\linewidth]  {tabarnac/is_b_kb2_orig}
-        \caption{\texttt{key\_buff2} (original).}
-        \label{fig:is-behaviour-orig-kb2}
-    \end{subfigure}
-    \begin{subfigure}{.32\linewidth}
-        \includegraphics[width=\linewidth]  {tabarnac/is_b_kb1_orig}
-        \caption{\texttt{key\_buff1} (original).}
-        \label{fig:is-behaviour-orig-kb1}
-    \end{subfigure}
-    \begin{subfigure}{.32\linewidth}
-        \includegraphics[width=\linewidth] {tabarnac/is_b_kba_modif}
-        \caption{\texttt{key\_array} (modified).}
-        \label{fig:is-behaviour-modif-kba}
-    \end{subfigure}
-    \begin{subfigure}{.32\linewidth}
-        \includegraphics[width=\linewidth] {tabarnac/is_b_kb2_modif}
-        \caption{\texttt{key\_buff2} (modified).}
-        \label{fig:is-behaviour-modif-kb2}
-    \end{subfigure}
-    \begin{subfigure}{.32\linewidth}
-        \includegraphics[width=\linewidth] {tabarnac/is_b_kb1_modif}
-        \caption{\texttt{key\_buff1} (modified).}
-        \label{fig:is-behaviour-modif-kb1}
-    \end{subfigure}
-
-    \caption[Memory access distribution of \IS.]{Memory access distribution for the main structures of
-        \IS. Original behavior on the top, modified on
-    the bottom.}
-    \label{fig:is-behaviour}
-
-\end{figure}
 
 % We executed \gls{Tabarnac} on the benchmarks %written in \texttt{C}
 % from the OpenMP
@@ -295,11 +256,33 @@ Still, \gls{Tabarnac} helped identifying and solving the issue.
 According to the \gls{NPB} website\footnote{\small\url{http://www.nas.nasa.gov/publications/npb.html}}, \IS has a random memory access pattern, while we observed a very specific pattern.
 In this section we explain this pattern and how we used it to improve the performance of \IS.
 
-\IS was executed with input class \emph{D} for the performance evaluation, resulting in a memory usage of $33.5$Gib, and class \emph{B} for the analysis, with a memory usage of $0.25Gib$.
+\IS was executed with input class \emph{D} for the performance evaluation, resulting in a memory usage of \SI{33.5}{Gib}, and class \emph{B}\footnote{
+    \DC was run in class \emph{A} as it was too slow in class \emph{B} to run the full experiment.}
+    for the analysis, with a memory usage of \SI{0.25}{Gib}.
 
-The top of \fig{is-behaviour} shows the original access distributions for the three main structures of \IS.
+\begin{figure}[htb]
+    \centering
+    \begin{subfigure}{.32\linewidth}
+        \includegraphics[width=\linewidth]  {tabarnac/is_b_kba_orig}
+        \caption{\texttt{key\_array}.}
+        \label{fig:is-behaviour-orig-kba}
+    \end{subfigure}
+    \begin{subfigure}{.32\linewidth}
+        \includegraphics[width=\linewidth]  {tabarnac/is_b_kb2_orig}
+        \caption{\texttt{key\_buff2}.}
+        \label{fig:is-behaviour-orig-kb2}
+    \end{subfigure}
+    \begin{subfigure}{.32\linewidth}
+        \includegraphics[width=\linewidth]  {tabarnac/is_b_kb1_orig}
+        \caption{\texttt{key\_buff1}.}
+        \label{fig:is-behaviour-orig-kb1}
+    \end{subfigure}
+    \caption[Original memory access distribution for \IS.]{Original memory access distribution for the main structures of \IS.}
+    \label{fig:is-behaviour-orig}
+\end{figure}
+\fig{is-behaviour-orig} shows the original access distributions for the three main structures of \IS.
 We can see that each structure has a different access pattern: \texttt{key\_array}'s (\fig{is-behaviour-orig-kba}) access distribution shows that each thread works on a different part of the structure, which permits automated tools perform an efficient data/thread mapping on it.
-On the other hand, \texttt{key\_buff2} (\fig{is-behaviour-orig-kb2}) is completely shared by all threads.
+On the other hand, \texttt{key\_buff2} (\fig{is-behaviour-orig-kb2}) is completely shared by all threads, we can barely see a diagonal pattern.
 \texttt{key\_buff1}'s access distribution (\fig{is-behaviour-orig-kb1}) is the most interesting one.
 We can see that almost all accesses occur in pages in the middle of the structure (from page $500$ to $1500$), and those pages are shared by all threads.
 This means that the number of access per page  for each thread follows a Gaussian distribution centered in the middle of the structure.
@@ -312,22 +295,44 @@ Indeed, all the accesses to \texttt{key\_buff1} are linear, except in one \gls{O
     In the original version, the arrays \texttt{key\_buff1} (resp. \texttt{key\_buff2}) are accessed via a generic pointer called \texttt{key\_buff\_ptr} (resp. \texttt{key\_buff\_ptr2}).
     }, Line~\ref{lst:is-gaus-end}, which depend on the values of \texttt{key\_buff2}.
 
-    \begin{lstlisting}[caption={Modified IS code.}, label=lst:is-modif,float=htb]
+\begin{lstlisting}[caption={Modified IS code.}, label=lst:is-modif,float=htb]
 #pragma omp for schedule(static,NUM_BUCKETS/
     (2*omp_get_num_threads()))
 \end{lstlisting}
 
 As we noticed in \fig{is-behaviour-orig-kb1} that the values of \texttt{key\_buff2} follow a Gaussian distribution, we can design a distribution of the threads that provides both a good load balancing and locality of data.
-By default, \gls{OpenMP} threads are scheduled dynamically to avoid unbalanced distribution of work, but the developers also propose a cyclic distribution of the threads over the loop.
-For our distribution, we split the loop into two equal parts and distribute each part among the threads in a round-robin way.
+By default, \gls{OpenMP} threads are scheduled dynamically to avoid unbalanced distribution of work, but the developers also propose an optional cyclic distribution of the threads over the loop.
+For our distribution, we split the loop into two equal parts and distribute each part among the threads in a cyclic way.
 This can be done by modifying the \gls{OpenMP} pragma (Line~\ref{lst:is-sched} in the original code), as shown in \lstr{is-modif}.
 
+\begin{figure}
+    \begin{subfigure}{.32\linewidth}
+        \includegraphics[width=\linewidth] {tabarnac/is_b_kba_modif}
+        \caption{\texttt{key\_array}.}
+        \label{fig:is-behaviour-modif-kba}
+    \end{subfigure}
+    \begin{subfigure}{.32\linewidth}
+        \includegraphics[width=\linewidth] {tabarnac/is_b_kb2_modif}
+        \caption{\texttt{key\_buff2}.}
+        \label{fig:is-behaviour-modif-kb2}
+    \end{subfigure}
+    \begin{subfigure}{.32\linewidth}
+        \includegraphics[width=\linewidth] {tabarnac/is_b_kb1_modif}
+        \caption{\texttt{key\_buff1}.}
+        \label{fig:is-behaviour-modif-kb1}
+    \end{subfigure}
+    \caption[Modified memory access distribution for \IS.]{Modified memory access distribution for the main structures of \IS.}
+    \label{fig:is-behaviour-modif}
 
-With this code modification, we obtain the access distribution shown in the bottom of \fig{is-behaviour}.
+\end{figure}
+
+
+
+With this code modification, we obtain the access distribution shown in \fig{is-behaviour-modif}.
 We can see that now each thread accesses a different part of \texttt{key\_buff1}.
 Furthermore, if most of the accesses still occur in the middle of the structure, the average number of access across the structure is the same for all threads, which means that our distribution preserves the good load balancing.
 Our modification has also changed \texttt{key\_buff2}'s accesses distribution.
-We can see that each thread uses mostly one part of the array and again the load balance is preserved.
+Indeed, we can now see a sharing pattern very similar to the one obtain for \texttt{key\_buff1}.
 
 The main point of our code modification is to improve the affinity between thread and memory, therefore we need to pin each thread on a core to keep them close to the data they access.
 To perform the thread mapping, we use the \texttt{GOMP\_CPU\_AFFINITY} environment variable.
@@ -339,7 +344,7 @@ As we map threads manually, interleave and \gls{NUMA} Balancing are not relevant
 
 \begin{figure}[htb]
     \centering
-    \includegraphics[width=\linewidth]{tabarnac/is_exectime}
+    \includegraphics[width=.9\linewidth]{tabarnac/is_exectime}
     \caption[Speedup for \IS.]{Speedup for \IS (class D) compared to the baseline.}
 \label{fig:is-res}
 \end{figure}
