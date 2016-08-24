@@ -159,14 +159,16 @@ These plots can be used to identify inefficient memory sharing and to determine 
 \section{Moca: Collecting fine grain traces}
 \label{sec:Moca}
 
-As many tools, \gls{Tabarnac} sees the memory as a set of pages, loosing information at a finer granularity.
-This approximation enable to trace memory accesses at a reduced cost.
-Still, it only keeps one counter per page and per threads in order to reduce its overhead.
-While this approach provides a deeper insight about the memory use than hardware performance counters, it lacks temporal information.
+\gls{Tabarnac} manage to keep it's overhead reasonable by two means.
+First is sees the memory at the granularity of the page, loosing any information about the internal usage of a page.
+While this is enough to debug issues specific to \gls{NUMA}, it is not \emph{detailed} enough to build a map of the memory accesses.
+Furthermore it does not collect any temporal information, reducing the size of its trace and avoiding to maintain temporal order.
+An instrumentation similar to \gls{Tabarnac} but with temporal information with a finer grain than the page would have a considerable overhead.
+Therefore it is required to find a lighter mean to collect memory traces.
 
 \subsection{Background knowledge}
 
-Page faults interception can provide useful online information about memory usage.
+Page faults interception is often used to collect information about memory usage at the run time.
 Such a mechanism has been used in several existing works : in parallel garbage collectors~\cite{Boehm91Mostly}, in memory checkpointing~\cite{Heo05Spaceefficient} or in the domain of virtualization to provide the hypervisor with information about the memory usage of the guest \gls{OS}~\cite{Jones06Geiger}.
 However, page faults only occur when caused by predetermined events in the system (copy-on-write, paging, ...).
 Thus, just intercepting existing page faults only provide an approximate view of the memory use.
@@ -234,7 +236,6 @@ Indeed, instrumentation based methods often work at a high granularity, collecti
 
 \subsubsection{Internal design}
 
-In this section we present in details how the main components of \gls{Moca} interact and how \gls{Moca} addresses the management of data it collects within the kernel space.
 During the execution, \gls{Moca} needs to store three kinds of information:
 
 \begin{enumerate}
@@ -298,7 +299,7 @@ The order of accesses inside a chunk is preserved.
     \end{algorithmic}
 \end{algorithm}
 
-The monitoring thread is a kernel thread that uses the algorithm~\ref{algo:monTh}, is in charge of enabling false page faults destined for \gls{Moca}.
+The monitoring thread is a kernel thread, that uses the algorithm~\ref{algo:monTh}, is in charge of enabling false page faults destined for \gls{Moca}.
 It performs its task by removing the \texttt{PRESENT} flags from the \texttt{Page Table Entry} (\texttt{PTE}) that corresponds to each recently accessed addresses.
 Of course, the shorter is the period between two wakeups, the more precise the trace is.
 This period is called \emph{monitor thread wakeup interval} (or \emph{monitor interval}).
@@ -324,7 +325,7 @@ The \texttt{MonitorThreadWakeUpInterval} \gls{Moca} parameter lets the user chan
     \end{algorithmic}
 \end{algorithm}
 
-The logging daemon that uses \alg{moca-log}, is a userspace process which periodically reads \texttt{/proc} pseudo files used by \gls{Moca} kernel module to export its data to userspace.
+The logging daemon, that uses \alg{moca-log}, is a userspace process which periodically reads \texttt{/proc} pseudo files used by \gls{Moca} kernel module to export its data to userspace.
 Those reads trigger a callback method in our tool which flush completed chunks from memory to disc.
 As it works on completed chunks, it does not directly interfere with the normal application execution.
 Especially, no lock is required to access to these completed chunks, and, as it mostly generates disc I/O, it does not compete much for CPU.
@@ -359,13 +360,13 @@ Especially, no lock is required to access to these completed chunks, and, as it 
     \label{fig:fpf-flow}
 \end{figure}
 
-Each time a page fault occurs, it is trapped by the handler registered by \gls{Moca}, which first finds out if the task (thread or process) involved by the page fault is monitored or not.
+Each time a page fault occurs, it is trapped by the handler registered by \gls{Moca}.
+As depicted by \fig{fpf-flow}, it first finds out if the task (thread or process) involved by the page fault is monitored or not.
 If not, it has to check if the task is a child of a monitored task and, in this case, it starts monitoring it.
 The check be done with a simple read lock on the hashmap containing the monitored tasks, and the write lock is only taken if the task must be added.
 This last case occurs only at the first page fault from a new monitored process or thread which is quite rare and usually occurs only at initialization time.
 For instance, in the benchmarks used for the evaluation it happens $8$ times out of $5\times10^6$ accesses.
 At the end of this phase, if the task is still not monitored, we let Linux handle the page fault as usual.
-This behavior is depicted by \fig{fpf-flow}.
 
 When a monitored task triggers a page fault, the access is first added to its current chunk.
 For each access, \gls{Moca} stores the exact address, its type (read or write) and the CPU on which the fault occurred.
@@ -410,12 +411,14 @@ As some state of the art tools can only run on \gls{AMD} machines, we also ran
     \begin{tabular}{lllllllllll}
         \toprule
         & \multicolumn{5}{c}{\textbf{Totals}}\\
+        \cmidrule(lr){2-6}
         & Nodes & Threads & Vendor & Model & Memory \\
         \cmidrule(lr){2-6}
         \texttt{Edel}    & $2$ & $8$  & Intel & Xeon E5520      & \SI{24}{Gib} \\
         \texttt{StRemi} & $2$ & $24$ & AMD   & Opteron 6164 HE & \SI{48}{Gib} \\
         \midrule
         & \multicolumn{5}{c}{\textbf{Per node}}\\
+        \cmidrule(lr){2-6}
         & Cores & Threads & Frequency & L3 Cache & Memory \\
         \cmidrule(lr){2-6}
         \texttt{Edel}   & $4$  & $4$   & \SI{2.27}{Ghz}& \SI{8}{Mib}  & \SI{12}{Gib} \\
@@ -432,17 +435,17 @@ As some state of the art tools can only run on \gls{AMD} machines, we also ran
         \toprule
          & \textbf{Moca} & \textbf{Tabarnac} & \textbf{Mitos} & \textbf{MemProf} \\
             \midrule
-            \emph{Design} & & & &\\
+            \textbf{Design} & & & &\\
             \midrule
             Mechanisms   & Page faults  & Inst* & PEBS + Inst* & IBS \\
             Architecture & \textbf{Any} & Intel (AMD) & Intel & AMD   \\
             \midrule
-            \emph{Completness} & & & &\\
+            \textbf{Completeness} & & & &\\
             \midrule
             Trace Granularity & \textbf{Address} & Page          & \textbf{Address} & \textbf{Address} \\
             Superset          & \textbf{Page} & \textbf{Page} & None             & None             \\
             \midrule
-            \emph{Detail} & & & &\\
+            \textbf{Detail} & & & &\\
             \midrule
             Temporal data & \textbf{Yes} & No          & \textbf{Yes} & \textbf{Yes} \\
             CPU location  & \textbf{Yes} & No          & \textbf{Yes} & \textbf{Yes} \\
@@ -527,12 +530,12 @@ This experiment was run on a machine from the \texttt{Edel} cluster.
 
 \begin{figure}[htb]
     \centering
-    \begin{subfigure}{.49\linewidth}
+    \begin{subfigure}{.7\linewidth}
         \includegraphics[width=\linewidth]{moca/moca_param.pdf}
         \caption{Execution time.}
         \label{fig:param_time}
     \end{subfigure}
-    \begin{subfigure}{.49\linewidth}
+    \begin{subfigure}{.7\linewidth}
         \includegraphics[width=\linewidth]{moca/moca_param_events.pdf}
         \caption{Number of captured events.}
         \label{fig:param_evts}
@@ -562,11 +565,9 @@ With the help of their support team\footnote{
 }, we managed to make it work by disabling the library used to retrieve data structures names.
 For the same reason as in the case of \gls{Mitos}, our study includes two versions of \gls{MemProf}: the default version and MemProfTun for which we have increased the sampling rate to its maximum.
 
-\DB{Expliquer MocaPin ancienne: version ou refaire une campagne d'expé ?}
-Finally our evaluation also distinguishes \gls{Moca} (kernel module only) from
-MocaPin, which also retrieve the data structure information using a Pin
-instrumentation. We make this distinction to evaluate the impact of Pin on
-\gls{Moca} performances.
+Finally our evaluation also distinguishes \gls{Moca} (kernel module only) from MocaPin, which also retrieve the data structure information using a \gls{Pin} instrumentation.
+This \gls{Pin} instrumentation has been replaced by a library that does not instrument the binary in the latest version of \gls{Moca}, as described in \sect{moca-design}.
+Still the library and the \gls{Pin} instrumentation have comparable overhead.
 
 We compare the different tools regarding two metrics, trace \emph{precision} and induced slowdown.
 Regarding the trace \emph{precision}, the first experiment compares the tools using two criteria, the percentage of captured pages and the number of captured events.
@@ -584,12 +585,12 @@ All these experiments have been run on each of the \gls{NPB} on class A.
 
 \begin{figure}[htb]
     \centering
-    \begin{subfigure}{.49\linewidth}
+    \begin{subfigure}{.7\linewidth}
         \includegraphics[width=\linewidth]{moca/moca_pages_intel.pdf}
         \caption{Percentage of captured pages.}
         \label{fig:pages}
     \end{subfigure}
-    \begin{subfigure}{.49\linewidth}
+    \begin{subfigure}{.7\linewidth}
         \includegraphics[width=\linewidth]{moca/moca_addr_intel.pdf}
         \caption{Percentages of events captured (compared to \gls{Moca}).}
         \label{fig:addr}
@@ -610,7 +611,7 @@ Thus, we can safely ignore these differences.
 Regarding \gls{MemProf}, changing the default sampling rate does not seem to have any noticeable impact on the end result.
 Both \gls{MemProf} and MemProfTun capture significantly more pages than \gls{Mitos} and MitosTun.
 Nevertheless, for half of the studied applications it does not see more than \SI{50}{\%} of the addresses space.
-Only for, \BT, \LU, \SP and \UA, \gls{MemProf} manages to capture around \SI{75}{\%} of the accessed pages.
+Only for \BT, \LU, \SP and \UA, \gls{MemProf} manages to capture around \SI{75}{\%} of the accessed pages.
 This is explained by the fact that all these benchmarks are using uniformly most of their address space, and that many pages are frequently accessed.
 This is coherent with the fact that \gls{MemProf} is solely based on instructions sampling and only sees the most accesses pages.
 
@@ -627,12 +628,12 @@ In short, not only our tool provides a \emph{complete} trace at the granularity 
 
 \begin{figure}[htb]
     \centering
-    \begin{subfigure}{.49\linewidth}
+    \begin{subfigure}{.7\linewidth}
         \includegraphics[width=\linewidth]{moca/moca_overhead_intel.pdf}
         \caption{Evaluation on \texttt{Edel} (Intel)}
         \label{fig:ovh-moca-Intel}
     \end{subfigure}
-    \begin{subfigure}{.49\linewidth}
+    \begin{subfigure}{.7\linewidth}
         \includegraphics[width=\linewidth]{moca/moca_overhead_amd.pdf}
         \caption{Evaluation on \texttt{StRemi} (AMD)}
         \label{fig:ovh-moca-AMD}
@@ -673,7 +674,6 @@ providing traces a little more \emph{precise}. Nevertheless, they are still \emp
 way less \emph{precise} than \gls{Moca} traces. Obviously MemProfTun has the same
 overhead as \gls{MemProf} as it capture the same amount of data.
 
-\DB{MocaPin}
 Finally, we can see, as expected, that adding one execution with a Pin instrumentation to retrieve data structures information (MocaPin) only adds a small overhead to the whole \gls{Moca} execution.
 For several benchmarks this difference is so small that we cannot distinguish it from \gls{Moca} usual overhead.
 
@@ -681,7 +681,7 @@ For several benchmarks this difference is so small that we cannot distinguish it
 %\label{sec:expe-cncl}
 \subsection{Results and discussion}
 
-We have tested \gls{Moca} and \gls{Tabarnac} with various applications and using several parameters.
+We have tested \gls{Moca} with various applications and using several parameters.
 Our experiments, show that \gls{Moca} has a good behavior for a wide range of parameters and helped us defining their default values.
 Our experiments also show that, with these parameters, \gls{Moca} provides significantly more precise traces than state of the art tools.
 Of course, because of this increased precision, \gls{Moca} is slower than two of these tools, \gls{MemProf} and \gls{Mitos}.
@@ -697,7 +697,7 @@ This is a key challenge in high performance computing as memory is often a perfo
 Memory traces can be used at runtime to improve data locality or offline by developers to understand and improve the memory behavior of their applications and, therefore, their performances.
 For online analysis the trace \emph{precision} is limited by the volume of data that can be analyzed in real time, but for offline usage, highly accurate traces can provides a better understanding of the application memory behavior.
 
-\gls{Tabarnac}, our first attempt at collecting memory traces is designed specifically for \gls{NUMA} related issue.
+Our first attempt at collecting memory traces, \gls{Tabarnac}, is designed specifically for \gls{NUMA} related issue.
 It relies on a custom memory tracer based on the Pin dynamic binary instrumentation tool which records the number of memory reads and writes performed by all threads for each data structure.
 The advantage of instrumentation is that it is the most accurate and portable way to generate memory traces.
 Despite the overhead caused by the instrumentation, \gls{Tabarnac} is efficient enough to analyze even huge applications in a reasonable time.
@@ -710,7 +710,8 @@ Improvements were also substantially higher than those provided by automated too
 Yet, \gls{Tabarnac} traces are not \emph{precise} as they only contains a global overview of the memory sharing patterns without temporal information.
 Therefore they only allow to observe a limited number of memory related issues.
 
-To address this challenge, we propose \gls{Moca} an efficient tool for the collection of \emph{precise}, \emph{complete} and \emph{detailed} memory traces.
+Our second memory trace collection tool, \gls{Moca} addresses this challenge.
+It  collects \emph{precise}, \emph{complete} and \emph{detailed} memory traces.
 While existing tools rely on \emph{incomplete} hardware sampling to provide such traces at an acceptable cost, \gls{Moca} provides a \emph{complete} trace, that contains all the accessed areas, at the granularity of the page.
 Moreover, \gls{Moca} traces not only contain all the pages that are accessed during the execution, but also, for each trapped access, temporal, spatial and sharing information: accesses are timestamped and recorded along with their thread number, CPU number, and kind.
 While \gls{Moca} works at the page granularity, it stores the exact address of each intercepted accesses.
@@ -726,7 +727,8 @@ As information provided by only intercepting regular page faults is not always \
 To our knowledge, all the existing tools relying on these mechanisms uses the collected data online and, thus, do not have to manage and store a large volume of data.
 \gls{Moca} is the first tool able to generate and store \emph{complete} and \emph{precise} memory traces for offline analysis.
 
-We evaluated \gls{Moca} and \gls{Tabarnac} by comparing them to two state of the art tools: \gls{Mitos} and \gls{MemProf} (both with their default parameters and with some fine tunning of our own).
+We evaluated \gls{Moca} and \gls{Tabarnac} by comparing them to two state of the art tools: \gls{Mitos} (the collection tool from \gls{MemAxes}) and \gls{MemProf}.
+Both of these tools were evaluated with their default parameters and with some fine tunning of our own.
 For this comparison, we evaluated two criteria: the \emph{precision} of the trace and the runtime overhead.
 We ran our evaluation on the \gls{NPB} which are representative of multiple kinds of applications from simple kernels to realistic ones.
 Our evaluation has exposed the fact that the tools relying on hardware sampling miss a large part of the address space.
@@ -734,6 +736,13 @@ It has also shown that \gls{Moca} is able to provide both a \emph{complete} trac
 Generating comparable traces using \gls{MemProf} or \gls{Mitos} would require to sample more memory instructions than the hardware can.
 Finally, \gls{Moca} overhead is more important than the overhead of sampling based tools but usually lower than the one induced by binary instrumentation.
 
-Future work will focus on the visualization and exploitation of these memory traces which is another challenge mainly due to the volume of the collected data.
+Future work will focus on the visualization and exploitation of these memory traces which is another challenge.
+Indeed, not only theses traces contains an important volume of data, but they are spread over several dimensions.
+The most obvious ones are the virtual address space and the time.
+Yet, the threads responsible for the accesses can also be seen as a dimension.
+Moreover, as the location where the accesses occurs, and the location of the memory page in the physical memory can impact the performances.
+Thus these data form two more dimensions.
+Finally, temporal evolution can be seen either in terms of time or call stack.
+In the end of the day, our traces contains at least five dimensions, therefore designing meaningful and intuitive visualization is far from being trivial.
 
 % vim: et si sta lbr  sw=4 ts=4 spelllang=en_us

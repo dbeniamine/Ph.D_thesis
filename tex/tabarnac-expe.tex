@@ -381,16 +381,17 @@ Finally, as our analysis is designed to be used during the development phase and
 \subsection{Results and discussion}
 
 Our experiments have highlighted the fact that although automated tools such as \gls{NUMA} Balancing can be efficient, in some cases they result in performance losses.
-Moreover, although simple static mapping policies can result in substantial improvements, the best policy depends on the memory accesses behavior of the parallel application.
-Therefore, it is necessary to understand this behavior to select the most appropriate mapping policy.
+Moreover, while simple static mapping policies can result in substantial improvements, the best policy depends on the memory accesses behavior of the parallel application.
+Therefore, it is required to understand this behavior to select the most appropriate mapping policy.
 
-Our tools and methodology enables developers and users to achieve performance improvements in two ways.
-First, by providing a deep understanding of the memory access behavior, it enables the user to find the best mapping policy.
+\gls{Tabarnac} enables developers and users to achieve performance improvements in two ways.
+First, by providing a deep understanding of the memory sharing pattern, it enables the user to find the best mapping policy.
 Second, this knowledge can be used to identify and fix inefficient memory behavior.
 Our experiments showed that both situations result in significant performance gains.
 
-Still, \gls{Tabarnac} only highlight global sharing pattern.
-While it allow to identify and fix some inefficient sharing patterns, it does not collect temporal data.
-Therefore, it does not enable identification of inefficient memory access patterns over the time, such as the naïve matrix multiplication.
+%Still, \gls{Tabarnac} only highlight global sharing pattern.
+While \gls{Tabarnac} helps to identify and fix some inefficient sharing patterns, it only provides a global overview of the memory usage.
+Indeed it does not collect any temporal information.
+Therefore, it does not enable identification of inefficient memory access patterns over the time, such as the ones depicted in \sect{archi} with the naïve matrix multiplication.
 
 % vim: et si sta lbr  sw=4 ts=4 spelllang=en_us

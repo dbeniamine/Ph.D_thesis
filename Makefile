@@ -44,7 +44,7 @@ $(BBL): $(BIBSRC) $(TEXALLSRC)
 	$(BIBCOMPILE)
 
 # First compilation
-$(AUX): $(TEXSRC) $(TEXSUBSRC)
+$(AUX): $(TEXALLSRC)
 	$(TEXCOMPILE)
 	$(TEXCOMPILE)
 
