@@ -99,12 +99,12 @@ Thus, this associativity can be used to create partitions in the cache and then 
 Finally, the cache prefecther try to detect memory access pattern to retrieve several line of cache at the same time from the main memory.
 This mechanism is particularity efficient with linear accesses.
 Yet, for sparse accesses it might prefetch unused lines evicting potentially useful ones.
-\DB{Peut être qu'il faudrait faire des mini expériences pour donner des temps d'exécution ,sur ces exemples}
+\DB{AJouter Micro Benchmarks}
 
 \begin{figure}[htb]
     \centering
     \input{tikz/bad-align}
-    \caption[Example of Bad alignment.]{Retrieving two lines of cache with one or two fetches depending on the alignment of the lines.}
+    \caption[Example of bad alignment.]{Retrieving two lines of cache with one or two fetches depending on the alignment of the lines.}
     \label{fig:bad-align}
 \end{figure}
 
