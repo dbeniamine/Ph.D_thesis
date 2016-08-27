@@ -9,7 +9,7 @@ Therefore, memory trace collection tools must work at the \gls{OS} or software l
 
 In this chapter we present our main contributions that consists in two different memory trace collection tools:
 \begin{itemize}
-    \item The first one, called \gls{Tabarnac}, uses a low overhead and lock free design instrumentation library to obtain a global overview of the memory usage.
+    \item The first one, called \gls{Tabarnac}, uses a low overhead and lock free design instrumentation library to obtain a global overview of the memory usage.
         It is designed specifically to inspect \gls{NUMA} related issues.
         This tool also provides simple yet meaningful visualizations.
         \gls{Tabarnac} was published at \gls{VPA} 2015 a \gls{SC} workshop~\cite{Beniamine15TABARNAC}.
@@ -29,7 +29,7 @@ Finally we provide our conclusions on memory traces collection in \sect{Tools-Co
 \section{Tabarnac: Global view of the memory usage}
 \label{sec:Tabarnac}
 
-\acrfull{Tabarnac} is our first attempt to collect memory traces and use them for performance optimizations.
+\acrfull{Tabarnac} is our first attempt to collect memory traces and use them for performance optimizations.
 As previous work~\cite{Beniamine13Cartographier} showed how difficult it is to capture \emph{complete} memory traces with temporal information, this tools focuses on the global behavior.
 Furthermore it aims specifically at improving \gls{NUMA} related performance issues.
 
@@ -159,7 +159,7 @@ These plots can be used to identify inefficient memory sharing and to determine 
 \section{Moca: Collecting fine grain traces}
 \label{sec:Moca}
 
-\gls{Tabarnac} manage to keep it's overhead reasonable by two means.
+\gls{Tabarnac} manage to keep it's overhead reasonable by two means.
 First is sees the memory at the granularity of the page, loosing any information about the internal usage of a page.
 While this is enough to debug issues specific to \gls{NUMA}, it is not \emph{detailed} enough to build a map of the memory accesses.
 Furthermore it does not collect any temporal information, reducing the size of its trace and avoiding to maintain temporal order.
@@ -518,7 +518,7 @@ In the following sections, all the tools are evaluated on each of the 10 \gls{NP
     \url{http://www.nas.nasa.gov/publications/npb.html}}.
 In this table, we included the footprint of each benchmark, that is the maximum memory used, as reported by Valgrind.
 
-In each experiment, \gls{Moca} and \gls{Tabarnac} were run with their default parameters,
+In each experiment, \gls{Moca} and \gls{Tabarnac} were run with their default parameters,
 except for the experiment about the influence of \gls{Moca} parameters.
 For \gls{Moca}, their default values are: a wakeup interval of \SI{0.5}{s} for the logging process and \SI{50}{ms} for the monitoring thread.
 
@@ -713,7 +713,7 @@ This is a key challenge in high performance computing as memory is often a perfo
 Memory traces can be used at runtime to improve data locality or offline by developers to understand and improve the memory behavior of their applications and, therefore, their performances.
 For online analysis the trace \emph{precision} is limited by the volume of data that can be analyzed in real time, but for offline usage, highly accurate traces can provides a better understanding of the application memory behavior.
 
-Our first attempt at collecting memory traces, \gls{Tabarnac}, is designed specifically for \gls{NUMA} related issue.
+Our first attempt at collecting memory traces, \gls{Tabarnac}, is designed specifically for \gls{NUMA} related issue.
 It relies on a custom memory tracer based on the Pin dynamic binary instrumentation tool which records the number of memory reads and writes performed by all threads for each data structure.
 The advantage of instrumentation is that it is the most accurate and portable way to generate memory traces.
 Despite the overhead caused by the instrumentation, \gls{Tabarnac} is efficient enough to analyze even huge applications in a reasonable time.
@@ -743,7 +743,7 @@ As information provided by only intercepting regular page faults is not always \
 To our knowledge, all the existing tools relying on these mechanisms uses the collected data online and, thus, do not have to manage and store a large volume of data.
 \gls{Moca} is the first tool able to generate and store \emph{complete} and \emph{precise} memory traces for offline analysis.
 
-We evaluated \gls{Moca} and \gls{Tabarnac} by comparing them to two state of the art tools: \gls{Mitos} (the collection tool from \gls{MemAxes}) and \gls{MemProf}.
+We evaluated \gls{Moca} and \gls{Tabarnac} by comparing them to two state of the art tools: \gls{Mitos} (the collection tool from \gls{MemAxes}) and \gls{MemProf}.
 Both of these tools were evaluated with their default parameters and with some fine tunning of our own.
 For this comparison, we evaluated two criteria: the \emph{precision} of the trace and the runtime overhead.
 We ran our evaluation on the \gls{NPB} which are representative of multiple kinds of applications from simple kernels to realistic ones.
