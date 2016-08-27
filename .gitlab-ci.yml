@@ -1,6 +1,7 @@
 before_script:
     - bash CI/install.sh
-    
-script:
-    - make
+
+make:
+    script:
+        - make
         
