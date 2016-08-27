@@ -87,7 +87,7 @@ In the end, \gls{SOFA} is currently parallelized using simple \gls{OpenMP} \text
 This parallelization impacts small chunks of code and miss the global aspect of the previous one.
 Thus it is considerably less efficient than the \gls{KAAPI} version.
 
-To conclude it appears that optimizing algorithms or chunk of codes pointed out by \gls{SOFA} developers is not sufficient.
+To conclude it appears that optimizing algorithms or chunk of codes pointed out by \gls{SOFA} developers is not sufficient.
 Indeed this approach can miss unknown hotspots and therefore opportunities for optimizations.
 Moreover while a structural approach seems potentially more efficient than local optimizations, it does not overpass this limitation.
 At the end of the day, it appears that identifying precisely unknown hotspots and digging into \gls{SOFA} performance would be more profitable than writing pieces of highly optimized code.
