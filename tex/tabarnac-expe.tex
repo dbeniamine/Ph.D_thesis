@@ -194,18 +194,18 @@ It simulates the propagation of seismic waves using a finite-differences numeric
 
 \begin{figure}[htb]
     \centering
-    \begin{subfigure}{.45\linewidth}
+    \begin{subfigure}{.49\linewidth}
         \includegraphics[width=\linewidth] {tabarnac/ondes3d_vz0_dist_orig}
         \caption{Access distribution}
         \label{fig:ondes3d-behaviour-vz0-orig}
     \end{subfigure}
     \newline
-    \begin{subfigure}{.45\linewidth}
+    \begin{subfigure}{.49\linewidth}
         \includegraphics[width=\linewidth] {tabarnac/ondes3d_vz0_ft_orig}
         \caption{Original first-touch.}
         \label{fig:ondes3d-ft-vz0-orig}
     \end{subfigure}
-    \begin{subfigure}{.45\linewidth}
+    \begin{subfigure}{.49\linewidth}
         \includegraphics[width=\linewidth] {tabarnac/ondes3d_vz0_ft_modif}
         \caption{Improved first-touch.}
         \label{fig:ondes3d-ft-vz0-modif}
@@ -262,17 +262,18 @@ In this section we explain this pattern and how we used it to improve the perfor
 
 \begin{figure}[htb]
     \centering
-    \begin{subfigure}{.32\linewidth}
+    \begin{subfigure}{.4\linewidth}
         \includegraphics[width=\linewidth]  {tabarnac/is_b_kba_orig}
         \caption{\texttt{key\_array}.}
         \label{fig:is-behaviour-orig-kba}
     \end{subfigure}
-    \begin{subfigure}{.32\linewidth}
+    \quad
+    \begin{subfigure}{.4\linewidth}
         \includegraphics[width=\linewidth]  {tabarnac/is_b_kb2_orig}
         \caption{\texttt{key\_buff2}.}
         \label{fig:is-behaviour-orig-kb2}
     \end{subfigure}
-    \begin{subfigure}{.32\linewidth}
+    \begin{subfigure}{.42\linewidth}
         \includegraphics[width=\linewidth]  {tabarnac/is_b_kb1_orig}
         \caption{\texttt{key\_buff1}.}
         \label{fig:is-behaviour-orig-kb1}
@@ -280,6 +281,7 @@ In this section we explain this pattern and how we used it to improve the perfor
     \caption[Original memory access distribution for \IS.]{Original memory access distribution for the main structures of \IS.}
     \label{fig:is-behaviour-orig}
 \end{figure}
+
 \fig{is-behaviour-orig} shows the original access distributions for the three main structures of \IS.
 We can see that each structure has a different access pattern: \texttt{key\_array}'s (\fig{is-behaviour-orig-kba}) access distribution shows that each thread works on a different part of the structure, which permits automated tools perform an efficient data/thread mapping on it.
 On the other hand, \texttt{key\_buff2} (\fig{is-behaviour-orig-kb2}) is completely shared by all threads, we can barely see a diagonal pattern.
@@ -287,7 +289,7 @@ On the other hand, \texttt{key\_buff2} (\fig{is-behaviour-orig-kb2}) is complete
 We can see that almost all accesses occur in pages in the middle of the structure (from page $500$ to $1500$), and those pages are shared by all threads.
 This means that the number of access per page  for each thread follows a Gaussian distribution centered in the middle of the structure.
 
-\lstinputlisting[caption={[Original IS code.]\IS code responsible for the distribution of memory accesses to the \texttt{key\_buff1} structure.}, label=lst:is, float=htb]{code/is.c}
+\lstinputlisting[caption={[Original IS code.]\IS code responsible for the distribution of memory accesses.}, label=lst:is, float=htb]{code/is.c}
 
 We can identify the source of this pattern in the \IS source code.
 Indeed, all the accesses to \texttt{key\_buff1} are linear, except in one \gls{OpenMP} parallel loop where they depend on the value of except the ones shown in \lstr{is}\footnote{
@@ -306,17 +308,19 @@ For our distribution, we split the loop into two equal parts and distribute each
 This can be done by modifying the \gls{OpenMP} pragma (Line~\ref{lst:is-sched} in the original code), as shown in \lstr{is-modif}.
 
 \begin{figure}
-    \begin{subfigure}{.32\linewidth}
+    \centering
+    \begin{subfigure}{.4\linewidth}
         \includegraphics[width=\linewidth] {tabarnac/is_b_kba_modif}
         \caption{\texttt{key\_array}.}
         \label{fig:is-behaviour-modif-kba}
     \end{subfigure}
-    \begin{subfigure}{.32\linewidth}
+    \quad
+    \begin{subfigure}{.4\linewidth}
         \includegraphics[width=\linewidth] {tabarnac/is_b_kb2_modif}
         \caption{\texttt{key\_buff2}.}
         \label{fig:is-behaviour-modif-kb2}
     \end{subfigure}
-    \begin{subfigure}{.32\linewidth}
+    \begin{subfigure}{.42\linewidth}
         \includegraphics[width=\linewidth] {tabarnac/is_b_kb1_modif}
         \caption{\texttt{key\_buff1}.}
         \label{fig:is-behaviour-modif-kb1}
