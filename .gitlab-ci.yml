@@ -1,7 +1,8 @@
+image: texlive
+
 before_script:
     - bash CI/install.sh
 
 make:
     script:
         - make
-        
