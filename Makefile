@@ -63,7 +63,7 @@ testfonts:
 	[ -z "`pdffonts $(PDF) | awk '{print $$5}' | grep no`" ]
 
 testcountpages:
-	[ `pdfinfo $(PDF) | grep Pages | awk '{print $$2}'` -gt 120 ]
+	[ `pdfinfo $(PDF) | grep Pages | awk '{print $$2}'` -gt 110 ]
 
 testpdfversion:
 	[ "`pdfinfo $(PDF) | grep "version" | awk '{print $$3}'`" = "1.4" ]
