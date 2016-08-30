@@ -10,7 +10,7 @@ TEXALLSRC = $(TEXSRC) $(TEXSUBSRC)
 PDF = $(TEXSRC:.tex=.pdf)
 AUX = $(TEXSRC:.tex=.aux)
 BBL = $(TEXSRC:.tex=.bbl)
-GLS = $(TEXSRC:.tex=.GLS)
+GLS = $(TEXSRC:.tex=.acr)
 
 
 
@@ -48,7 +48,7 @@ $(AUX): $(TEXALLSRC)
 	$(TEXCOMPILE)
 	$(TEXCOMPILE)
 
-tests: testrefs testbib testcountbib testfonts testpdfversion testcountpages
+tests: $(PDF) testrefs testbib testfonts testpdfversion testcountpages testcountbib
 
 testbib:
 	[ `pdfgrep -c '\[\?\]' $(PDF)` -eq 0 ]
@@ -56,17 +56,17 @@ testbib:
 testrefs:
 	[ `pdfgrep -c '\?\?' $(PDF)` -eq 0 ]
 
-testcountbib:
-	[ `grep -c bibitem $(TEXSRC:.tex=.bbl)` -ge 70 ]
-
 testfonts:
 	[ -z "`pdffonts $(PDF) | awk '{print $$5}' | grep no`" ]
 
-testcountpages:
-	[ `pdfinfo $(PDF) | grep Pages | awk '{print $$2}'` -gt 110 ]
-
 testpdfversion:
 	[ "`pdfinfo $(PDF) | grep "version" | awk '{print $$3}'`" = "1.4" ]
+
+testcountbib:
+	[ `grep -c bibitem $(TEXSRC:.tex=.bbl)` -ge 70 ]
+
+testcountpages:
+	[ `pdfinfo $(PDF) | grep Pages | awk '{print $$2}'` -gt 110 ]
 
 
 .PHONY: clean distclean
