@@ -1,8 +1,15 @@
 image: texlive
 
 before_script:
-    - bash CI/install.sh
+    - bash .ci/install.sh
 
 make:
+    stage: build
     script:
         - make
+
+test:
+    stage: test
+    script:
+        - make test
+

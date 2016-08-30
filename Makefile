@@ -48,6 +48,27 @@ $(AUX): $(TEXALLSRC)
 	$(TEXCOMPILE)
 	$(TEXCOMPILE)
 
+tests: testrefs testbib testcountbib testfonts testpdfversion testcountpages
+
+testbib:
+	[ `pdfgrep -c '\[\?\]' $(PDF)` -eq 0 ]
+
+testrefs:
+	[ `pdfgrep -c '\?\?' $(PDF)` -eq 0 ]
+
+testcountbib:
+	[ `grep -c bibitem $(TEXSRC:.tex=.bbl)` -ge 70 ]
+
+testfonts:
+	[ -z "`pdffonts $(PDF) | awk '{print $$5}' | grep no`" ]
+
+testcountpages:
+	[ `pdfinfo $(PDF) | grep Pages | awk '{print $$2}'` -gt 120 ]
+
+testpdfversion:
+	[ "`pdfinfo $(PDF) | grep "version" | awk '{print $$3}'`" = "1.4" ]
+
+
 .PHONY: clean distclean
 
 clean:
