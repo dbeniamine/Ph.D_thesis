@@ -8,32 +8,9 @@ make:
     script:
         - make
 
-testrefs:
+tests:
     stage: test
     script:
-        - make testrefs
+        - make
+        - make tests
 
-testbib:
-    stage: test
-    script:
-        - make testbib
-
-testcountbib:
-    stage: test
-    script:
-        - make testcountbib
-
-testfonts:
-    stage: test
-    script:
-        - make testfonts
-
-testpdfversion:
-    stage: test
-    script:
-        - make testpdfversion
-
-testcountpages:
-    stage: test
-    script:
-        - make testcountpages
