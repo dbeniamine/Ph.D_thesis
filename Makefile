@@ -48,7 +48,7 @@ $(AUX): $(TEXALLSRC)
 	$(TEXCOMPILE)
 	$(TEXCOMPILE)
 
-tests: $(PDF) testrefs testbib testfonts testpdfversion testcountpages testcountbib
+tests: $(PDF) testrefs testbib testplaceholders testfonts testpdfversion testcountpages testcountbib
 
 testbib:
 	[ `pdfgrep -c '\[\?\]' $(PDF)` -eq 0 ]
@@ -61,6 +61,9 @@ testfonts:
 
 testpdfversion:
 	[ "`pdfinfo $(PDF) | grep "version" | awk '{print $$3}'`" = "1.4" ]
+
+testplaceholders:
+	[ `pdfgrep -c '<\+\+>' $(PDF)` -eq 0 ]
 
 testcountbib:
 	[ `grep -c bibitem $(TEXSRC:.tex=.bbl)` -ge 70 ]
