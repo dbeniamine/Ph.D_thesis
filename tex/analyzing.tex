@@ -1,34 +1,31 @@
 %!TEX encoding=UTF-8 Unicode
 \chapter{Analyzing Fine Grained Memory Traces}
 
+\gls{Tabarnac} traces contains two kind parts: informations about the data structures and the actual trace.
+For small applications with a limited number of data structures, it is trivial to present the first kind of information.
+The actual trace is spread over three dimensions: threads, pages and type of accesses yet this last one can only take two values (read or write).
+Therefore it is relatively easy to find a meaningful representation of this traces that can be easily understood by a human.
+\gls{Moca} traces are way more generic.
+Indeed, they contain the same meta data but the actual trace also provides informations about time and \gls{CPU} locality.
+Thus these traces are spread over five dimensions, furthermore some dimension can be seen from several point of view, for instance we can look either at the physical or virtual address space.
+As we are not used to visualize things in more than three dimension, to analyze these traces, we must provide the user a way to navigate through different representations and easily find and focus on the important part of the trace.
+
+The contribution presented in this chapter consists in two different methods to analyze \gls{Moca} traces:
 \begin{itemize}
-    \item \gls{Tabarnac}
-        \begin{itemize}
-            \item difficulty extract pertinent informations.
-            \item Non interactive => user cannot explore traces
-            \item 2D data structures / Threads
-            \item Aspects: amount of acc, first touch, structures charactristics
-        \end{itemize}
-    \item \gls{Moca}
-        \begin{itemize}
-            \item More Generic
-            \item Interactivity 
-            \item 5D: Data structure, Time, Thread, CPU Locality, Memory Addresses
-            \item Aspects: Sharing, Temporal patterns, Physical mapping of addresses
-            \item Need “easy” way to highlight meaningful information
-            \item Need a model of the trace
-        \end{itemize}
-    \item Contribs:
-        \begin{itemize}
-            \item  Moca Importer
-            \item  Several fix in Framesoc / Ocelotl
-            \item  Research report
-            \item  Bitbucket: labbook, ongoing work
-            \item  Automatic analysis: internship report
-        \end{itemize}
+    \item The first method relies on an existing generic trace management tool called \gls{Framesoc}~\cite{Pagano14frameSoC} and more specifically one plugin called \gls{Ocelotl}~\cite{Dosimont14Ocelotl} that provide aggregated views of a trace.\\
+        We have implemented an importer to analyze \gls{Moca} traces in \gls{FrameSoc} that is distributed on Github under GPL License:\\
+        \url{https://github.com/dbeniamine/framesoc\_importer\_moca}.\\
+        The proposed visualizations are presented in an Inria Research Report~\cite{Beniamine15Memory}.
+    \item The second method relies on \gls{R}, it is an ongoing work, publicly available online:\DB{Make it public}
 \end{itemize}
 
+This chapter is organized as follows: first we present our analysis of \gls{Moca} traces with \gls{Framesoc} and \gls{Ocelotl} with an example and discuss the limits of this method in \sect{visu-first}.
+Then we propose a second, more flexible approach base on \gls{R} in \sect{visu-second}.
+Finally we present some perspective of work to improves these analysis and our conclusions in \sect{visu-cncl}.
+
+
 \section{First attempt}
+\label{sec:visu-first}
 
 Modelization, meaningful agregation
 Rely on Framesoc~\cite{Pagano14frameSoC} tool Ocelotl~\cite{Dosimont14Ocelotl}
@@ -61,18 +58,23 @@ Rely on Framesoc~\cite{Pagano14frameSoC} tool Ocelotl~\cite{Dosimont14Ocelotl}
 
 \subsection{Trace Description}
 
+Explain:
 \begin{itemize}
-    \item Producers: Addresses
-    \item One trace per visu: Phy, Virt, Per threads
-    \item Other info as event parameters
+    \item Trace representation
+    \item Artificial hierarchy
+        \begin{itemize}
+            \item Aggregate same structure first
+            \item Reduce the number of possible aggregations
+            \item MemRoot => Structs / Contiguous / Stacks => \ldots => Pages => Lines => Addresses
+        \end{itemize}
     \item Access = variable
-    \item Artificial Mem Heirarchy: struct => Page => cache line, with tree
+    \item Other info as event parameters (means influence aggregate but hard to visualize)
+    \item One trace per visu: Phy, Virt, Per threads
 \end{itemize}
 
-\subsection{Visualization}
+\subsection{Example}
 
 \DB{Adapt from Moca RR}
-
 
 \gls{Moca}'s output is designed to be imported inside the trace visualisation framework \gls{Framesoc} \cite{Pagano13Trace}, and to be visualised using \gls{Ocelotl} \cite{Dosimont14Trace}.
 This tool uses an adaptive algorithm to aggregate data.
@@ -83,7 +85,7 @@ Moreover it provides the ability to navigate through the trace, focus on one typ
 \begin{figure}[htb]
     \centering
     \includegraphics[width=\textwidth]{Moca-RR/multModuloThreadView.png}
-    \caption{Memory-gantt view of a parallel matrix multiplication.}
+    \caption{Memory-gantt view of the naïve parallel matrix multiplication.}
     \label{fig:ocelotl-th0}
 \end{figure}
 
@@ -101,21 +103,19 @@ We will explain how to use these views in the next section.
 \begin{figure}[htb]
     \centering
     \includegraphics[width=\textwidth]{Moca-RR/multModuloCartoView.png}
-    \caption{Cartography view of a parallel matrix multiplication}
+    \caption{Cartography view of the naïve parallel matrix multiplication.}
     \label{fig:ocelotl-carto0}
 \end{figure}
 
 On both figures, we can notice that the memory hierarchy (on the left) is a tree.
 For the first view, the top level correspond to the threads/ processes.
-In figure \fig{ocelotl-th0} we can clearly identify $3$ threads.
+In \fig{ocelotl-th0} we can clearly identify $3$ threads.
 The second level is created by merging together successive set of addresses.
 Every other level is computed by cutting the previous into two or three parts.
 The last level corresponds to the pages address detected by \gls{Moca}.
  Although this hierarchy is a bit artificial it shows the different parts of the memory (stack, heap, library, etc.).
 Furthermore, it can be used to compute a pre aggregation which can speed \gls{Ocelotl}~up.
 For the cartography view, the tree is identical, except that the first level is the second one of the memory gantt view.
-
-\subsubsection{Example on a matrix multiplication}
 
 \begin{algorithm}
     \caption{Naïve parallel matrix multiplication.}
@@ -137,7 +137,7 @@ The algorithm is quite naive: a master thread initializes the matrix then create
 Each thread will compute half of the result matrix: the first will do the even index and the second the odds, which gives us the \alg{mat-par}.
 
 
-If we go back to figure \fig{ocelotl-th0}, we see clearly the master/slave behavior of the threads.
+If we go back to \fig{ocelotl-th0}, we see clearly the master/slave behavior of the threads.
 While the two slave threads have a similar memory access pattern, the master threads seems to do all its access at the beginning of the execution.
 Moreover it seems to access all the memory at once.
 We can also see that it does less access at a time as the blocks are lighter.
@@ -151,13 +151,13 @@ From this picture, we can clearly identify two phases:
 \begin{figure}[htb]
     \centering
     \includegraphics[width=\textwidth]{Moca-RR/multModuloThreadViewInit.png}
-    \caption{Memory-gantt view of a paralell matrix multiplication,
+    \caption{Memory-gantt view of the naïve parallel matrix multiplication ,
     initialisation}
     \label{fig:ocelotl-th1}
 \end{figure}
 
 Now let's zoom on the initialisation step.
-The result is shown in figure \fig{ocelotl-th1}.
+The result is shown in \fig{ocelotl-th1}.
 We can clearly see that, contrary to what we thought on the last picture, during the initialisation phase, only the master thread is working.
 We can identify a three diagonal patterns happening at the same time, it correspond to the matrix initialisation.
 Moreover we see a few green access, while all the other are reds.
@@ -166,7 +166,7 @@ Therefore we can see that the master thread also access to some private data.
 Among these data, we can find a pid array used to wait the end of the slave threads.
 
 The cartography view of this initialisation phase, is almost identical except that we won't be able to know which thread is responsible for the accesses.
-However the global cartography view shown in figure \fig{ocelotl-carto0} gives more information.
+However the global cartography view shown in \fig{ocelotl-carto0} gives more information.
 In addition to the two execution phases, we can clearly identify three memory structures with different access patterns.
 Those structures correspond to the matrices.
 For the first and the third, we can see a regular diagonal access pattern which means that the matrix are accessed linearly.
@@ -175,12 +175,11 @@ As most cache optimizations such as \emph{prefetching} are designed for linear a
 \begin{figure}[htb]
     \centering
     \includegraphics[width=\textwidth]{Moca-RR/multModuloCartoViewMiddle2.png}
-    \caption{Cartography view of a parallel matrix multiplication, computing
-    phase.}
+    \caption{Cartography view of the naïve parallel matrix multiplication, computing phase.}
     \label{fig:ocelotl-Carto2}
 \end{figure}
 
-By focusing on the middle of the execution and setting the aggregation to $0$, we obtain the figure \fig{ocelotl-Carto2}.
+By focusing on the middle of the execution and setting the aggregation to $0$, we obtain the \fig{ocelotl-Carto2}.
 We can't identify a clear pattern on the middle matrix, however, we see that at each time slots we access more a slightly different part of the matrix (the lighter a block is, the less access it contains).
 The access on this matrix seems  dense and not designed to fit in a cache.
 Now, if we take a look at the algorithm \alg{mat-par}, we can explain the density of the accesses.
@@ -202,6 +201,7 @@ Although this example is quite simple, it shows how \gls{Moca}'s trace can easil
 \end{itemize}
 
 \section{Second attempt}
+\label{sec:visu-second}
 
 \begin{itemize}
     \item Exploration with R rather than full tool.
@@ -228,9 +228,11 @@ Although this example is quite simple, it shows how \gls{Moca}'s trace can easil
     \item Easy switch between views
     \item Limit: when lots of library
     \item Require that the user masters R
+    \item Labook: efficient for exploring, not for reproducing same analysis on different traces
 \end{itemize}
 
-\section{Possible future work}
+\section{Perspectives and conclusions}
+\label{sec:visu-cncl}
 
 Build user friendly trace viewer based on R analysis, using R-shiny or user friendly shell on top of R.
 
@@ -268,9 +270,9 @@ Hypothetical tool
 
 \subsection{Automatic analysis}
 
-\DB{Voir rapport Sebastien}
+\DB{Voir rapport Sebastien, sur Hopi}
 
-\section{Discussions}
+\subsection{Discussions}
 
 \begin{itemize}
     \item Still ongoing work
@@ -278,6 +280,7 @@ Hypothetical tool
     \item Need meaningful way to zoom / aggregate
     \item Ocelotl main drawback: impossible to switch between aspects.
     \item Compromise: facility to interact with the trace, semantic of the interaction
+    \item Need to put the user in the loop to filter out yet user don't know everything \ldots
     \item Possible solution: build abstraction on top of R
 \end{itemize}
 
