@@ -53,29 +53,72 @@ Additionally it has a multi view representation which means that several views o
 For instance a user can start inspecting a trace with a Gantt chart, focus on a small part and then look at a pie chart of the event distribution in this subset of the trace.
 \gls{Framesoc} is optimized to make such analysis as smooth as possible.
 
+\begin{figure}[htb]
+    \centering
+    \includegraphics[width=\linewidth]{ocelotl}
+    \caption[Screenshot of Ocelotl.]{
+        Screenshot of Ocelotl highlighting an irregularity in a trace.\\
+        Overview of the trace on the left, curves showing the impact of the $p$ parameters on the complexity of the trace on the bottom right.\\
+        Image from~\cite{Dosimont14Ocelotl}.}
+    \label{fig:ocelotl-overview}
+\end{figure}
 
-\gls{Ocelotl}~\cite{Pagano13TraceRR}
-\begin{itemize}
-    \item Aggregation based on entropy
-    \item Interactive aggregation / desaggregation
-    \item Zoom capacity
-\end{itemize}
+\gls{Ocelotl}~\cite{Dosimont14Ocelotl} is an analysis tool for \gls{Framesoc}.
+This tool is particularly interesting for us as it is provide an aggregated overview of a trace.
+The idea behind \gls{Ocelotl} is that a trace with too much entities (events or event producers) is not understandable, consequently, such trace should be analyzed with a \emph{systemic approach}.
+This means considering the whole trace as a system and finding a macroscopic representation of that system that contain an amount of information understandable by a human.
+To do so, it uses an aggregation methodology proposed by Lamarache-Perrin~\cite{Lamarche_Perrin14Agregation} and adapted for trace analysis.
+This methodology cut the trace on small slices over the two dimensions time and space (event producers).
+Then it consider each meaningful partition possible, benefiting from the structure on time and space to reduce the number of possibility.
+For instance merging two slices that are not continuous over time is not possible as it would not mean anything.
+In addition, it uses a parameter $p<[0,1]$ that controls the trade-off between information loss and data reduction and find the optimal partition for this parameters.
+Once the first visualization is generated, \gls{Ocelotl} provide the ability to explore the trace (zoom, use \gls{Framesoc} filters \ldots) and change the $p$ parameter.
+The usual workflow with \gls{Ocelotl} is starting with a high $p$, where the trace is mostly aggregated, zoom on anomalies or interesting parts and increasing $p$ to understand more precisely what phenomena we are observing.
+To make easy the exploration, \gls{Ocelotl} provides a small window that shows the amount of information loss and data reduction for each possible value of $p$, as shown in the bottom right of \fig{ocelotl-overview}.
+
 
 \subsection{Trace Description}
 
-Explain:
-\begin{itemize}
-    \item Trace representation
-    \item Artificial hierarchy
-        \begin{itemize}
-            \item Aggregate same structure first
-            \item Reduce the number of possible aggregations
-            \item MemRoot => Structs / Contiguous / Stacks => \ldots => Pages => Lines => Addresses
-        \end{itemize}
-    \item Access = variable
-    \item Other info as event parameters (means influence aggregate but hard to visualize)
-    \item One trace per visu: Phy, Virt, Per threads
-\end{itemize}
+As explained earlier, \gls{Moca} traces are spread on five dimensions while \gls{Framesoc} is designed for two dimensional traces (time and event producers).
+Nevertheless we can use the \emph{event type} of \gls{Framesoc} to differentiate reads from writes.
+Moreover, event producers are organized hierarchically, therefore we can represent two dimensions as one by using this hierarchy.
+For instance if we consider that each thread is a root level event producer and embed the whole memory hierarchy, we can represent at the same time memory and threads.
+Finally, as we cannot reorganize dynamically the hierarchy of event producers, another workaround consist in creating several traces with different event producer hierarchy.
+
+We designed a \gls{Framesoc} importer for \gls{Moca} traces which produces three different traces.
+The first one create an event hierarchy based on the virtual memory addresses.
+The second one does the same thing but for physical addresses.
+Finally, in the third one, each thread is a root event producers and embed the whole memory hierarchy.
+
+The more event producer there are, the more partitions \gls{Ocelotl} must consider to compute the aggregation.
+Yet, as \gls{Ocelotl} uses the structure of the event producer hierarchy to reduce the number of allowed partitions, we can counter balanced the huge number of event producers by creating an artificial hierarchy in the memory.
+We can build a meaningful hierarchy that also adds some semantic to the trace: to do so we create a virtual \emph{Memory Root} event producer that is the parent of every event producers.
+Then the first level of event producers is composed of the stacks and data structures.
+All the addresses that are not in these set, are merged if they are contiguous, creating chunks of continuous addresses which are also first level event producers.
+Then each level is obtained by splitting the previous one on two or three parts, until we arrive at the page level.
+The pages are the leaves of this virtual memory hierarchy.
+
+\begin{figure}[htb]
+    \centering
+    \input{tikz/sharing-detection}
+    \caption[Sharing detection on Moca traces.]{
+        Sharing detection on a Moca trace, where three threads accesses the same page over the time.\\
+        Each access is represented as an interval of time.\\
+        Original trace on the left, accesses are not annotated, timelines are not synchronized.\\
+        Modified trace on the right: timeline are synchronized and accesses are annotated with the number of thread involved in the sharing.
+    }
+    \label{fig:sharing-detection}
+\end{figure}
+
+To keep the thread information in the two first traces, we pre process \gls{Moca} traces to mark each access as shared or private.
+In \gls{Moca} traces, an access is timestamped by the beginning and end of the chunk to which it belongs.
+Furthermore, \gls{Moca} traces are \emph{complete} at the page granularity.
+Hence, we consider that an access is shared if and only if two threads accessed the same page during intersecting time lapse.
+\fig{sharing-detection} show how we transform \gls{Moca} traces to add sharing information.
+
+Each access is represented by a variable, whose value is the number of threads involved in the access.
+Our traces have four types of accesses: \texttt{PrivateRead}, \texttt{PrivateWrite}, \texttt{SharedRead} and \texttt{SharedWrite}.
+Finally, the \gls{CPU} on which the access occurred is store as an event parameter.
 
 \subsection{Example}
 
@@ -205,7 +248,7 @@ Although this example is quite simple, it shows how \gls{Moca}'s trace can easil
     \item  Conclusion: tool not well suited, need something more flexible
 \end{itemize}
 
-\section{Second attempt}
+\section{Programmatic exploration}
 \label{sec:visu-second}
 
 \begin{itemize}

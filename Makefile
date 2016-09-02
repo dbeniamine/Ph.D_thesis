@@ -48,29 +48,49 @@ $(AUX): $(TEXALLSRC)
 	$(TEXCOMPILE)
 	$(TEXCOMPILE)
 
-tests: $(PDF) testrefs testbib testplaceholders testfonts testpdfversion testcountpages testcountbib
+tests: $(PDF) testrefs testbib testbibtex testplaceholders testfonts testpdfversion testcountpages testcountbib
+
+testbibtex:
+	@echo "Looking for Warnings in bibtex compilation"
+	[ `$(BIBCOMPILE) | grep -c "^Warning"` -eq 0 ]
+	@echo "PASSED"
 
 testbib:
+	@echo "Checking for bad citations"
 	[ `pdfgrep -c '\[\?\]' $(PDF)` -eq 0 ]
+	@echo "PASSED"
 
 testrefs:
+	@echo "Checking for bad references"
 	[ `pdfgrep -c '\?\?' $(PDF)` -eq 0 ]
+	@echo "PASSED"
 
 testfonts:
+	@echo "Checking that all fonts are embedded"
 	[ -z "`pdffonts $(PDF) | awk '{print $$5}' | grep no`" ]
+	@echo "PASSED"
 
 testpdfversion:
+	@echo "Checking version of the produced pdf"
 	[ "`pdfinfo $(PDF) | grep "version" | awk '{print $$3}'`" = "1.4" ]
+	@echo "PASSED"
 
 testplaceholders:
+	@echo "Checking for remaining placeholders"
 	[ `pdfgrep -c '<\+\+>' $(PDF)` -eq 0 ]
+	@echo "PASSED"
 
 testcountbib:
-	[ `grep -c bibitem $(TEXSRC:.tex=.bbl)` -ge 70 ]
+	$(eval BITEMS=$(shell grep -c bibitem $(TEXSRC:.tex=.bbl)))
+	@echo "Total bibliographic entries: $(BITEMS)"
+	[ $(BITEMS) -ge 70 ]
+	@echo "PASSED"
 
 testcountpages:
-	[ `pdfinfo $(PDF) | grep Pages | awk '{print $$2}'` -gt 110 ]
-
+	$(eval PAGES=$(shell pdfinfo $(PDF) | grep Pages | awk '{print $$2}'))
+	@echo "Total pages: $(PAGES)"
+	[ $(PAGES) -gt 110 ]
+	@echo "PASSED"
 
 .PHONY: clean distclean
 
