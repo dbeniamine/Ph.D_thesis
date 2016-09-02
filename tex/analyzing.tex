@@ -13,10 +13,11 @@ As we are not used to visualize things in more than three dimension, to analyze 
 The contribution presented in this chapter consists in two different methods to analyze \gls{Moca} traces:
 \begin{itemize}
     \item The first method relies on an existing generic trace management tool called \gls{Framesoc}~\cite{Pagano14frameSoC} and more specifically one plugin called \gls{Ocelotl}~\cite{Dosimont14Ocelotl} that provide aggregated views of a trace.\\
-        We have implemented an importer to analyze \gls{Moca} traces in \gls{FrameSoc} that is distributed on Github under GPL License:\\
+        We have implemented an importer to analyze \gls{Moca} traces in \gls{Framesoc} that is distributed on Github under GPL License:\\
         \url{https://github.com/dbeniamine/framesoc\_importer\_moca}.\\
+        \DB{Distribute properly moca importer}
         The proposed visualizations are presented in an Inria Research Report~\cite{Beniamine15Memory}.
-    \item The second method relies on \gls{R}, it is an ongoing work, publicly available online:\DB{Make it public}
+    \item The second method relies on \gls{R}, it is an ongoing work, publicly available online:\DB{Make labbook public}
 \end{itemize}
 
 This chapter is organized as follows: first we present our analysis of \gls{Moca} traces with \gls{Framesoc} and \gls{Ocelotl} with an example and discuss the limits of this method in \sect{visu-first}.
@@ -24,36 +25,40 @@ Then we propose a second, more flexible approach base on \gls{R} in \sect{visu-s
 Finally we present some perspective of work to improves these analysis and our conclusions in \sect{visu-cncl}.
 
 
-\section{First attempt}
+\section{Interactive visualization of aggregated traces}
 \label{sec:visu-first}
 
-Modelization, meaningful agregation
-Rely on Framesoc~\cite{Pagano14frameSoC} tool Ocelotl~\cite{Dosimont14Ocelotl}
+As \gls{Moca} traces are spread over five dimensions and as the address space of an application can be quite large, we a way to navigate easily in the trace and highlight interesting parts.
+Consequently, we are looking for a tool that have a model of the trace and the ability to spot anomalies.
+While several generic trace manager tools such as \gls{HPCToolkit}~\cite{Adhianto10HPCTOOLKIT} are able to import generic traces, we decided to use \gls{Framesoc}~\cite{Pagano14frameSoC}.
+This decision was mainly motivate by one of \gls{Framesoc} visualization tool, called \gls{Ocelotl}~\cite{Dosimont14Ocelotl} that is designed specifically to aggregate similar parts of a trace and identify anomalies.
 
-\subsection{Framesoc and Ocelotl}
+\subsection{FrameSoc and Ocelotl}
 
+\gls{Framesoc} is a generic trace management, it provides importers to read traces from many different format.
+From its point of view a trace consists on four sets:
+\begin{enumerate}
+    \item Some meta data on the trace, such as the name of the trace, the application traced, the number of \glspl{CPU} used, the \gls{OS} etc.
+    \item A set of \emph{Event Producers}: which are entities able to produce some \emph{Events}, in classic performance traces the Event producers are the \glspl{CPU}.
+    \item A set of \emph{Events}, \emph{Variables} and \emph{States}: for instance in a classic trace, a call to a \gls{MPI} function could be an event, and a \gls{CPU} could be in \emph{idle} state after a call to \texttt{MPI\_Receive}. Variables are used to represent events that have a specific values and last over time.
+    \item A set of \emph{Links} that can be used to represent causality between events, variables and states.
+\end{enumerate}
+
+To analyze a trace from an unknown format in \gls{Framesoc}, we need to write an importer which is a relatively simple task.
+Indeed \gls{Framesoc} is implemented as an Eclipse plugin, consequently an importer is a small piece of java code that read a trace file, create the sets described above and store them in a database, using \gls{Framesoc} \gls{API}.
+The main difficulty of this task is to represent a trace with \gls{Framesoc} model.
+
+\gls{Framesoc} provides several functionalities to explore a trace such as filtering events by type, name, focusing on a time frame, etc.
+Additionally it has a multi view representation which means that several views of the trace can be opened at the same time and synchronized.
+For instance a user can start inspecting a trace with a Gantt chart, focus on a small part and then look at a pie chart of the event distribution in this subset of the trace.
+\gls{Framesoc} is optimized to make such analysis as smooth as possible.
+
+
+\gls{Ocelotl}~\cite{Pagano13TraceRR}
 \begin{itemize}
-    \item \gls{Framesoc}
-        \begin{itemize}
-            \item Generic trace representation
-                \begin{itemize}
-                    \item Event Producers
-                    \item Event / Variables
-                    \item Event Types
-                    \item State
-                    \item Traces DB
-                \end{itemize}
-            \item Multi view
-            \item Possibility to filter
-            \item Optimized (caches etc.)
-            \item Easy to build importers
-        \end{itemize}
-    \item \gls{Ocelotl}~\cite{Pagano13TraceRR}
-        \begin{itemize}
-            \item Aggregation based on entropy
-            \item Interactive aggregation / desaggregation
-            \item Zoom capacity
-        \end{itemize}
+    \item Aggregation based on entropy
+    \item Interactive aggregation / desaggregation
+    \item Zoom capacity
 \end{itemize}
 
 \subsection{Trace Description}
