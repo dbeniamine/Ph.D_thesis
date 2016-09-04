@@ -122,13 +122,23 @@ Finally, the \gls{CPU} on which the access occurred is store as an event paramet
 
 \subsection{Example}
 
-\DB{Adapt from Moca RR}
+\begin{algorithm}
+    \caption{Naïve parallel matrix multiplication.}
+    \label{alg:mat-par}
+    \begin{algorithmic}
+        \For{i=0; i<sz; i++}
+            \For{j=myid(); j<sz; j+=NbThreads()}
+                \For{k=0; k<sz; k++}
+                    \State Res[i][j]+=A[i][k]*B[k][j]
+                \EndFor
+            \EndFor
+        \EndFor
+    \end{algorithmic}
+\end{algorithm}
 
-\gls{Moca}'s output is designed to be imported inside the trace visualisation framework \gls{Framesoc} \cite{Pagano13Trace}, and to be visualised using \gls{Ocelotl} \cite{Dosimont14Trace}.
-This tool uses an adaptive algorithm to aggregate data.
-This algorithm returns a set of results which provides a trade-off between the information loss and the reduction of the visualisation complexity.
-The user has then the possibility to move the cursor between a precise view of the trace or something more aggregated.
-Moreover it provides the ability to navigate through the trace, focus on one type of event or another.
+To illustrate these visualizations we implemented an extremely naïve parallel matrix multiplication.
+In this example, a first thread does the whole initialization, then create two threads that will do the actual computations.
+Furthermore, we split the work between the threads in a round robin way, the first thread computes all even columns and the second does the odd ones as described in \alg{mat-par}.
 
 \begin{figure}[htb]
     \centering
@@ -137,56 +147,13 @@ Moreover it provides the ability to navigate through the trace, focus on one typ
     \label{fig:ocelotl-th0}
 \end{figure}
 
+\fig{ocelotl-th0} is a screenshot of \gls{Ocelotl} visualization of \gls{Moca} trace, where the hierarchy starts by the threads of the application.
+We can see the hierarchy on the Y-axis, starting with the three threads, each embedding the whole memory hierarchy.
+The X-axis represent temporal evolution.
+We call this view Memory-gantt.
 
-We provide two different views of \gls{Moca}'s traces.
-The first, is a \emph{memory gantt chart}, it shows memory usage of each threads, as we can see in \fig{ocelotl-th0}.
-This view can be used to spot difference in the memory usage in terms of quantity or pattern.
-The second, quite similar to HeapInfo's cartography, displays the memory addresses accessed depending on the time, as we can see in \fig{ocelotl-carto0}.
-It allows the user to focus on the global memory pattern.
-We provide both views for physical and virtual addresses.
-Most of the time virtual addresses are recommended to have a better understanding of what the code is doing.
-However, working on physical addresses can be useful for \emph{NUMA} machines to detect remote access.
-We will explain how to use these views in the next section.
-
-\begin{figure}[htb]
-    \centering
-    \includegraphics[width=\textwidth]{Moca-RR/multModuloCartoView.png}
-    \caption{Cartography view of the naïve parallel matrix multiplication.}
-    \label{fig:ocelotl-carto0}
-\end{figure}
-
-On both figures, we can notice that the memory hierarchy (on the left) is a tree.
-For the first view, the top level correspond to the threads/ processes.
-In \fig{ocelotl-th0} we can clearly identify $3$ threads.
-The second level is created by merging together successive set of addresses.
-Every other level is computed by cutting the previous into two or three parts.
-The last level corresponds to the pages address detected by \gls{Moca}.
- Although this hierarchy is a bit artificial it shows the different parts of the memory (stack, heap, library, etc.).
-Furthermore, it can be used to compute a pre aggregation which can speed \gls{Ocelotl}~up.
-For the cartography view, the tree is identical, except that the first level is the second one of the memory gantt view.
-
-\begin{algorithm}
-    \caption{Naïve parallel matrix multiplication.}
-    \label{alg:mat-par}
-    \begin{algorithmic}
-        \For{l=0; l<sz; l++}
-            \For{c=myid(); c<sz; c+=NbThreads()}
-                \For{k=0; k<sz; k++}
-                \State Res[l][c]=A[l][k]*B[k][c]
-                \EndFor
-            \EndFor
-        \EndFor
-    \end{algorithmic}
-\end{algorithm}
-
-In this section, we show an example use of \gls{Moca}.
-The studied application is a parallel matrix multiplication done by $2$ threads.
-The algorithm is quite naive: a master thread initializes the matrix then creates two threads.
-Each thread will compute half of the result matrix: the first will do the even index and the second the odds, which gives us the \alg{mat-par}.
-
-
-If we go back to \fig{ocelotl-th0}, we see clearly the master/slave behavior of the threads.
-While the two slave threads have a similar memory access pattern, the master threads seems to do all its access at the beginning of the execution.
+From this view, we see clearly the master slave behavior of the threads.
+While the two slave threads have a similar memory access pattern, the master threads do all its access at the beginning of the execution.
 Moreover it seems to access all the memory at once.
 We can also see that it does less access at a time as the blocks are lighter.
 From this picture, we can clearly identify two phases:
@@ -198,10 +165,9 @@ From this picture, we can clearly identify two phases:
 
 \begin{figure}[htb]
     \centering
-    \includegraphics[width=\textwidth]{Moca-RR/multModuloThreadViewInit.png}
-    \caption{Memory-gantt view of the naïve parallel matrix multiplication ,
-    initialisation}
-    \label{fig:ocelotl-th1}
+    \includegraphics[width=\textwidth]{Moca-RR/multModuloCartoView.png}
+    \caption{Cartography view of the naïve parallel matrix multiplication.}
+    \label{fig:ocelotl-carto0}
 \end{figure}
 
 Now let's zoom on the initialisation step.
@@ -213,12 +179,19 @@ Here a red access mean that it is on a page used by several threads, while green
 Therefore we can see that the master thread also access to some private data.
 Among these data, we can find a pid array used to wait the end of the slave threads.
 
-The cartography view of this initialisation phase, is almost identical except that we won't be able to know which thread is responsible for the accesses.
+\begin{figure}[htb]
+    \centering
+    \includegraphics[width=\textwidth]{Moca-RR/multModuloThreadViewInit.png}
+    \caption{Memory-gantt view of the naïve parallel matrix multiplication ,
+    initialisation}
+    \label{fig:ocelotl-th1}
+\end{figure}
+
+The cartography view (trace without the threads in the hierarchy) of this initialisation phase, is almost identical except that we won't be able to know which thread is responsible for the accesses.
 However the global cartography view shown in \fig{ocelotl-carto0} gives more information.
 In addition to the two execution phases, we can clearly identify three memory structures with different access patterns.
 Those structures correspond to the matrices.
-For the first and the third, we can see a regular diagonal access pattern which means that the matrix are accessed linearly.
-As most cache optimizations such as \emph{prefetching} are designed for linear access, his is a good pattern.
+For the first and the third, we can see a regular diagonal access pattern which means that the matrix are accessed linearly, which is an efficient memory pattern.
 
 \begin{figure}[htb]
     \centering
@@ -230,23 +203,31 @@ As most cache optimizations such as \emph{prefetching} are designed for linear a
 By focusing on the middle of the execution and setting the aggregation to $0$, we obtain the \fig{ocelotl-Carto2}.
 We can't identify a clear pattern on the middle matrix, however, we see that at each time slots we access more a slightly different part of the matrix (the lighter a block is, the less access it contains).
 The access on this matrix seems  dense and not designed to fit in a cache.
-Now, if we take a look at the algorithm \alg{mat-par}, we can explain the density of the accesses.
-We go through all the matrix B while working on only one line of A.
+This density of accesses is coherent with the behavior describer in \alg{mat-par}
+Indeed, each thread goes through all the matrix B while working on only one line of A.
 Moreover the two threads works on two different columns at the same time, while the work on the same lines of A and Res.
 Due to the representation of 2D matrix in \texttt{C}, each access on B is separated from $sz$ doubles.
 Hence \gls{Ocelotl} groups almost everything in a huge chunks of access on all the matrices.
 To improve this application, we should try to work on small blocks of B.
 This is indeed the strategy used to compute efficient matrix multiplication.
-Although this example is quite simple, it shows how \gls{Moca}'s trace can easily highlight wrong memory access patterns.
 
 \subsection{Discussion}
 
-\begin{itemize}
-    \item  Not that interactive / too slow
-    \item  Impossible to switch “aspect” of trace without reloading full trace
-    \item  Hard to identify data structures
-    \item  Conclusion: tool not well suited, need something more flexible
-\end{itemize}
+Although we were able to visualize all the inefficient pattern in the example described previously, we were not completely convinced of the visualization based on \gls{Ocelotl}.
+Indeed, the first limitation comes from the fact that \gls{Framesoc} trace description is quite static and does not permit to change the event producers.
+As a result we had to generate three traces (virtual addresses, physical addresses and by threads) to provide different visualizations.
+This means that if we spot an interesting pattern in a visualization and want to look at it from another point of view, we need to reload the whole trace and  which breaks the flow of trace analysis.
+Indeed \gls{Ocelotl} initial computations are slow as it needs to compare all possible partitions.
+Additionally, by doing so we loose all filtering and zoom done on the previous trace.
+
+\DB{Reformuler:}
+Another limit of this approach is that it is hard to identify (name) the data structure.
+Furthermore selecting only a set of data structure is slow as \gls{Framesoc} is not designed for handling as much event producers as we have with memory traces.
+Finally meta data about there size or number of accesses are impossible to obtain.
+
+To conclude, these visualization are interesting and enables identification all classic mistakes.
+Yet it seems that in the end \gls{Ocelotl} tool is no well suited for memory traces.
+Therefore we should try a more dynamic approach that permit to change the point of view easily.
 
 \section{Programmatic exploration}
 \label{sec:visu-second}
