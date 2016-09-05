@@ -2,7 +2,7 @@
 TEXSRC = $(wildcard *.tex)
 BIBSRC = $(wildcard *.bib)
 # Additional sources
-SUBDIRS=tex custom style
+SUBDIRS=tex custom style tikz
 TEXSUBSRC = $(foreach d, $(SUBDIRS),$(wildcard $d/*.tex))
 TEXALLSRC = $(TEXSRC) $(TEXSUBSRC)
 
@@ -48,7 +48,12 @@ $(AUX): $(TEXALLSRC)
 	$(TEXCOMPILE)
 	$(TEXCOMPILE)
 
-tests: $(PDF) testrefs testbib testbibtex testplaceholders testfonts testpdfversion testcountpages testcountbib
+tests: $(PDF) testbadspace testrefs testbib testbibtex testplaceholders testfonts testpdfversion testcountpages testcountbib
+
+testbadspace:
+	@echo "Looking bad spaces '\ u8'"
+	[ -z "`grep " " $(TEXALLSRC)`" ]
+	@echo "PASSED"
 
 testbibtex:
 	@echo "Looking for Warnings in bibtex compilation"

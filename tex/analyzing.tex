@@ -31,7 +31,7 @@ Finally we present some perspective of work to improves these analysis and our c
 As \gls{Moca} traces are spread over five dimensions and as the address space of an application can be quite large, we a way to navigate easily in the trace and highlight interesting parts.
 Consequently, we are looking for a tool that have a model of the trace and the ability to spot anomalies.
 While several generic trace manager tools such as \gls{HPCToolkit}~\cite{Adhianto10HPCTOOLKIT} are able to import generic traces, we decided to use \gls{Framesoc}~\cite{Pagano14frameSoC}.
-This decision was mainly motivate by one of \gls{Framesoc} visualization tool, called \gls{Ocelotl}~\cite{Dosimont14Ocelotl} that is designed specifically to aggregate similar parts of a trace and identify anomalies.
+This decision was mainly motivate by one of \gls{Framesoc} visualization tool, called \gls{Ocelotl}~\cite{Dosimont14Ocelotl} that is designed specifically to aggregate similar parts of a trace and identify anomalies.
 
 \subsection{FrameSoc and Ocelotl}
 
@@ -79,7 +79,7 @@ To make easy the exploration, \gls{Ocelotl} provides a small window that shows t
 
 \subsection{Trace Description}
 
-As explained earlier, \gls{Moca} traces are spread on five dimensions while \gls{Framesoc} is designed for two dimensional traces (time and event producers).
+As explained earlier, \gls{Moca} traces are spread on five dimensions while \gls{Framesoc} is designed for two dimensional traces (time and event producers).
 Nevertheless we can use the \emph{event type} of \gls{Framesoc} to differentiate reads from writes.
 Moreover, event producers are organized hierarchically, therefore we can represent two dimensions as one by using this hierarchy.
 For instance if we consider that each thread is a root level event producer and embed the whole memory hierarchy, we can represent at the same time memory and threads.
@@ -147,7 +147,7 @@ Furthermore, we split the work between the threads in a round robin way, the fir
     \label{fig:ocelotl-th0}
 \end{figure}
 
-\fig{ocelotl-th0} is a screenshot of \gls{Ocelotl} visualization of \gls{Moca} trace, where the hierarchy starts by the threads of the application.
+\fig{ocelotl-th0} is a screenshot of \gls{Ocelotl} visualization of \gls{Moca} trace, where the hierarchy starts by the threads of the application.
 We can see the hierarchy on the Y-axis, starting with the three threads, each embedding the whole memory hierarchy.
 The X-axis represent temporal evolution.
 We call this view Memory-gantt.
