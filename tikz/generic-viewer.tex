@@ -1,0 +1,144 @@
+%!TEX encoding=UTF-8 Unicode
+
+% Layers
+\pgfdeclarelayer{background}
+\pgfdeclarelayer{foreground}
+\pgfsetlayers{background,main,foreground}
+
+\definecolor{TraceCol}{HTML}{B2ABD2}
+\definecolor{UserCol}{HTML}{FDB863}
+\definecolor{ViewerCol}{HTML}{E66101}
+\definecolor{EntityCol}{HTML}{5E3C99}
+
+\tikzstyle{entity} = [drawed box=EntityCol]
+\tikzstyle{userbox} = [filled box=UserCol,shape=circle]
+
+\tikzstyle{dep}  = [-latex,TraceCol,thick]
+\tikzstyle{exec} = [-latex,ViewerCol,thick]
+\tikzstyle{copy} = [-latex, dashed, thick, UserCol]
+
+%\newlength{\cornerlength}
+%\setlength{\cornerlength}{.1}
+
+\tikzset{
+  basic box/.style = {
+    shape = rectangle,
+    draw,
+    text centered,
+    text width=5em,
+    },
+  rounded box/.style={
+    basic box,
+    rounded corners,
+  },
+  drawed box/.style ={
+    rounded box,
+    draw = #1,},
+  filled box/.style = {
+    rounded box,
+    draw  = #1,
+    fill  = #1,
+  },
+  concrete box/.style = {
+    shape = rectangle,
+    text centered,
+    text width=5em,
+    draw  = #1,
+    fill  = #1,
+  },
+    corner/.style={
+      shape=rectangle,
+      fill=white,
+      alias=this,
+      append after command = {
+          \pgfextra{
+              \begin{pgfonlayer}{foreground}
+                % Borders of the corner
+                \draw [] (this.south west) -- (this.south east);
+                \draw [] (this.south west) -- (this.north west);
+                \draw [] (this.north west) -- (this.south east);
+                % Borders of the main rectangle
+                \draw [] (#1.north west)   -- (this.north west);
+                \draw [] (#1.north west)   -- (this.north west);
+                \draw [] (#1.north west)   -- (#1.south west);
+                \draw [] (#1.south west)   -- (#1.south east);
+                \draw [] (#1.south east)   -- (this.south east);
+              \end{pgfonlayer}
+            }
+      }
+  },
+  file/.style ={
+      shape = rectangle,
+      text centered,
+      fill = TraceCol,
+      minimum height = 5.5em,
+      text width = 3.5em,
+      append after command = {
+            \pgfextra{\let\TikZlastnode\tikzlastnode}
+                node [corner=\TikZlastnode, anchor=north east] (corner-\TikZlastnode) at
+                (\TikZlastnode.north east){}
+          }
+  },
+  fileT/.style ={
+      file,
+      fill =TraceCol,
+  },
+  fileV/.style ={
+      file,
+      fill =ViewerCol,
+  },
+  header node/.style = {
+    %Minimum Width = header nodes,
+    font          = \strut\large,%\ttfamily,
+  %  text depth    = +0pt,
+    fill          = #1,
+    text         = white,
+    draw},
+    header/.style n args={4}{%
+    inner ysep = +1.7em,
+    append after command = {
+      \pgfextra{\let\TikZlastnode\tikzlastnode}
+      node [header node=#2,#4] (header-\TikZlastnode) at (\TikZlastnode.#3) {#1}
+      %node %[span = (\TikZlastnode)(header-\TikZlastnode)]
+       % at (fit bounding box) (h-\TikZlastnode) {}
+    }
+  },
+  hv/.style = {to path = {-|(\tikztotarget)\tikztonodes}},
+  vh/.style = {to path = {|-(\tikztotarget)\tikztonodes}},
+  fat blue line/.style = {ultra thick, blue}
+}
+\begin{tikzpicture}[font=\small,scale=1]
+
+    %expe env
+    \node [fileT] (f0) at (0,0) {Main Data};
+    \node [fileT] (f1) at (2,0) {Meta Data};
+    \node [fileT] (f2) at (1,-2.5) {Other File};
+
+    \begin{pgfonlayer}{background}
+        \node[entity,fit=(f0) (f1) (f2),%
+        header={Trace}{EntityCol}{north}{}] (trace) {};
+    \end{pgfonlayer}
+
+    \node [filled box=TraceCol]   (rqf) at (0, -6) {Required files};
+    \node [concrete box=TraceCol] (pc) at  (3, -6) {Parsing code};
+    \node [concrete box=TraceCol] (pp) at  (1.5,-8) {Predefined plots};
+
+    \begin{pgfonlayer}{background}
+        \node[entity,fit=(rqf) (pc) (pp),%
+        header={Configuration}{EntityCol}{south}{}] (config) {};
+    \end{pgfonlayer}
+
+    \node [userbox] (user) at (5,-4) {User};
+
+    \node[filled box=ViewerCol] (shell) at (8,-4) {\textbf{Shell:} R and Commands (pop, zoom, filtrate)};
+ 
+    \node[filled box=ViewerCol] (stack) at (11,-4) {R dataframe Stack};
+
+    \begin{pgfonlayer}{background}
+        \node[entity,fit=(shell) (stack),%
+            header={Viewer}{EntityCol}{north}{}] (viewer) {};
+    \end{pgfonlayer}
+
+
+\end{tikzpicture}
+% vim: et si sta lbr  sw=4 ts=4 spelllang=en_us

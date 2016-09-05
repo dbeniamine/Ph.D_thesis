@@ -232,32 +232,92 @@ Therefore we should try a more dynamic approach that permit to change the point 
 \section{Programmatic exploration}
 \label{sec:visu-second}
 
-\begin{itemize}
-    \item Exploration with R rather than full tool.
-    \item Helps finding useful views
-    \item R dataframes => weel design to switch point of view
-    \item Work with labboks \DBm{Ref ?}
-\end{itemize}
+The main drawback of using a generic visualization tool for analyzing \gls{Moca} traces come from the difficulty to switch the perspective from which we visualize the data.
+Hence, a more programmatic approach may enable to work closer to the data thus ease this point of view switch.
+In \gls{R}, data are usually stored in huge dataframes, each row of a dataframe represent one observation and each column give the value of a parameter or a measure for this observation.
+While this representation consume a lot of memory, it ease switching point of view, as the same dataframe can represent several observations.
+For these reason, we analyzed several traces with \gls{R}, for more reproducibility, we store the evolution of our work in a labbook, as described in~\cite[Chapter~4,p~54]{Stanisic15Reproducible}.
+
+While this approach is not user friendly as it requires to know how to write efficient \gls{R} code, it is quite flexible.
+Indeed, after a few analysis we obtain a basic procedure to analyze traces (parsing, transforming data, showing some generic visualization) and we can adapt each step to the trace.
+For instance we might want to ignore some parts of the trace very soon to focus on some data structures, or after analyzing one plot we might think of another representation of data that might be meaningful in this case.
 
 \subsection{Design}
 
+Our analysis converged very quickly to a classical yet adaptable analysis pipeline:
 \begin{enumerate}
-    \item Parsing (csv)
-    \item Retrieving mapping page => structures
-    \item Creating simplified data frames
-    \item Predefined plots
-    \item Easily zoom  with R selection
-    \item Modify plots and/or data frame
+    \item Parsing: reading \gls{Moca} traces (to which we have applied the sharing detection written for \gls{Framesoc} and depicted in \fig{sharing-detection})
+        and representing the data in a \gls{R} friendly way. At the end of this step, we have two data frame, the main one contains each access, and the other one the list of data structures.
+    \item Retrieving the mapping between structures and pages, this step is the most costly one, but can be speed it up by several means:
+        \begin{itemize}
+            \item During the parsing step, we sort data structures by addresses, then we can easily compute the minimum and maximum address that are in a structure and ignore all accesses out of theses bounds.
+            \item As there are significantly less data structures than memory addresses, we can do the mapping by applying on the data frame representing the structures, a function that returns a vector with one entry per line of the main data frame.
+                When this function is applied, each data structures adds it names to the addresses that belongs to it.
+                In the end we just have to add this vector as a column of the main data frame.
+        \end{itemize}
+    \item Creating simplified data frames: At this point, the main data frames contains a set of access where shared access appears one time for each thread involved in the sharing as described in \fig{sharing-detection}. We can aggregate all theses accesses, reducing the size of the main data frame.
+    \item Predefined plots: Finally we can present some predefined  plots, the three first are inspired from \gls{Tabarnac} ones and show the size of data structures, the number of accesses, and amount of sharing.
+        At this point it ease trivial to focus on the data structure that have enough access with one line of \gls{R} code.
+        Then we present a cartography view of the density of accesses or of sharing by data structures and by type of accesses.
+    \item Zoom and modify plots: at this point it is possible to zoom or focus on some data structures by selecting subsets of the main dataframe.
+        Furthermore, we can easily change the axes of the plots, show other metrics, do some conditional zoom on specific part of the trace \ldots
 \end{enumerate}
 
 \subsection{Results and discussion}
 
+\begin{figure}[htb]
+    \centering
+    \includegraphics[width=\textwidth]{labbook/intensity_Rw_dgetrf}
+    \caption{Visualization of the memory access of the dgetrf kernel from ffplas-ffpack.}
+    \label{fig:dgetrf-intensity}
+\end{figure}
+
+\lstinputlisting[caption={R code to focus on interesting data structures.}, label=lst:R-zoom,float=htb]{code/zoom.R}
+
+\begin{figure}[htb]
+    \centering
+    \includegraphics[width=\textwidth]{labbook/intensity_Share_dgetrf_zoom}
+    \caption{Visualization of the memory access of the dgetrf kernel from ffplas-ffpack, zoom on the three main data structures.}
+    \label{fig:dgetrf-share-zoom}
+\end{figure}
+
 \begin{itemize}
-    \item Small example
-    \item Easy switch between views
-    \item Limit: when lots of library
-    \item Require that the user masters R
-    \item Labook: efficient for exploring, not for reproducing same analysis on different traces
+    \item Results
+        \begin{itemize}
+            \item Small example
+                \begin{itemize}
+                    \item trace from fflas-ffpack, compiled with openblas
+                        \DB{Refs fflas, openblas}
+                    \item \fig{dgetrf-intensity} 
+                        \begin{itemize}
+                            \item POV: Nacc on page=fct(time)
+                            \item 4 types of access disinguished
+                            \item 6 data structures
+                            \item 3 structs only private not that interesting => zoom
+                            \item Stack weird pattern: small part used
+                            \item Same mfor malloc \#1
+                            \item Temporat pattern stack 1256
+                        \end{itemize}
+                    \item Easy one line \lstr{R-zoom}
+                    \item \fig{dgetrf-share-zoom}
+                        \begin{itemize}
+                            \item Point of view Nsharing=f(time)
+                            \item Similar pattern
+                            \item Find something interesting to say
+                        \end{itemize}
+                \end{itemize}
+        \end{itemize}
+    \item  Discussion
+        \begin{itemize}
+            \item Require that the user masters R
+            \item Labook: efficient for exploring, not for reproducing same analysis on different traces, or also need to master emacs
+            \item Sofa => Limit: when lots of library
+                \begin{itemize}
+                    \item Retrieving mapping => slow
+                    \item Impossible to visualize with facets
+                    \item Need to do a priori filtering
+                \end{itemize}
+        \end{itemize}
 \end{itemize}
 
 \section{Perspectives and conclusions}
@@ -267,7 +327,14 @@ Build user friendly trace viewer based on R analysis, using R-shiny or user frie
 
 \subsection{Generic trace visu R}
 
-Hypothetical tool
+\begin{figure}[htb]
+    \centering
+    \input{tikz/generic-viewer}
+    \caption{Description of a R based hypothetical generic trace viewer.}
+    \label{fig:generic-viewer}
+\end{figure}
+
+Hypothetical tool \fig{generic-viewer}
 \begin{itemize}
     \item Goal:
         \begin{itemize}
@@ -297,9 +364,6 @@ Hypothetical tool
 \end{itemize}
 \DB{Figure ?}
 
-\subsection{Automatic analysis}
-
-\DB{Voir rapport Sebastien, sur Hopi}
 
 \subsection{Discussions}
 
@@ -311,6 +375,7 @@ Hypothetical tool
     \item Compromise: facility to interact with the trace, semantic of the interaction
     \item Need to put the user in the loop to filter out yet user don't know everything \ldots
     \item Possible solution: build abstraction on top of R
+    \item Automatic approach => Hard detecting / defining pattern, intern have tried and died
 \end{itemize}
 
 % vim: et si sta lbr  sw=4 ts=4 spelllang=en_us
