@@ -94,7 +94,7 @@ testcountbib:
 testcountpages:
 	$(eval PAGES=$(shell pdfinfo $(PDF) | grep Pages | awk '{print $$2}'))
 	@echo "Total pages: $(PAGES)"
-	[ $(PAGES) -gt 110 ]
+	[ $(PAGES) -gt 120 ]
 	@echo "PASSED"
 
 .PHONY: clean distclean

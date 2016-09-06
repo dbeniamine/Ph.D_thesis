@@ -272,7 +272,24 @@ Our analysis converged very quickly to a classical yet adaptable analysis pipeli
     \label{fig:dgetrf-intensity}
 \end{figure}
 
+We illustrate our visualization with the \emph{dgetrf} kernel from the fflas-ffpack~\cite{group16FFLASFFPACK} compiled against the OpenBlas.
+\DB{Refs, A word about fflas-ffpack / work stealing / dgetrf / openblas}
+This trace was collected on a machine from the Edel cluster which hardware was presented in \tbl{hw-moca}.
+
+\fig{dgetrf-intensity} shows for each data structures\footnote{
+    A few almost unused data structure have been filtered to make the image more readable.}
+    the number of accesses per page over the time. Furthermore we differentiate four types of access: PrivateRead, PrivateWrites, SharedRead and SharedWrites.
+From this visualization we can see that two of the stacks (1252 and 1250) are always used privately.
+Furthermore the data structure malloc\#5 seems to be used mostly privately and only very rarely read in a shared way.
+These three structures seems also to be accessed mostly linearly, hence they might not be subject to interesting analysis.
+
+For each structures, some access private and shared seemed to appear at the same time which is not possible, yet by zooming on a small part of the execution were able to confirm that those access are just interleaved and never of both types in the same time.
+This means that several threads are working on data very close and often do actually share some pages.
+
 \lstinputlisting[caption={R code to focus on interesting data structures.}, label=lst:R-zoom,float=htb]{code/zoom.R}
+
+At this point, it is interesting to focus on these three data structures and ignore the others, we can do this with the simple line of code displayed in \lstr{R-zoom}.
+Additionally, we can look at the amount of sharing instead of the number of axis just by changing the \emph{y} parameter of the plot.
 
 \begin{figure}[htb]
     \centering
@@ -281,51 +298,35 @@ Our analysis converged very quickly to a classical yet adaptable analysis pipeli
     \label{fig:dgetrf-share-zoom}
 \end{figure}
 
-\begin{itemize}
-    \item Results
-        \begin{itemize}
-            \item Small example
-                \begin{itemize}
-                    \item trace from fflas-ffpack, compiled with openblas
-                        \DB{Refs fflas, openblas}
-                    \item \fig{dgetrf-intensity} 
-                        \begin{itemize}
-                            \item POV: Nacc on page=fct(time)
-                            \item 4 types of access disinguished
-                            \item 6 data structures
-                            \item 3 structs only private not that interesting => zoom
-                            \item Stack weird pattern: small part used
-                            \item Same mfor malloc \#1
-                            \item Temporat pattern stack 1256
-                        \end{itemize}
-                    \item Easy one line \lstr{R-zoom}
-                    \item \fig{dgetrf-share-zoom}
-                        \begin{itemize}
-                            \item Point of view Nsharing=f(time)
-                            \item Similar pattern
-                            \item Find something interesting to say
-                        \end{itemize}
-                \end{itemize}
-        \end{itemize}
-    \item  Discussion
-        \begin{itemize}
-            \item Require that the user masters R
-            \item Labook: efficient for exploring, not for reproducing same analysis on different traces, or also need to master emacs
-            \item Sofa => Limit: when lots of library
-                \begin{itemize}
-                    \item Retrieving mapping => slow
-                    \item Impossible to visualize with facets
-                    \item Need to do a priori filtering
-                \end{itemize}
-        \end{itemize}
-\end{itemize}
+We can see in \fig{dgetrf-share-zoom} that the sharing patterns are very similar to the access patterns.
+The three other data structures present different yet interesting memory access patterns.
+First the malloc\#1 structure is very small and accessed intensively in a shared way, during all the execution and always on the same page.
+We can presume that this data structure contains information about the threads status that must be updated quite often, maybe it is used for work stealing or at least thread scheduling.
+Second the stack 1256 is only used during the first third of the execution and written only at the beginning and in parallel.
+For a generic data structure, this parallel initialization could probably have been designed to distribute first touch on the \gls{NUMA} nodes of the machine, yet on a stack it seems quite unusual.
+Last but not least, a small part of the main stack is accessed in read and write mode and in a shared way during all the execution.
+This pattern means that threads are probably organized in a master / slave way, where the master thread allocates data in its stack (not dynamic allocation).
+This might be problematic on \gls{NUMA} machines as the stack is statically allocated and thus cannot be allocated explicitly on some node.
+It would be interesting to zoom on the beginning of the execution to check if the initialization of this part of the stack is correctly spread around the thread or not.
+If not, Linux will allocate each page on the memory bank of the master thread independently of the re partition of the data between the threads.
 
-\section{Perspectives and conclusions}
-\label{sec:visu-cncl}
+After discussing these results with some of the developers of the fflas-ffpack, it appears that the observe patterns can be due to the OpenBlas library and might be complex to improve.
+Yet an interesting thing to do would be to compare these traces, with the trace of the same kernel but compiled to the \gls{MKL}.
+Indeed there are some performance differences between the two library that are hard to explain with traditional profiling tools as the \gls{MKL} code is proprietary.
+Therefore, memory traces might help understanding the underlying algorithms.
 
-Build user friendly trace viewer based on R analysis, using R-shiny or user friendly shell on top of R.
+In the end, this approach ease the exploration of \gls{Moca} traces, yet it is only true for developers that know a minimum of \gls{R} code.
+Moreover, while \gls{Framesoc} and \gls{Ocelotl} can be easily used by an end user without the our intervention, at the time of the writing, this programmatic approach requires to read at least a part of the labbook to understand how to do the analysis.
+Additionally, we had some troubles to analyze some traces from Lulesh and \gls{SOFA}.
+Indeed these applications generates thousands of call to the malloc functions (hundreds of thousands for Lulesh).
+Hence, retrieving the mapping page to data structure was extremely slow or nearly impossible without merging some data structures.
+In the end it appears that we need both a more user friendly tool, and a way to add a priori knowledge of the developers in the parsing to filter out uninteresting data.
 
-\subsection{Generic trace visu R}
+\subsection{Generic trace visualization tool}
+
+Programmatic exploration of traces is extremely powerful yet it is not user friendly.
+We describe here and hypothetical, generic trace viewer based on \gls{R} exploration that might make it more user friendly.
+We only provide a few principles of design and interaction that results from our experiment while trying to analyze traces with \gls{R}.
 
 \begin{figure}[htb]
     \centering
@@ -334,38 +335,31 @@ Build user friendly trace viewer based on R analysis, using R-shiny or user frie
     \label{fig:generic-viewer}
 \end{figure}
 
-Hypothetical tool \fig{generic-viewer}
+The main components and interactions of our hypothetical tool are presented in \fig{generic-viewer}.
+To be generic this tool is splitted in two parts: the viewer itself is quite minimalist, it contains a few predefined commands for interacting with data (zoom, filters \ldots), with the dataframe stack that will be described later and do predefined actions (parse, show some plot).
+The second part is the configuration and should be provided by the developer of the tracing tool.
+This configuration defines four things:
 \begin{itemize}
-    \item Goal:
-        \begin{itemize}
-            \item More user friendly than simple R
-            \item Provide default parsing and visu
-            \item Can analysis any trace
-            \item Enable roll back if data frame messed up without repeating parsing
-        \end{itemize}
-    \item Configurations
-        \begin{itemize}
-            \item Define mandatory arguments (trace files)
-            \item R: parsing
-            \item R: Default visu
-        \end{itemize}
-    \item Interactions:
-        \begin{itemize}
-            \item Do parsing
-            \item Do plots
-            \item See code (parsing / plot)
-            \item Apply code (possibly from models)
-        \end{itemize}
-    \item Data frame stack
-        \begin{itemize}
-            \item Every modification copy the data frame
-            \item Possibility to roll back on the stack
-        \end{itemize}
+    \item The files that constitute the trace.
+    \item Some \gls{R} code used to do the parsing steps.
+    \item Some \gls{R} code used to provide the main predefined plots.
+    \item The code required to implement the trace interaction commands (zoom, filter etc.).
 \end{itemize}
-\DB{Figure ?}
+It would be also interesting to add hooks that enables the insertion of \gls{R} code between during the parsing step to filter data as soon as possible.
 
+Another important idea is that the tool should conserve a \emph{dataframe stack} which means that the user will work on a small set of dataframes, and every modification to a dataframe (except if specified otherwise) should generate a copy.
+While this means a considerable memory footprint, it enables rolling back if a step of aggregation (for instance) loose too much information.
+Moreover, the first step of the analysis often consists in filtering data to focus on the most meaningful part of the trace.
+Hence, only the first copies will have an important impact on the memory footprint.
 
-\subsection{Discussions}
+The user would have two ways to interact with this tool: use builtin commands (or commands defined by the tool), or \gls{R} code.
+These two usage are not incompatible.
+At any step the user can see the code of the next step that he want to do and modify it.
+A natural workflow would be to start analyzing the trace with the commands provided with the trace, and if necessary, start running \gls{R} code to generate new visualizations or filter data.
+In the end, the user would be able to export the code of the new visualization to improve the original configuration.
+
+\section{Discussions}
+\label{sec:visu-cncl}
 
 \begin{itemize}
     \item Still ongoing work

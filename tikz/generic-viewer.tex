@@ -111,13 +111,13 @@
 
     \node [userbox] (user) at (0,0) {User};
 
-    \node[filled box=ViewerCol] (shell) at (3,0) {\textbf{Shell:} R and Commands (pop, zoom, filtrate)};
+    \node[filled box=ViewerCol] (shell) at (3,0) {\textbf{Shell:} R and Commands (pop, zoom, filtrate, show plot)};
 
     \node[filled box=ViewerCol] (stack) at (5.5,0) {R dataframe Stack};
 
     \node [fileT] (f0) at (8,0) {Main Data};
     \node [fileT] (f1) at (10,0) {Meta Data};
-    \node [fileT] (f2) at (9,-2.5) {Other File};
+    \node [fileT] (f2) at (9,-2.5) {Other Files};
 
     \begin{pgfonlayer}{background}
         \node[entity,fit=(f0) (f1) (f2),%
@@ -126,10 +126,11 @@
 
     \node [filled box=TraceCol]   (rqf) at (6, -6) {Required files};
     \node [concrete box=TraceCol] (pc) at  (9, -6) {Parsing code};
-    \node [concrete box=TraceCol] (pp) at  (7.5,-8) {Predefined plots};
+    \node [concrete box=TraceCol] (pp) at  (6,-8)  {Predefined plots};
+    \node [concrete box=TraceCol] (cc) at  (9, -8) {Command code};
 
     \begin{pgfonlayer}{background}
-        \node[entity,fit=(rqf) (pc) (pp),%
+        \node[entity,fit=(rqf) (pc) (pp) (cc),%
         header={Configuration}{EntityCol}{south}{}] (config) {};
     \end{pgfonlayer}
 
