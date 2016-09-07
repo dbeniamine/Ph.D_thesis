@@ -17,12 +17,9 @@
 \input{custom/fancy.tex}
 
 % Links
-\usepackage[pdftex]{hyperref}
 
-\title{Something about performance analysis and stuff}
-\author{David Beniamine}
+\usepackage[pdfusetitle]{hyperref}
 
-\makeatletter
 \hypersetup{
     colorlinks=true, %colore les liens
     breaklinks=true, %permet le retour à la ligne dans les liens trop longs
@@ -30,10 +27,7 @@
     linkcolor= black, %couleur des liens internes
     bookmarksopen=true,
     citecolor=black,
-    pdftitle={\@title},
-    pdfauthor={\@author},
 }
-\makeatother
 \usepackage{url}
 
 % Images
@@ -58,6 +52,10 @@
 \input{custom/glossary}
 
 \input{custom/tikz}
+
+
+\title{Something about performance analysis and stuff}
+\author{David Beniamine}
 
 \begin{document}
 
