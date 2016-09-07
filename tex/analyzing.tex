@@ -272,8 +272,7 @@ Our analysis converged very quickly to a classical yet adaptable analysis pipeli
     \label{fig:dgetrf-intensity}
 \end{figure}
 
-We illustrate our visualization with the \emph{dgetrf} kernel from the fflas-ffpack~\cite{group16FFLASFFPACK} compiled against the OpenBlas.
-\DB{Refs, A word about fflas-ffpack / work stealing / dgetrf / openblas}
+We illustrate our visualization with the \emph{dgetrf} kernel from the fflas-ffpack~\cite{group16FFLASFFPACK} compiled against the OpenBlas~\cite{Chothia16OpenBlas}.
 This trace was collected on a machine from the Edel cluster which hardware was presented in \tbl{hw-moca}.
 
 \fig{dgetrf-intensity} shows for each data structures\footnote{
@@ -336,7 +335,7 @@ We only provide a few principles of design and interaction that results from our
 \end{figure}
 
 The main components and interactions of our hypothetical tool are presented in \fig{generic-viewer}.
-To be generic this tool is splitted in two parts: the viewer itself is quite minimalist, it contains a few predefined commands for interacting with data (zoom, filters \ldots), with the dataframe stack that will be described later and do predefined actions (parse, show some plot).
+To be generic this tool is split in two parts: the viewer itself is quite minimalist, it contains a few predefined commands for interacting with data (zoom, filters \ldots), with the dataframe stack that will be described later and do predefined actions (parse, show some plot).
 The second part is the configuration and should be provided by the developer of the tracing tool.
 This configuration defines four things:
 \begin{itemize}
@@ -361,15 +360,33 @@ In the end, the user would be able to export the code of the new visualization t
 \section{Discussions}
 \label{sec:visu-cncl}
 
-\begin{itemize}
-    \item Still ongoing work
-    \item Hard due to number of dimension
-    \item Need meaningful way to zoom / aggregate
-    \item Ocelotl main drawback: impossible to switch between aspects.
-    \item Compromise: facility to interact with the trace, semantic of the interaction
-    \item Need to put the user in the loop to filter out yet user don't know everything \ldots
-    \item Possible solution: build abstraction on top of R
-    \item Automatic approach => Hard detecting / defining pattern, intern have tried and died
-\end{itemize}
+Visualizing \gls{Moca} traces is a complex task.
+Indeed these traces are spread over five dimension: time, addresses (physical and virtual), threads and \gls{CPU} location.
+Furthermore, the address space is quite large and we are mostly interest on some specific patterns.
+Therefore, we first used \gls{Ocelotl} to analyze these traces.
+This tool is designed to aggregate traces in a meaningful way, trying to provide a good trade-off between information lost and complexity gain.
+Moreover it is implemented as a \gls{Framesoc} tool.
+\gls{Framesoc} is a generic trace manager, that provide a simple interface to import traces from virtually any tools.
+Importing \gls{Moca} traces inside \gls{Framesoc} is also interesting as it provides easy filtering and zoom on the traces.
+Still, \gls{Framesoc} considers that a traces has two dimensions: time and event producers, it is hard to represent the complexity of \gls{Moca} traces in it.
+As a result, we had to generate several different \gls{Framesoc} traces while importing one \gls{Moca} trace.
+The main drawback of this workaround is that switching traces inside \gls{Framesoc} means loosing all zooms and filters along with the caches and the results of the aggregated views computed by \gls{Ocelotl}.
+In the end this approach enable the visualization of small traces, yet the cost of changing the perspective is too high and make the interaction too slow to be usable.
+
+Our second approach to analyze these trace was more programmatic, we use \gls{R} and saved all our attempts in a labbook.
+While this is not user friendly at all, \gls{R} is a powerful tool and it enables more complex visualization.
+We are able to do efficient and complex zoom with \gls{R} selection operators.
+To make this analysis reproducible by user non familiar with \gls{R}, it would be interesting to develop a generic viewer build upon predefined \gls{R} visualization.
+Such viewer should (at least) provide the two following feature: simple (non \gls{R}) zoom and filtering and a dataframe stack so the users can rollback if they discard some useful informations.
+
+Another approach that have not been studied during this thesis would be to analyze traces automatically.
+Such analysis would have to detect memory patterns and possibly and highlight parts of code that should be improved.
+A memory pattern is an interaction between threads inside a memory area over a short laps of time.
+Yet, defining such a pattern in a more specific way is a hard task.
+
+For any approach, it appears that the developers knowledge is useful to focus the analysis on the interesting parts.
+Therefore we need a way to use this knowledge during this analysis and as soon as possible to reduce the amount of data we need to analyze.
+Nerveless, we seen in \chap{perf} that they might not know all the source of performance issues.
+In the end, this knowledge can be used to focus the analysis but it is important to also have a global visualization of the trace, to spot issue that would have been missed by the developers.
 
 % vim: et si sta lbr  sw=4 ts=4 spelllang=en_us
