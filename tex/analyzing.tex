@@ -18,7 +18,8 @@ The contribution presented in this chapter consists in two different methods to 
         \url{https://github.com/dbeniamine/framesoc\_importer\_moca}.\\
         \DB{Distribute properly moca importer}
         The proposed visualizations are presented in an Inria Research Report~\cite{Beniamine15Memory}.
-    \item The second method relies on \gls{R}, it is an ongoing work, publicly available online:\DB{Make labbook public}
+    \item The second method relies on \gls{R}, it is an ongoing work, publicly available online at:
+        \url{https://github.com/dbeniamine/Moca\_visualization}
 \end{itemize}
 
 This chapter is organized as follows: first we present our analysis of \gls{Moca} traces with \gls{Framesoc} and \gls{Ocelotl} with an example and discuss the limits of this method in \sect{visu-first}.
@@ -235,7 +236,6 @@ This means that if we spot an interesting pattern in a visualization and want to
 Indeed \gls{Ocelotl} initial computations are slow as it requires to compare all possible partitions.
 Additionally, by doing so we loose all filtering and zoom done on the previous trace.
 
-\DB{Reformuler:}
 Another limit of this approach is that it is hard to identify (name) the data structure.
 Furthermore selecting only a set of data structure is slow as \gls{Framesoc} is not designed for handling as much event producers as we have with memory traces.
 Finally meta data about there size or number of accesses are impossible to visualize.
@@ -253,7 +253,8 @@ Hence, a more programmatic approach may enable to work closer to the data and ea
 In \gls{R}, data are usually stored in huge dataframes, each row of a dataframe represent one observation and each column give the value of a parameter or a measure for this observation.
 While this representation has a significant memory footprint, it ease switching point of view, as the same dataframe can represent several measures.
 For these reason, we analyzed several traces with \gls{R}.
-For more reproducibility, we store the evolution of our work in an \gls{Org-mode} labbook, as described in~\cite[Chapter~4, p~54]{Stanisic15Reproducible}, and available online at \url{TODO}.
+For more reproducibility, we store the evolution of our work in an \gls{Org-mode} labbook, as described in~\cite[Chapter~4, p~54]{Stanisic15Reproducible}, and available online at:\\
+\url{https://github.com/dbeniamine/Moca\_visualization}.
 
 While this approach is extremely flexible, it is not user friendly.
 Indeed it requires to know how to write efficient \gls{R} code, how to use \gls{Org-mode} and Emacs and to read the labbook before doing an analysis.
