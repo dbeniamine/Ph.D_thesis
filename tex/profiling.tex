@@ -10,14 +10,14 @@ Then we have to understand their nature and localization both in terms of code a
 Finally, when optimizing a real life application, it is important to make the code modifications as clear as possible.
 Indeed not all developers are specialized in \gls{HPC} and a code is only maintainable if understandable.
 
-\gls{SOFA}~\cite{Allard07SOFA} is a simulation framework designed for exact and interactive simulation.
-Indeed, it aims at assisting surgeons with real time simulation thus  it cannot afford to reduce the amount of computation by relying on approximations.
-Therefore improving \gls{SOFA} performance is crucial.
-Yet, most of the developers are not from the \gls{HPC} field.
-Our goal is to guide them through the optimization process.
-To do so, we need to analyze the  performances of \gls{SOFA} and identify precisely the hotspots.
+\gls{SOFA}~\cite{Allard07SOFA} is a simulation framework designed for exact and interactive physical simulation, it aims at assisting surgeons with real time medical simulation.
+Hence  it cannot afford to improve its efficiency by relying on approximations.
+Therefore optimizing \gls{SOFA} performance is crucial.
+Yet, most of the developers are not from the \gls{HPC} community.
+To guide them into this optimization process, we need to analyze the  performances of \gls{SOFA} and identify precisely the hotspots.
 
-In this chapter, we present a case study on the performance optimisation of \gls{SOFA}.
+In this chapter, we present a case study about the performance optimisation of \gls{SOFA}.
+This study case aims at demonstrating the usage of classical analysis tools and emphasize their limits concerning memory related performance issues.
 It is organized as follow: first we present \gls{SOFA}, its specificities and previous attempt to parallelize or optimize it in \sect{motivations}.
 Then, we discuss the existing profiling tools that can be used to analyze the performances of application in \sect{prof-tools}.
 After that we detail our experimental methodology and discuss reproducibility matters in \sect{expe-methodo}.
@@ -57,48 +57,47 @@ Hence many algorithms  were developed to compute them efficiently,  each algorit
 \end{figure}
 
 One of \gls{SOFA} main specificity is that it has a multi-model representation of each component.
-A simulation scene is represented as a graph, as shown in \fig{sofa-tree} where each physical object is a node.
+A simulation scene is represented as a tree, as shown in \fig{sofa-tree} where each physical object is a node.
 Each level of the graph can embed solvers, collision detector and visual representation, overriding the defaults.
 This hierarchical representation enable dependencies management between objects and the representation of complex embedded objects~\cite{Nesme09Preserving,Faure11Sparse}.
 
-\subsection{Previous efforts on SOFA parallelization}
+\subsection{Previous efforts toward SOFA parallelization}
 
 It is important to note that the main developers of \gls{SOFA} are  mostly computer scientists with a physical or medical background but not specialized in \gls{HPC}.
-Several efforts were made by external developers to parallelize \gls{SOFA}, most of these efforts consist in optimizing some algorithms which, according to \gls{SOFA} developers are costly in time.
+Several efforts were made by external developers to parallelize \gls{SOFA}, most of these efforts consist in optimizing some algorithms which, according to \gls{SOFA} developers, are time consuming.
 For instance, Everton Hermann proposed an efficient (sequential) collision detection algorithm based on ray tracing and a parallelization of this algorithm~\cite{Hermann08Raytraced}.
-More recently, Julio Toss have been developing several algorithms on \glspl{GPU} to improve the computation time of Voronoi diagrams~\cite{Toss13Parallel,Toss14Parallel}.
-These diagrams are critical for \gls{SOFA} as they enable efficient simulation of force propagation on heterogeneous materials~\cite{Faure11Sparse}.
-Still their computation generates a considerable overhead before the simulation.
+More recently, Julio Toss has been developing several algorithms on \glspl{GPU} to improve the computation time of Voronoi diagrams~\cite{Toss13Parallel,Toss14Parallel}.
+Although their computation generates a considerable overhead before the simulation, these diagrams enable efficient simulation of forces propagation in heterogeneous materials~\cite{Faure11Sparse}.
+Hence optimizing their computation is critical for \gls{SOFA}.
 
-E. Hermann also proposed a more global approach exploiting the hierarchy of the scene graph to parallelize the time integration step~\cite{Hermann09Interactive}.
-This parallelization relies the \gls{KAAPI} runtime~\cite{Gautier07KAAPI} which consider an application as a set of task and dependencies between them.
-Each task can provide one or several implementations (\gls{CPU}, \gls{GPU} \ldots), the runtime will choose online which implementation to use depending on the current performances and resulting in portable performances.
-With this method the amount of parallelism depends of the number of objects simulated.
-Still most \gls{SOFA} scenes only includes only a few objects, thus this parallelization is not suitable for them.
-
+E. Hermann also proposed a more global approach, exploiting the hierarchy of the scene tree, to parallelize the time integration step~\cite{Hermann09Interactive}.
+This parallelization relies on the \gls{KAAPI} runtime~\cite{Gautier07KAAPI} which consider an application as a set of tasks and dependencies between these tasks.
+Each task can provide one or several implementations (\gls{CPU}, \gls{GPU} \ldots), the runtime choose online which implementation to use depending on the current performances, which results in portable performances.
+With this method, the amount of parallelism depends on the number of objects simulated.
+As  most \gls{SOFA} scenes only include a few objects, this parallelization is not suitable for them.
 
 While this approach is more generic it was never actually used by \gls{SOFA} developers for several reasons.
-First of all they are not specialized in parallelism thus not used to think their program in parallel.
-Second \gls{KAAPI} is a research runtime that evolve quickly, thus, maintaining code based on it seemed to costly for them.
-Last but not least, while this approach helps to parallelize the code it does not help finding hotspots and optimizing existing code.
-In the end, \gls{SOFA} is currently parallelized using simple \gls{OpenMP} \texttt{\#pragma}\footnote{
-    These are compiler directives to tells the \gls{OpenMP} runtime that a region of code should be run in parallel.
-    These \texttt{\#pragma} are trivial to use but it requires to spend more time to obtain an efficient parallelization.}.
-This parallelization impacts small chunks of code and miss the global aspect of the previous one.
+First of all, they are not specialized in parallelism, hence not used to write programs in parallel languages.
+Second, \gls{KAAPI} is a research runtime that evolve quickly, maintaining code based on it seemed to costly for them.
+Last but not least, while this approach helps to parallelize the code, it does not help finding hotspots and optimizing existing code.
+In the end, \gls{SOFA} is currently parallelized using simple \gls{OpenMP} \texttt{\#pragma}.
+These  \texttt{\#pragma} are compiler directives to tells the runtime that a region of code should be run in parallel.
+While adding such annotation to an existing code is trivial, it requires to spend some time at improving data structures and algorithms to obtain an efficient parallelization.
+This method impacts small chunks of code and miss the global aspect of the previous one.
 Thus it is considerably less efficient than the \gls{KAAPI} version.
 
-To conclude it appears that optimizing algorithms or chunk of codes pointed out by \gls{SOFA} developers is not sufficient.
+To conclude, it appears that optimizing algorithms or chunk of codes pointed out by \gls{SOFA} developers is not sufficient.
 Indeed this approach can miss unknown hotspots and therefore opportunities for optimizations.
-Moreover while a structural approach seems potentially more efficient than local optimizations, it does not overpass this limitation.
-At the end of the day, it appears that identifying precisely unknown hotspots and digging into \gls{SOFA} performance would be more profitable than writing pieces of highly optimized code.
+Moreover, while the global, runtime based approach seems potentially more efficient than local optimizations, it does not overpass this limitation.
+At the end of the day, it appears that identifying precisely unknown hotspots and digging into \gls{SOFA} performances would be more profitable than writing pieces of highly optimized code.
 
 \section{Profiling tools}
 \label{sec:prof-tools}
 
 Performance analysis consists of two steps: data collection and presentation.
-The first step aims at extracting as much pertinent information from an execution as possible.
-Still observing an execution is not free: it takes time to count and record events.
-Thus it can impact the application performances or, worst, modify its behavior.
+The first step aims at extracting as much pertinent information as possible from an execution.
+Nevertheless, observing an execution is not free: it takes time to count and record events.
+As a result, it can impact the application performances or, worst, modify its behavior.
 Consequently, any analysis provides a trade-off between the amount of data collected and the impact on the monitored application.
 The second step is also challenging as the analysis tool has to to find out which data are pertinent and to present them in a meaningful way to the user.
 Many tools were designed to address one or both of these challenges.
@@ -107,42 +106,42 @@ Performance counters are dedicated \gls{CPU} registers that were originally desi
 They count events such as cache misses, or branch miss-predicts at a very low cost compared to software based solutions.
 They can directly be accessed using the \gls{Perf} driver which is part of the \gls{Linux} kernel since version $2.6.31$.
 Yet, as a result of their initial aim, the available counters depends of the \gls{CPU} model and vendor.
-Furthermore it requires a deep knowledge of \glspl{CPU} mechanisms to understand the meaning of some counters.
-Therefore higher level libraries such as \gls{PAPI}~\cite{Browne00Portable,Malony11Parallel,Weaver13PAPI} and \gls{Likwid}~\cite{Treibig10LIKWID} were designed to make performance counter access and interpretation more convenient.
+Furthermore, it requires a deep knowledge of \glspl{CPU} mechanisms to understand the meaning of some counters.
+Hence, higher level libraries such as \gls{PAPI}~\cite{Browne00Portable,Malony11Parallel,Weaver13PAPI} and \gls{Likwid}~\cite{Treibig10LIKWID} were designed to make performance counter access and interpretation more convenient.
 These libraries provide performance groups and automatically compute comprehensive metrics.
-In addition they provide markers that can be used in the code in order to collect only counters on some parts of the execution.
+In addition they provide markers that can be used in the code in order to collect counters only during some parts of the execution.
 This is useful once hotspots are identified, but can lead to miss a part of the execution if used too early.
 
 An other approach to make performance counters more understandable consists in combining them with contextual informations.
 Such informations can be obtained by intercepting libraries calls (system calls, C standard library, \gls{MPI}, \gls{OpenMP} \ldots).
-The easiest way to intercept a library call is by overriding it at runtime with the \texttt{LD\_PRELOAD} hack\footnote{
-    One can use the \texttt{LD\_PRELOAD} environment variable to tell the linker to load a library before running a programmings.
-    Thus each call to a function overwritten in the preloaded library will be intercepted.}.
+The easiest way to intercept a library call is by overriding it at runtime with the \texttt{LD\_PRELOAD} hack\DHm{ref?}\footnote{
+    One can use the \texttt{LD\_PRELOAD} environment variable to tell the linker to load a library before running a program.
+    As a result, each call to a function from an external library overwritten in the preloaded library will be intercepted.}.
 A second method is to rely on binary instrumentation libraries such as \gls{Intel} \gls{Pin}~\cite{Luk05Pin} or Dyninst from the Paradyn Project~\cite{Miller95Paradyn}.
-This method is more flexible and usually enable higher level data collection.
-Yet, it is more intrusive, thus it can impact the behavior of the studied application.
-Simulators such as \gls{SimGrid}~\cite{Casanova14Versatile} can be used to overpass these limitations, still they are usually more complex to install and use.
-Furthermore they are designed for \gls{HPC} applications and often focus on explicit communications (via \gls{MPI} or \gls{OpenMP}) discarding the actual computations.
-Therefore they might miss memory related issues.
+This method is more flexible and usually enable higher level data collection, but it is more intrusive, thus it can impact the behavior of the studied application.
+Simulators such as \gls{SimGrid}~\cite{Casanova14Versatile} can be used to overpass these limitations.% still they are usually more complex to install and use.
+However \gls{HPC} simulators often focus on explicit communications (via \gls{MPI} or \gls{OpenMP}) discarding the actual computations.
+Hence they might miss memory related issues.
 Several tools such as \gls{HPCToolkit}~\cite{Adhianto10HPCTOOLKIT}, \gls{PARAVER}~\cite{Pillet95PARAVER}, \gls{TAU}~\cite{Shende06Tau}, \gls{MAQAO}~\cite{Djoudi05MAQAO}, \gls{AMD} \gls{CodeXL}~\cite{AMD16CodeXL} (the successor of \gls{AMD} \gls{CodeAnalyst}~\cite{Drongowski08introduction}) and \gls{Intel} \gls{VTune}~\cite{Reinders05VTune} combines several of these methods to collects traces.
 
 When it comes to presenting performance traces in a readable way, we can split these tools in three groups.
-The first ones only provides textual traces and let the user extract pertinent informations from them.
+The first ones only provides textual traces and let the user extract pertinent information from them.
 It includes the \gls{Perf} driver, \gls{Likwid} and \gls{PAPI} library as well as several \glspl{Pintool}.
 Such traces are very useful for small applications as they do not require complex tools to be read.
-Furthermore they are usually easy to parse thus one can build more complex visualization on top of it using \gls{R} for instance.
+Moreover they are usually easy to parse and one can build more complex visualization on top of it using \gls{R}, for instance.
 Tools from the second group, that includes \gls{VTune}, \gls{CodeXL} tries to present data in a more readable way.
-Usually their visualization consist in a set of tables and plots, where they highlight values that seems to be pertinent (for instance cache miss above a fixed threshold) pointing important parts to the user.
-Finally, while tools like \gls{MAQAO}, \gls{HPCToolkit} and \gls{PARAVER} propose similar visualizations, they also provide \glspl{API} to design new visualizations or import external traces.
+Usually their visualization consist in a set of tables and plots, where they highlight values that seem to be pertinent (for instance cache miss above a fixed threshold) pointing important parts to the user.
+Finally, while tools like \gls{MAQAO}, \gls{HPCToolkit} and \gls{PARAVER} propose similar visualizations, but they also provide \glspl{API} to design new visualizations or import external traces.
 \gls{Framesoc}~\cite{Pagano13Trace,Pagano14frameSoC} is very similar to the previous tools, the main difference is that it is designed for trace management and analysis.
-Therefore it does not provide any way to collect traces but is able to import traces collected by the user.
-It describe them with a generic representation and enable easy navigation through different visualizations of the same trace.
+Consequently it does not provide any way to collect traces but is able to import traces collected by the user.
+It describes them with a generic representation and enable easy navigation through different visualizations of the same trace.
 
-To conclude, many tools were developed to monitor the performances of an application, the best tool depends on the kind of issues we are looking for and the application we are monitoring.
-Most of the tools discussed here are based on performance counters and therefore focus the point of view of the \gls{CPU}.
+To conclude, many tools were developed to monitor the performances of an application.
+The best tool depends on the kind of issues we are looking for and the application that is monitored.
+Most of the tools discussed here are based on performance counters and thus present data from the point of view of the \gls{CPU}.
 In our specific case, we are studying a complex application, yet we are in contact with the developers of \gls{SOFA}.
-Thus they can give us hints about the important parts and the kind of issues we should look for.
-Therefore low level tools such as \gls{Likwid} are well suited as they can both compute pertinent metrics and focus on different parts of the application.
+Consequently they can give us hints about the important parts and the kind of issues we should look for.
+Therefore low level tools such as \gls{Likwid} are well suited as they can both compute pertinent metrics and focus on specific parts of the application.
 
 \section{Experimental Methodology}
 \label{sec:expe-methodo}
