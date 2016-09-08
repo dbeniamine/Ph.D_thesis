@@ -3,10 +3,10 @@
 
 \gls{Tabarnac} traces contains two parts: informations about the data structures and the actual trace.
 For small applications with a limited number of data structures, it is trivial to present the first kind of information.
-The actual trace is spread over three dimensions: threads, pages and type of accesses yet this last one can only take two values (read or write).
+The actual trace is spread over three dimensions: threads, pages and type of accesses however this last one can only take two values (read or write).
 Therefore it is relatively easy to find a meaningful representation of this traces that can be easily understood by a human.
 \gls{Moca} traces are way more generic.
-Indeed, they contain the same meta data but the actual trace also provides informations about time and \gls{CPU} location.
+Indeed, they contain the same meta data and the actual trace also provides informations about time and \gls{CPU} location.
 These traces are spread over five dimensions: time, addresses, type of access, and \gls{CPU} location.
 Furthermore some dimension can be seen from several point of view, for instance we can look either at the physical or virtual address space.
 As we are not used to visualize things in more than three dimension, to analyze these traces, we must provide the user a way to navigate through different representations and easily find and focus on the important parts.
@@ -97,7 +97,7 @@ Finally, as we cannot reorganize dynamically the hierarchy of event producers, a
 
 We designed a \gls{Framesoc} importer for \gls{Moca} traces which produces three different \gls{Framesoc} traces.
 The first one create an event hierarchy based on the virtual memory addresses.
-The second one does the same thing but for physical addresses.
+The second one does the same thing for physical addresses.
 Finally, in the third one, each thread is a root event producer and embed the whole memory hierarchy.
 
 The more event producer there are, the more partitions \gls{Ocelotl} must consider to compute the aggregation.
@@ -108,7 +108,7 @@ Then the second level of event producers is composed of the stacks and data stru
 All the addresses that are not in these set, are merged if they are contiguous, creating chunks of continuous addresses which are also second level event producers.
 Then each level is obtained by splitting the previous one on two or three parts, until we arrive at the page level.
 The pages are the leaves of this virtual memory hierarchy.
-We could divide the pages in cache lines and keep going until the address granularity, yet this would generate way more event producer that what \gls{Ocelotl} is able to handle.
+We could divide the pages in cache lines and keep going until the address granularity, but this would generate way more event producer that what \gls{Ocelotl} is able to handle.
 
 \begin{figure}[htb]
     \centering
@@ -321,11 +321,11 @@ Additionally, we can look at the amount of sharing instead of the number of axis
 \end{figure}
 
 We can see in \fig{dgetrf-share-zoom} that the sharing patterns are very similar to the access patterns.
-The three other data structures present different yet interesting memory access patterns.
+The three other data structures present different and interesting memory access patterns.
 First the malloc\#1 structure is very small and accessed intensively in a shared way, during all the execution and always on the same page.
 We can presume that this data structure contains information about the threads status that must be updated quite often, maybe it is used for thread scheduling.
 Second the stack 1256 is only used during the first third of the execution and written only at the beginning and in parallel.
-For a generic data structure, this parallel initialization could probably have been designed to distribute first touch on the \gls{NUMA} nodes of the machine, yet on a stack it seems quite unusual.
+For a generic data structure, this parallel initialization could probably have been designed to distribute first touch on the \gls{NUMA} nodes of the machine, still on a stack it seems quite unusual.
 Last but not least, a small part of the main stack is accessed in read and write mode and in a shared way during all the execution.
 This pattern means that threads are probably organized in a master / slave way, where the master thread allocates data in its stack (not dynamic allocation).
 This might be problematic on \gls{NUMA} machines as the stack is statically allocated and thus cannot be allocated explicitly on some node.
@@ -337,7 +337,7 @@ Yet an interesting thing to do would be to compare these traces, with the trace 
 Indeed there are some performance differences between the two library that are hard to explain with traditional profiling tools as the \gls{MKL} code is proprietary.
 Therefore, memory traces might help understanding the underlying algorithms.
 
-In the end, this approach ease the exploration of \gls{Moca} traces, yet it is only true for developers that know a minimum of \gls{R} code.
+In the end, this approach ease the exploration of \gls{Moca} traces, provided that we know a minimum of \gls{R} code.
 Moreover, while \gls{Framesoc} and \gls{Ocelotl} can be easily used by an end user without the our intervention, at the time of the writing, this programmatic approach requires to read at least a part of the labbook to understand how to do the analysis.
 Additionally, we had some troubles to analyze some traces from Lulesh \gls{OpenMP} and \gls{SOFA}.
 Indeed these applications generates thousands of call to the malloc functions (hundreds of thousands for Lulesh).
@@ -346,7 +346,7 @@ In the end it appears that we need both a more user friendly tool, and a way to 
 
 \subsection{Generic trace visualization tool}
 
-Programmatic exploration of traces is extremely powerful yet it is not user friendly.
+Programmatic exploration of traces is extremely powerful but not user friendly.
 We describe here an hypothetical, generic trace viewer based on \gls{R} that should make trace exploration more user friendly.
 We only provide some principles of design and interaction that results from our experiment while trying to analyze traces with \gls{R}.
 
