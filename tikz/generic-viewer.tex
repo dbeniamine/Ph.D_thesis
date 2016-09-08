@@ -124,13 +124,16 @@
         header={Trace}{EntityCol}{north}{}] (trace) {};
     \end{pgfonlayer}
 
-    \node [filled box=TraceCol]   (rqf) at (6, -6) {Required files};
-    \node [concrete box=TraceCol] (pc) at  (9, -6) {Parsing code};
-    \node [concrete box=TraceCol] (pp) at  (6,-8)  {Predefined plots};
-    \node [concrete box=TraceCol] (cc) at  (9, -8) {Command code};
+    \node [concrete box=TraceCol,text width=7.5em] (ci) at  (3, -6) {Mandatory commands implementation};
+    \node [concrete box=TraceCol,text width=7.5em] (sc) at  (6, -6) {Additional commands implementation};
+    \node [filled box=TraceCol]   (rqf) at (9, -6) {Required files};
+
+    \node [concrete box=TraceCol] (pc) at  (3, -8) {Parsing code};
+    \node [concrete box=TraceCol] (bp) at  (6,-8)  {Breakpoints};
+    \node [concrete box=TraceCol] (pp) at  (9,-8)  {Predefined plots};
 
     \begin{pgfonlayer}{background}
-        \node[entity,fit=(rqf) (pc) (pp) (cc),%
+        \node[entity,fit=(rqf) (ci) (sc) (pc) (bp) (pp),%
         header={Configuration}{EntityCol}{south}{}] (config) {};
     \end{pgfonlayer}
 
@@ -140,9 +143,9 @@
             header={Viewer}{ViewerCol}{north}{}] (viewer) {};
     \end{pgfonlayer}
 
-    \path[trace]  (rqf.north) edge[out=90,in=-90] node[pos=.3,above] {Defines} (trace.south);
+    \draw[trace]  (rqf.north) -- node[pos=.2,left] {Defines} (trace.south);
 
-    \path[view] (viewer.south) edge[out=-90,in=180] node[pos=.3,right] {Loads} (config.west);
+    \path[view] (viewer.south) edge[out=-90,in=90] node[pos=.3,right] {Loads} (config.north);
 
     \draw[view] ($(user.east)+(-.1,.2)$) -- ($(viewer.west)+(0,.2)$);
     \draw[view] ($(viewer.west)+(0,-.2)$) -- ($(user.east)+(-.1,.-.2)$);
