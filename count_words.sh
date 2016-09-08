@@ -1,5 +1,5 @@
 #!/bin/bash
-WORDS=('Thus' 'Therefore' 'Thereby' 'Hence' 'Consequently' 'As a result' 'Yet' 'Still' 'But' 'However' 'Nevertheless' 'Although' 'Despite' 'Anyway' 'Furthermore' 'Moreover'  'Additionally' 'Indeed')
+WORDS=('Thus' 'Therefore' 'Thereby' 'Hence' 'Consequently' 'As a result' 'Yet' 'Still' 'But' 'However' 'Nevertheless' 'While' 'Although' 'Despite' 'Anyway' 'Furthermore' 'Moreover'  'Additionally' 'Indeed')
 
 if [ -z "$1" ]
 then

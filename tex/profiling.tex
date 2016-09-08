@@ -114,7 +114,7 @@ This is useful once hotspots are identified, but can lead to miss a part of the 
 
 An other approach to make performance counters more understandable consists in combining them with contextual informations.
 Such informations can be obtained by intercepting libraries calls (system calls, C standard library, \gls{MPI}, \gls{OpenMP} \ldots).
-The easiest way to intercept a library call is by overriding it at runtime with the \texttt{LD\_PRELOAD} hack\DHm{ref?}\footnote{
+The easiest way to intercept a library call is by overriding it at runtime with the \texttt{LD\_PRELOAD} environment variable\footnote{
     One can use the \texttt{LD\_PRELOAD} environment variable to tell the linker to load a library before running a program.
     As a result, each call to a function from an external library overwritten in the preloaded library will be intercepted.}.
 A second method is to rely on binary instrumentation libraries such as \gls{Intel} \gls{Pin}~\cite{Luk05Pin} or Dyninst from the Paradyn Project~\cite{Miller95Paradyn}.
@@ -146,26 +146,25 @@ Therefore low level tools such as \gls{Likwid} are well suited as they can both 
 \section{Experimental Methodology}
 \label{sec:expe-methodo}
 
-In computer science, most experiment are not costly in terms of both time and money.
-Furthermore we can easily monitor our experiments and restart them quickly if something goes wrong.
-In other domains, such as biology,  were this reactivity is not possible, scientist are obliged to write very precise protocols to avoid loosing large amounts time and money.
-By inspiring ourselves from their protocols we could make our experiments more reproducible thus make our research more trustable.
+In computer science we can easily monitor our experiments and restart them quickly if something goes wrong.
+At the opposite, in other domains, such as biology,  this reactivity is not possible, scientist are forced to write very precise protocols to avoid loosing large amounts of time and money.
+By inspiring ourselves from their protocols we could make our experiments reproducible and our research more trustable.
 
-In this section we first introduce why reproducibility matters and how people have tried to reach it in \gls{HPC}, then we present the methodology we have developed during this thesis to make our experiment as reproducible as possible.
+In this section we first introduce reproducibility and how people have tried to reach it in \gls{HPC}, then, we present the methodology we have developed during this thesis to make our experiments as reproducible as possible.
 
 
 \subsection{Reproducible research}
 
-Measurement bias, which means attributing a consequence to the wrong cause due to an issue in our measurement method, is a widely known phenomena in scientific communities and is analyzed in most fields.
-Mytkowicz et al.~\cite{Mytkowicz09Producing} highlighted several way to introduce significant measurement bias in computer science experiments without noticing it.
+Measurement bias, which means attributing a consequence to the wrong cause due to an issue in our measurement and analyze method, is a widely known phenomena in scientific communities and is analyzed in most fields.
+Mytkowicz et al.~\cite{Mytkowicz09Producing} highlighted several ways to introduce significant measurement bias in computer science experiments without noticing it.
 Its experiments showed that measurement bias is both commonplace and unpredictable in our field.
-Therefore the easiest way to deal with this bias is to reproduce studies published by other teams in order to confirm or invalidate their results.
-Still reproducing experiment in computer science and more specifically in \gls{HPC} is not trivial.
+Therefore, the easiest way to deal with this bias is to reproduce studies published by other teams in order to confirm or invalidate their results.
+Still, reproducing experiments in computer science and more specifically in \gls{HPC}, is not trivial.
 
-A previous study~\cite{Collberg15Repeatability} tried to evaluate how reproducible the experiment presented in computer science article are.
-To do so, they focused on the capacity to build the experimental code and evaluated $601$ articles published in “top ACM conferences and journal”.
+A previous study~\cite{Collberg15Repeatability}, tried to evaluate how reproducible the experiment presented in computer science article are.
+To do so, they only focused on the capacity to compile the experimental code and evaluated $601$ articles published in “top ACM conferences and journal”.
 From these $601$ articles they were only able to build the environment of $217$ articles.
-Moreover it took more than half an hour to build $64$ of these papers and $23$ other required the intervention of the authors.
+Moreover it took more than half an hour to build the experimental code of $64$ of these papers and $23$ others required the intervention of the authors.
 
 At this point we need to define precisely reproducibility, for the remaining of this thesis, we will use the definition proposed by Dror G. Feitelson~\cite{Feitelson15From}:
 
@@ -176,36 +175,44 @@ At this point we need to define precisely reproducibility, for the remaining of 
 \end{quote}
 
 Repeating an experiment in the sense of Feitelson in \gls{HPC} is nearly impossible.
-Indeed repeating an experiment requires the access to the machine that executed the original one, with the exact same software stack and all the scripts to run it.
-Yet several unpredictable factors can impact the repeatability: between the two experiments, some hardware (for instance a disc) could have been replaced by one faster.
-While we can log the whole hardware configuration during the experiment, some other factors, such as the room temperature, can impact the performances and are nearly impossible to measure during the experiment.
+Indeed repeating an experiment first requires the access to the machine that executed the original one, with the exact same software stack and all the scripts to run it.
+Yet, several unpredictable factors can impact the repeatability: between the two experiments, some hardware (for instance a disc) could have been replaced by one faster.
+While we can log the whole hardware configuration during the experiment, some other factors, such as the room temperature, can impact the performances and are nearly impossible to measure during the experiment and impossible to reproduce.
 Still there is a gap between the definitions of repeatability and reproducibility.
-Indeed if we have access to a machine, with the exact same software stack and comparable hardware and to the experimental scripts we can repeat the experiment in \textbf{similar} conditions.
-This definition of \emph{similar} repeatability is strongest than reproducibility as we do not re-implement the experiment but re-run it on a similar settings.
-Still we cannot expect the exact same results.
-If the experiments compares raw execution times, changing the machine may significantly changes the results, while if we compare relative time (speedup or slowdown) we are more likely to obtain similar results.
-Finally adaptive algorithms may be a limit to similar repetition.
-Indeed small hardware differences might be enough to trigger a change on the executed code of an adaptive algorithm.
+Indeed if we have access to a machine, with the exact same software stack and comparable hardware, as well as the experimental scripts, we can repeat the experiment in \textbf{similar} conditions.
+This definition of \emph{similar} repeatability is stronger than reproducibility as we do not re-implement the experiment but re-run it on a similar settings.
+Nevertheless we cannot expect the exact same results.
+If the experiments compares raw execution times, changing the machine may significantly changes the results, although if we compare relative time (speedup or slowdown) we are more likely to lessen the discrepancy.
+Finally, adaptive algorithms may be a limit to similar repetition.
+Indeed, small hardware differences might be enough to trigger a change on the executed code of an adaptive algorithm.
 
-Several tools can helps use making experiments more repeatable for instance, by running our experiment on a shared platform such as grid5000~\cite{Cappello05Grid5000}, we can hope that other people might access the same set of machines.
-Moreover one can control and distribute the set of installed libraries by deploying a custom environment on these machines.
-\gls{Kameleon}~\cite{Ruiz15Reconstructable} go even further as it describe an environment as a recipe thus makes it easy to check the version of a library or replace it.
-It also make the distribution of the environment easier as a recipe is a piece of code instead of an archive.
+Several tools can helps use making experiments more repeatable.
+For instance, by running our experiment on a shared platform such as grid5000~\cite{Cappello05Grid5000}, we can argue that other people have access to the same set of machines.
+Moreover on these machines, it extremely easy to make a deployable image of our environment.
+Using an image provides controls on the installed library, but it is impossible to know or change the version a library without deploying it.
+\gls{Kameleon}~\cite{Ruiz15Reconstructable} overpass this limit by describing an environment as a recipe.
+It also make the distribution of the environment easier as we only need to distribute the recipe which is a lightweight piece of code instead of an archive containing a whole \gls{OS}.
 
-To reproduce an experiment it is important to understand how it has been designed and how it evolves from the first version to the results presented in the paper.
-Stanisic et al.~\cite[Chapter~4, p31-44]{Stanisic15Reproducible} described an experimental workflow based on \gls{Git} and \gls{Org-mode} to keep track of these evolutions and make easy for someone to understand it.
+To reproduce an experiment it is important to understand how it has been designed and how it has evolved from the first version to the results presented in the paper.
+Stanisic et al.~\cite[Chapter~4, p31-44]{Stanisic15Reproducible} described an experimental workflow based on \gls{Git} and \gls{Org-mode} to keep track of these evolutions and make easy for anyone to understand it.
 One of the main drawback of this workflow is that it is not suitable for experiment generating huge ($\ge$\SI{500}{Mib}) trace files as \gls{Git} is not designed to handle such files.
 
-Many tools were designed to conduct experiments in computer science still they are not designed for \gls{HPC} and using them in our context would require some adjustments.
-A more complete survey can be found in~\cite[Chapter~3, p17-19]{Stanisic15Reproducible}
+Many tools were designed to conduct experiments in computer science however they are not designed for \gls{HPC} and using them in our context would require some adjustments.
+A comprehensive survey can be found in~\cite[Chapter~3, p17-19]{Stanisic15Reproducible}
 
 \subsection{Experimental workflow}
 
 We design experiments to analyze the behavior of an application, compare it to other applications or to test it under specific circumstances.
 The goal of the experiment is to answer a question or confirm an hypothesis.
-Answer scientifically a question requires it to be formulated in precise words.
-More specifically, we have to define what we are measuring, how we measure it, under which circumstance, to what are we comparing our results and what results do we expect.
-Designing an experiment consists in translating a high level questions into an \emph{experimental plan} that allow to answer it scientifically.
+Answering scientifically a question requires to define:
+\begin{itemize}
+    \item The metric: what we are measuring.
+    \item The measurement method: how we measure int.
+    \item The environment: the circumstances under which we do the measure.
+    \item The reference cases to which we will compare our results.
+    \item The expected results.
+\end{itemize}
+Designing an experiment consists in translating high level questions into an \emph{experimental plan} that answer them scientifically.
 
 \begin{figure}[htb]
     \centering
@@ -214,32 +221,37 @@ Designing an experiment consists in translating a high level questions into an \
     \label{fig:exp-pipeline}
 \end{figure}
 
-\paragraph{Experimental plan:}
-We consider an experiment as a three steps workflows depicted in \fig{exp-pipeline}, the first one called \emph{Experimental Plan} determines the whole experiment.
-We define the \emph{experimental plan} as the smallest set of scripts and documentation required to repeat an experiment.
+\paragraph{Complete experimental plan:}
+We consider an experiment as a three steps workflow depicted in \fig{exp-pipeline} determined by a \emph{Complete experimental plan}.
+We define the \emph{Complete experimental plan} as the smallest set of scripts and documentation required to repeat an experiment.
 It includes the main script that actually run the experiment with all its dependencies.
-These dependencies consists in the tested applications (\gls{VCS} version) with their inputs or the benchmarks used for testing them and the \emph{environment} on which it is run (\gls{OS}, libraries and other configurations).
-It also contains the description of the experimental machine(s) and the command or script used to deploy the \emph{environment} on them and start the main script.
-Finally all the scripts used for parsing and analyzing the experimental results are part of the experimental plan as they are required to repeat it.
-Moreover designing the analysis at the same time as the experiment allow to reduce some bias.
-Indeed preparing the data presentation before obtaining them forces us to write on our expectations down.
-Thus if the results does not match theses assumptions we are more likely to notice it.
+These dependencies consists in the tested applications (\gls{Git} version, modifications) along with their inputs or the benchmarks used for testing them and the \emph{environment} on which it is run.
+This environment contains the \gls{OS}, libraries and any user configurations, it can be distributed as an image of the system or a \gls{Kameleon} recipe.
+The complete experimental plan also contains the description of the experimental machine(s) and the command(s) or script(s) used to deploy the \emph{environment} on them and start the main script.
+Finally all the scripts used for parsing and analyzing the experimental results are part of the complete experimental plan as they are required to repeat it.
+Moreover, designing the analysis at the same time as the experiment help reduce some bias.
+Indeed, preparing data presentation before obtaining the actual data forces us to express our expectations.
+In the end, if the results do not match theses expectations we are more likely to notice it.
+
+\paragraph{Main experiment:}
+The first step of the experimental workflow consist in execution the main experiment on the experimental machines.
+This step produces two types of results: the raw results which are the actual output of the experiment and the meta data.
+These meta data include all pertinent informations on how the data were produced (information about the environment, commands executed, \gls{Git} version of every applications) and how to interpret them.
 
 \paragraph{Raw analysis:}
-The first step of the experimental workflow produces two types of results: the raw results which are the actual output of the experiment and the meta data that describe the condition on which the experiment was executed.
-We call \emph{Raw Analysis} the second step that extract the raw values needed to compute the metrics defined in the experimental plan from the raw results.
+We call \emph{Raw Analysis} the second step that extract the raw values needed to compute the metrics defined in the complete experimental plan from the raw results.
 This step only aims at reducing the amount of data to analyze (from \SI{100}{Gio} to few Mib in some of our experiments).
 The result of the raw analysis is usually one or two \texttt{csv} files that can be easily read by any statistical tool.
 
 \paragraph{Statistical Analysis:}
-Finally comes the \emph{Statistical Analysis} which first read the filtered results and compute statistics such as means, standard error, speedup and slowdown etc.
+Finally comes the \emph{Statistical Analysis} which first reads the filtered results and computes statistics such as means, standard error, speedup and slowdown etc.
 The second aim of this step is to present a comprehensive visualization of these statistics.
 
 \paragraph{}
-While the whole \emph{experimental plan} is required repeat the experiment, some people may want to reproduce only the statistical analysis to inspect the results from another point of view.
-Furthermore they might want to extract some other values from the raw results or get more information on the experimental condition from the meta data.
-Thus each step should be distributed separately including all the files required to repeat the experiment from the beginning the of step to the final results.
-Finally while repeating the whole experiment requires access to the experimental machines, the two last steps are not machine dependents thus are easily repeatable.
+While the complete experimental plan is required to repeat the experiment, some people may want to reproduce only the statistical analysis to change it and inspect the results from another point of view.
+Furthermore they might want to extract other values from the raw results or get more information about the experimental environment from the meta data.
+To enable such partial reproduction we can distribute the \emph{Complete analysis plan} and the \emph{filtered analysis plan} that each includes all the files generate by the previous step and all the files required to redo the next step.
+Finally while repeating the whole experiment requires access to the experimental machines, the two last steps are not machine dependent, thus, are easily repeatable.
 
 \subsection{Methodology}
 

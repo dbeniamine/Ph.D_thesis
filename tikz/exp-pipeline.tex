@@ -18,6 +18,7 @@
 \tikzstyle{dep}  = [-latex,Expecol,thick]
 \tikzstyle{exec} = [-latex,Resultcol,thick]
 \tikzstyle{copy} = [-latex, dashed, thick, Analysecol]
+\tikzstyle{steparr} = [single arrow,draw,Resultcol,anchor=west,text centered]
 
 %\newlength{\cornerlength}
 %\setlength{\cornerlength}{.1}
@@ -85,11 +86,12 @@
     %Minimum Width = header nodes,
     font          = \strut\large,%\ttfamily,
   %  text depth    = +0pt,
+    text width  =   5em,
     fill          = #1,
     text         = white,
     draw},
     header/.style n args={4}{%
-    inner ysep = +1.7em,
+    inner ysep = +2.5em,
     append after command = {
       \pgfextra{\let\TikZlastnode\tikzlastnode}
       node [header node=#2,#4] (header-\TikZlastnode) at (\TikZlastnode.#3) {#1}
@@ -121,36 +123,36 @@
 
     \begin{pgfonlayer}{bg1}
         \node[distrib,fit=(configs) (venv) (ana) (filt) (main) (dpl) (mach),%
-        header={Experimental plan}{distribcol}{north}{}] (distenv) {};
+        header={Complete experimental plan}{distribcol}{north}{text width=7em}] (distenv) {};
     \end{pgfonlayer}
 
     % Analysis env
 
     \begin{pgfonlayer}{foreground}
-        \coordinate  (inv0)  at (6.5,5.8);
-        \node[fileR] (mi)    at (6.5,3.5)  {Meta data};
-        \node[fileR] (raw)   at (6.5,0)  {Raw results};
-        \node[fileA] (filt1) at (6.5,-3.5)  {Parsing script};
-        \node[fileA] (ana1)  at (6.5,-7)  {Analysis script};
+        \coordinate  (inv0)  at (6,5.8);
+        \node[fileR] (mi)    at (6,3.5)  {Meta data};
+        \node[fileR] (raw)   at (6,0)  {Raw results};
+        \node[fileA] (filt1) at (6,-3.5)  {Parsing script};
+        \node[fileA] (ana1)  at (6,-7)  {Analysis script};
     \end{pgfonlayer}
 
     \begin{pgfonlayer}{foreground}
-        \coordinate  (inv1) at (10.5,5.5);
-        \node[fileR] (csv)  at (10.5,0) {Filtered results};
-        \node[fileA] (ana2) at (10.5,-7) {Analysis script};
-        \coordinate  (inv2) at (10.5,-8.5);
+        \coordinate  (inv1) at (10,5.8);
+        \node[fileR] (csv)  at (10,0) {Filtered results};
+        \node[fileA] (ana2) at (10,-7) {Analysis script};
+        \coordinate  (inv2) at (10,-8.5);
     \end{pgfonlayer}
 
     \begin{pgfonlayer}{bg1}
         \node[distrib,fit=(inv0) (raw) (mi) (filt1) (ana1),%
-        header={Raw analysis}{distribcol}{north}{}] (rawa) {};
+        header={Complete analysis plan}{distribcol}{north}{}] (rawa) {};
     \end{pgfonlayer}
 
-    \node[fileR] (res) at (14.5,0) {Human readable results};
+    \node[fileR] (res) at (14,0) {Human readable results};
 
     \begin{pgfonlayer}{bg1}
         \node[distrib,fit=(inv1) (csv) (ana2) (inv2),%
-        header={Statistical analysis}{distribcol}{north}{text width=5em}] (stata) {};
+        header={Filtered analysis plan}{distribcol}{north}{}] (stata) {};
     \end{pgfonlayer}
 
 
@@ -166,15 +168,19 @@
      \path[copy] (ana.east)  edge (ana1.west);
      \path[copy] (filt.east) edge  (filt1.west);
 
-    \path[exec] (mach.south) edge[out=0,in=180] (mi.west);
-    \path[exec] (mach.south) edge[out=0,in=180]  node[pos=.9,above=2em,rotate=90] {generate} (raw.west);
+    \path[exec] (mach.south) edge[out=0,in=180,looseness=.9] (mi.west);
+    \path[exec] (mach.south) edge[out=0,in=180]  node[pos=.95,above=2em,rotate=90] {generate} (raw.west);
 
     \draw[exec] (raw.east) -- node[pos=.06,below=2em,rotate=90] {generate} (csv.west);
     \path[exec] (filt1.east) edge[out=0,in=180] (csv.west);
     \path[copy] (ana1.east) edge[out=0,in=180] (ana2.west);
 
-    \draw[exec] (csv.east) -- node[pos=.09,below=2em,rotate=90] {generate} (res.west);
-    \path[exec] (ana2.east) edge[out=0,in=180,looseness=.6] (res.west);
+    \draw[exec] (csv.east) -- node[pos=.02,below=2em,rotate=90] {generate} (res.west);
+    \path[exec] (ana2.east) edge[out=0,in=180,looseness=.5] (res.west);
+
+    \node[steparr,text width=16.5em] at ($(distenv.south west)+(0,-1)$)    {Main experiment};
+    \node[steparr,text width=5.5em] at ($(rawa.south)+(0,-1)$)       {Raw analysis};
+    \node[steparr] at ($(stata.south)+(0,-1)$)      {Statistical analysis};
 
 \end{tikzpicture}
 % vim: et si sta lbr  sw=4 ts=4 spelllang=en_us
