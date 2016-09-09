@@ -206,13 +206,17 @@ We design experiments to analyze the behavior of an application, compare it to o
 The goal of the experiment is to answer a question or confirm an hypothesis.
 Answering scientifically a question requires to define:
 \begin{itemize}
-    \item The metric: what we are measuring.
-    \item The measurement method: how we measure int.
     \item The environment: the circumstances under which we do the measure.
+    In computer science that includes the \gls{OS}, libraries and any user configurations.
     \item The reference cases to which we will compare our results.
-    \item The expected results.
+        These are usually state of the art existing applications comparable to the one we evaluate.
+    \item The inputs given to the tested applications.
+    \item The parameters used for each application.
+    \item The metrics: a set of quantifiable and measurable indicators used to evaluate our results.
+    \item The expected results: what behavior do we expect, what should be considered as abnormal.
 \end{itemize}
-Designing an experiment consists in translating high level questions into an \emph{experimental plan} that answer them scientifically.
+
+Designing an experiment consists in translating high level questions into an experimental plan that answers them scientifically.
 
 \begin{figure}[htb]
     \centering
@@ -225,9 +229,8 @@ Designing an experiment consists in translating high level questions into an \em
 We consider an experiment as a three steps workflow depicted in \fig{exp-pipeline} determined by a \emph{Complete experimental plan}.
 We define the \emph{Complete experimental plan} as the smallest set of scripts and documentation required to repeat an experiment.
 It includes the main script that actually run the experiment with all its dependencies.
-These dependencies consists in the tested applications (\gls{Git} version, modifications) along with their inputs or the benchmarks used for testing them and the \emph{environment} on which it is run.
-This environment contains the \gls{OS}, libraries and any user configurations, it can be distributed as an image of the system or a \gls{Kameleon} recipe.
-The complete experimental plan also contains the description of the experimental machine(s) and the command(s) or script(s) used to deploy the \emph{environment} on them and start the main script.
+These dependencies consists in the tested applications (\gls{Git} version, modifications) along with their inputs or the benchmarks used for testing them and the environment on which it is run.
+The complete experimental plan also contains the description of the experimental machine(s) and the command(s) or script(s) used to deploy the environment on them and start the main script.
 Finally all the scripts used for parsing and analyzing the experimental results are part of the complete experimental plan as they are required to repeat it.
 Moreover, designing the analysis at the same time as the experiment help reduce some bias.
 Indeed, preparing data presentation before obtaining the actual data forces us to express our expectations.
@@ -259,10 +262,9 @@ Implementing such an experimental plan is not trivial, we describe here how we d
 
 \subsubsection{Construction of an experimental plan}
 
-In \gls{HPC}, an experiment usually consist in testing the execution time or the exactitude of an application or a tool that uses an application as an input (scheduler, simulator, analysis tool \ldots).
-For both we need to find a set of \emph{benchmarks} to conduct our experiments, but the signification of this term is slightly different for the two cases.
-In the first case, a benchmark is an input for the studied application that should cover the whole code that we want to test.
-While in the second case it means a set of applications which have a behavior representative of the ones targeted by the evaluated tool.
+In \gls{HPC}, an experiment usually consists in evaluating the performances or the correctness of an application or of a tool that uses an application as an input (scheduler, simulator, analysis tool \ldots).
+For both we need to find a set of \emph{benchmarks} to conduct our experiments, which means an input representative of the case we want to test.
+A benchmark can be either the input of a computational kernel or an actual application used by the tool we evaluate.
 %For this need, we use the \gls{npb}~\cite{Jin99NPBOpenMP} as they cover a large set of applications from simple computational kernels to real life applications.
 Furthermore if the aim of the experiment is to evaluate the performances of a code that we have developed, we need to test it against existing comparable applications.
 Yet, a set of benchmarks might not a sufficient input as such \gls{HPC} applications are often highly configurable.
