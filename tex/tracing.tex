@@ -422,7 +422,7 @@ cluster (Intel machines).
 As some state of the art tools can only run on \gls{AMD} machines, we also ran
     some of the experiments on
     \texttt{StRemi} machine from \gls{Grid5000} grenoble.
-    These machines hardware specifications%
+    These machines hardware and software specifications%
     \footnote{\gls{Grid5000} provides an online hardware description:\\
        \url{https://www.grid5000.fr/mediawiki/index.php/Grenoble:Hardware\#Edel}
        \\\url{https://www.grid5000.fr/mediawiki/index.php/Reims:Hardware\#Stremi}}
@@ -445,9 +445,19 @@ As some state of the art tools can only run on \gls{AMD} machines, we also ran
         \cmidrule(lr){2-6}
         \texttt{Edel}   & $4$  & $4$   & \SI{2.27}{Ghz}& \SI{8}{Mib}  & \SI{12}{Gib} \\
         \texttt{StRemi} & $12$ & $12$  & \SI{1.70}{Ghz}& \SI{12}{Mib} & \SI{24}{Gib}\\
+        \midrule
+        & \multicolumn{5}{c}{\textbf{Software}}\\
+        \cmidrule(lr){2-6}
+        & \multicolumn{2}{c}{Distribution} & Kernel &
+            \multicolumn{2}{c}{Bios configurations} \\
+        \cmidrule(lr){2-6}
+        \texttt{Turing}   & \multicolumn{2}{c}{Debian Jessie} & Linux 3.16.0-4 &
+            \multicolumn{2}{c}{No hyper threading} \\
+        \texttt{Idfreeze} & \multicolumn{2}{c}{Debian Jessie} & Linux 3.16.0-4 &
+            \multicolumn{2}{c}{No hyper threading}\\
         \bottomrule
     \end{tabular}
-    \caption{Hardware configuration the evaluation system for Moca.}
+    \caption{Hardware and software configuration of the evaluation system for Moca.}
     \label{tab:hw-moca}
 \end{table}
 
@@ -485,7 +495,7 @@ As some state of the art tools can only run on \gls{AMD} machines, we also ran
 \end{table}
 
 
-For each experiment, we deployed the same \emph{Debian} \emph{Jessie} environment running a \texttt{Linux 3.16.0-4} on a machine with hyper threading disabled.
+%For each experiment, we deployed the same \emph{Debian} \emph{Jessie} environment running a \texttt{Linux 3.16.0-4} on a machine with hyper threading disabled.
 We disabled address space randomization to make the comparison between different traces more practical.
 As our two evaluation machines do not have the same hardware, we limited the number of threads used by \gls{OpenMP} to $8$, that is the largest number of hardware threads available on both machines.
 

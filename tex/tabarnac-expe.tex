@@ -29,16 +29,26 @@ We also evaluate the overhead of \gls{Tabarnac} on each of the \gls{NPB}.
         \cmidrule(lr){2-6}
         \texttt{Turing}   & $8$ & $16$ & \SI{2.00}{Ghz}& \SI{18}{Mib} & \SI{32}{Gib} \\
         \texttt{Idfreeze} & $6$ & $6$  & \SI{2.20}{Ghz}& \SI{12}{Mib} & \SI{32}{Gib}\\
+        \midrule
+        & \multicolumn{5}{c}{\textbf{Software}}\\
+        \cmidrule(lr){2-6}
+        & Kernel & \multicolumn{2}{c}{Distribution} &
+            \multicolumn{2}{c}{Bios configurations} \\
+        \cmidrule(lr){2-6}
+        \texttt{Turing}   & Linux 3.13 & \multicolumn{2}{c}{Ubuntu ??} &
+            \multicolumn{2}{c}{Hyper threading} \\
+        \texttt{Idfreeze} & Linux 3.2 & \multicolumn{2}{c}{Debian Jessie} &
+            \multicolumn{2}{c}{No hyper threading}\\
         \bottomrule
     \end{tabular}
-    \caption{Hardware configuration of the evaluation system for Tabarnac.}
+    \caption{Hardware and software configuration of the evaluation system for Tabarnac.}
     \label{tab:turing-hw}
 \end{table}
 
 We used two NUMA machines for our experiments, \texttt{Turing} and \texttt{Idfreeze}.
 The second machine was only used to compare the instrumentation overhead on Intel and AMD machines, all the other experiments ran on \texttt{Turing}.
-The hardware details are summarized in \tbl{turing-hw}.
-\texttt{Turing} runs version $3.13$ of the Linux kernel, while \texttt{Idfreeze} runs version $3.2$.
+The hardware and software configurations are summarized in \tbl{turing-hw}.
+%\texttt{Turing} runs version $3.13$ of the Linux kernel, while \texttt{Idfreeze} runs version $3.2$.
 
 We evaluated the following applications with \gls{Tabarnac} in this paper: the \IS benchmark from the \gls{NPB} and \Ondes.
 They were chosen to demonstrate different memory access behaviors with different strategies to improve them.
