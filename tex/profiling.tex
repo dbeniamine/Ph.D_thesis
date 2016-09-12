@@ -266,54 +266,55 @@ In \gls{HPC}, an experiment usually consists in evaluating the performances or t
 For both we need to find a set of \emph{benchmarks} to conduct our experiments, which means an input representative of the case we want to test.
 A benchmark can be either the input of a computational kernel or an actual application used by the tool we evaluate.
 %For this need, we use the \gls{npb}~\cite{Jin99NPBOpenMP} as they cover a large set of applications from simple computational kernels to real life applications.
-Furthermore if the aim of the experiment is to evaluate the performances of a code that we have developed, we need to test it against existing comparable applications.
-Yet, a set of benchmarks might not a sufficient input as such \gls{HPC} applications are often highly configurable.
-Thus we must evaluate each program under at least two set of parameters: the default and a tuned version with a set of parameters optimized for the results we are measuring.
+Additionally, if the aim of the experiment is to evaluate the performances of a code that we have developed and there are some existing comparable applications, we need to test it against these applications.
+Yet, a set of benchmarks might not be a sufficient input as \gls{HPC} applications are often highly configurable.
+Consequently, we must determine for each application which parameters are the most efficient for the evaluated metrics and the defined benchmarks.
+In the end, we evaluate each program under at least two set of parameters: the default and a tuned version.
 
 Once the benchmarks are chosen, we need to decide on one machine or a set of machines on which we will run the experiment.
 This step is crucial as computers architectures are getting more and more complex  and applications are (usually) designed for one type of machines.
 Furthermore some tools (such as \gls{Pin}, \gls{PEBS}~\cite{Levinthal09Performance}, \gls{IBS}~\cite{Drongowski07Instructionbased}) are either vendor specific or optimized for some architecture.
-Therefore, we often have to repeat the same experiment on several different machines to do a fair comparison.
+Therefore, we often have to repeat the same experiment on several different machines to conduct a fair comparison.
 
 At this point, we need to find some relevant metrics to answer the questions that we are asking.
 These metrics should remain simple as they will be interpreted by humans.
-Yet they must also cover every aspects that we are studying.
-A complete set of simple measurable metrics is often easier to understand that one complex metric providing an overall score in an unknown unit.
-Still simple ratios and percentages can make an analysis more reproducible for instance an execution time is significant only for a very specific configuration on one machine, while speedups and overheads can be compared more easily.
+Still, they must also cover every aspect that we are studying.
+A complete set of simple measurable metrics is often easier to understand that one complex metric providing an overall score in an obscure unit.
+%Still simple ratios and percentages can make an analysis more reproducible for instance an execution time is significant only for a very specific configuration on one machine, while speedups and overheads can be compared more easily.
 
-An experimental environment should be \emph{minimalist} yet \emph{sufficient}.
+An experimental environment should be both \emph{minimalist} and \emph{sufficient}.
 Indeed if the environment is not sufficient we will have to install packages or library before the experiment.
-Thus the installed version will depend on the time where the experiment is run, making it almost impossible to repeat.
-At the opposite if we include more libraries then we need or worst several version of the same library when it is not required, it might be hard to find out which version was actually used during our original experiment.
+Hence the installed version will depend on the date at which the experiment is run, making it almost impossible to repeat.
+At the opposite if we include more libraries than we need or worst several version of the same library when it is not required, finding the version actually used during the original experiment might require to pay an extra attention to the whole building pipeline.
 
 Finally it is crucial to write both parsing and analysis scripts before running the experiment.
 To do so, we can generate a filler set of (fake) results representing our expectations.
 From this set we can design some data visualizations.
 Furthermore using this set we can complete the plots with some text describing these expected results.
-Such information will stop us from trying to explain a posteriori results that infirm our hypothesis.
+Such information will prevent us from trying to explain a posteriori results that infirm our hypothesis.
 
 \subsubsection{Automation and documentation}
 
-It is crucial that any step of the experiment from the deployment of the environment to the final analysis is properly scripted in a language that can be understood by other developers.
-Any manual step can make the experiment impossible to repeat and an obscure code might make it difficult to change some parameters without breaking the whole experiment.
+It is crucial that a all the steps of the experiment from the deployment of the environment to the final analysis are properly scripted in a language that can be understood by other developers.
+Any manual step can make the experiment impossible to repeat and an obscure code might make it difficult to modify the experiment without breaking it.
 
-Furthermore, the traces generated by an experiment must be \emph{self explanatory} or at some point they will only be a (large) set of meaningless bytes on a hard drive.
+Moreover, the traces generated by an experiment must be \emph{self explanatory} or at some point they will only be a (large) set of meaningless bytes on a hard drive.
 We consider that a trace is \textbf{self explanatory} if and only if we can easily answer the following questions from the raw trace:
 \begin{itemize}
     \item How the trace was generated, what is the exact command that launched it ?
     \item What software were used (including their versions and possible modifications) ?
-    \item What was the aim of the experiment ?
+    \item What were the hypotheses and expectations ?
     \item When was it executed ?
     \item On which machines (description, name and physical location) ?
-    \item How are the trace file organized (file hierarchy) ?
-    \item How can we interpret these results ?
+    \item How are the trace files organized (file hierarchy) ?
+    \item What scripts are used to do the analysis ?
 \end{itemize}
 To do so, all our experimental scripts starts the same way: they first create a new directory that will hold the traces.
-Then they copy themselves with all the scripts which are on their directory inside it.
-After that they duplicate their output to a file in this new directory and log every sensible meta data.
+Then they copy themselves with all the scripts which are inside their directory to this new directory.
+After that they duplicate their output to a file in this new directory and log every sensitive meta data.
 During the experiment, each command is echoed before executing it.
-Concerning the data analysis we use \gls{R} as it provides a large set of reliable statistic analysis libraries.
-Furthermore thanks to \gls{R-markdown}, we can produce a standalone structured output that contains the original questions, our assumptions, the results and plots, and our observations and comments.
+Regarding the data analysis we use \gls{R} as it provides a large set of reliable statistic analysis libraries.
+Additionally, thanks to \gls{R-markdown}, we can produce a standalone structured output that contains the original questions, our assumptions, the results and plots, our observations and comments.
 Finally, before distributing an experimental trace, we write a small \texttt{Readme} that explain the file hierarchy and the experiment design (although these informations could be recovered from the meta data and by reading the experiment code).
 
 \begin{centering}
@@ -374,40 +375,43 @@ Finally, before distributing an experimental trace, we write a small \texttt{Rea
     \vspace{1em}
 \end{centering}
 
-To evaluate the variability and reduce the effect of external noise, we run each configuration at least $30$ times.
+To evaluate the variability and reduce the effect of external noise, we run each configuration several times.
+The more variability there is, the more runs we need to execute.
 These runs are all independent therefore we must avoid to make them artificially dependent.
 The \alg{dependent-runs} shows a very simple experiment where the runs are launched by the process that actually do the experiment.
-As we do not create a new process for every run, some cache effects might appear between the runs improving their performances.
-Thus these runs are artificially dependent.
+As we do not create a new process for every run, some cache effects might appear after the first the run improving the performances of subsequent runs.
+Thus, these runs are artificially dependent.
 An easy way to avoid this bias is to start a new process for each run, as shown in \alg{independent-runs}.
-Yet, this is not enough to protect our experiment from system noise
+However, this is not enough to protect our experiment from system noise
 Indeed if at some point of the experiment a system process (such as \texttt{logrotate}) interfere with our experiment, the performance of a set of runs will drop.
-As the runs are executed in order, it might be correlated with the size, and therefore we will not realize that it is due to external noise, and credit the size for it.
-While if we randomize the runs, the performance drop will affect several runs (but not all) for different size.
-As a result we will observe a high variability for the impacted sizes and therefore conclude that something might have interfered.
+As the runs are executed in order, it might be correlated with the size, and therefore we will not realize that it is due to external noise, and we will consider it as a consequence of the size.
+While, if we randomize the runs, the performance drop will affect several runs (but not all) for different sizes.
+As a result we will observe abnormal results for the impacted sizes and conclude that something might have interfered.
 To do so, our experimental scripts generate a list of runs that should be executed, shuffle it and then execute them in this randomized order.
 
-Each run consists of three step: a pre-command that can set specific environment values, the actual command that execute the benchmark and the post command that can save and pre-process data, might compute metrics and must restore the normal state.
-The first and last steps are not mandatory, yet any environment change must be restored on the last step.
+Each run consists of three step: a pre-command that can set specific environment values, the actual command that execute the benchmark and the post-command that can save data, pre-process it, compute metrics must restore the normal state.
+Pre-processing data during the experiment can reduce the raw trace, and interfere with the raw analysis, but it is sometimes unavoidable, for instance when some evaluated tools generate binary traces that can only be interpreted inside the experimental environment.
+The first and last steps are not mandatory, however any environment change must be restored on the last step.
 Each of the commands executed by these 3 steps are logged before execution.
 
 \subsubsection{Distribution}
 
 The experimental plan is mostly composed of source code, thus it can easily be distributed using a \gls{VCS}.
-As it often depends of external programs, it is preferable to use \gls{VCS} which manage dependencies and patches such as \gls{Git} or mercurial.
-We distribute our experimental plans as \gls{Git} repositories, were each dependencies is tracked as a submodule.
-This repository includes an initialization script that retrieves all dependencies and apply the patch required.
+As it often depends on external programs, it is preferable to use \gls{VCS} which can manage dependencies and patches such as \gls{Git} or mercurial.
+We distribute our experimental plans as \gls{Git} repositories, were each dependency is tracked as a submodule.
+This repository includes an initialization script that retrieves all dependencies and apply the required patch.
 If the virtual environment is written as a \gls{Kameleon} recipe, it is trivial to distribute it inside the \gls{Git} repository.
 Yet in this case, we have to build the image from the recipe during the initialization.
 Often the environment is just an archive, in that case, we make it available on a http server, and the initialization script take charge of downloading it.
 Finally, we add a Readme describing how to run the experiment, on which machines and what variables should be changed (if any).
+Ideally this Readme should be generated automatically.
 
 Distributing the raw analysis is more difficult as some trace files can be quite heavy and code repositories are usually not designed to handle large files.
-Large file hosting services such as Renater File Sender or Zenodo are well suited to upload these files.
+Large file hosting services such as Renater FileSender~\cite{RenaterFileSender} or Zenodo~\cite{CernZenodo} are well suited to upload these files.
 Moreover they generate \gls{DOI} that can be used both in the article and in the experimental \gls{Git} to link to the trace.
 
-The statistical analysis could be distributed via code repository or with large file sharing service as it does not include large files.
-Yet large file sharing seems more suitable to us as the filtered traces are not code but experimental results.
+The statistical analysis could be distributed via code repository or with large file hosting service as it does not include large files.
+Still, large file hosting seems more suitable to us as the filtered traces are not code but experimental results.
 
 \section{SOFA Analysis}
 \label{sec:sofa-analysis}
@@ -417,7 +421,7 @@ In this section, we present first the experiment designed to produce a performan
 \subsection{Experimental plan}
 
 The current version of \gls{SOFA} is mostly sequential with a simple \gls{OpenMP} parallelization in some places.
-Yet this parallelization is known to be often inefficient.
+Yet, this parallelization is known to be often inefficient.
 The \gls{SOFA} developers gave us four simulation scenes specifically designed to test the most popular parts of \gls{SOFA}, and hints about functions that are known as hotspots.
 
 We decided to use \gls{Likwid} to analyze \gls{SOFA} performances as it is quite flexible allowing both global (wrapper mode) and local (marker mode) analysis and provides several useful metrics and performance groups out of the box.
@@ -425,8 +429,9 @@ We decided to use \gls{Likwid} to analyze \gls{SOFA} performances as it is quite
 More specifically, we focused on the following metrics:
 \begin{itemize}
     \item \emph{Idle time ratio}: The CPU is idle when it is waiting for a transfer to memory,  disc or network \glspl{I/O}.
-        Idle time can often be reduced either by overlapping it with computation or by improving memory (or \glspl{I/O} access pattern).
-        This metric gives the ratio between the time spent idle and the time actually spent computing things during the simulation.
+        Idle time can often be reduced either by overlapping it with computation or by improving memory (or \glspl{I/O}) access patterns.
+        This metric gives the ratio between the time spent idle and the total execution time.
+        It is computed from two likwid metrics: \texttt{Runtime (RDTSC)} (total time) and \texttt{Runtime unhalted} (total time not idle): $idleTime=100*(1-\frac{RuntimeUnhalted}{RuntimeRDTSC}$).
     \item \emph{Simulation time}: The time spent inside \gls{SOFA} simulation loop, this is only useful to compare parallel executions to sequential ones.
     \item \emph{Runtime ratio}: For each function, the ratio of the time spent in this function and the total time spent in the simulation loop.
         This metric highlights functions that are actually hotspots.
@@ -450,64 +455,72 @@ More specifically, we focused on the following metrics:
         \cmidrule(lr){2-3}
         \cmidrule(lr){5-6}
         & \SI{32}{Kib} & \SI{256}{Kib} & &\SI{10}{Mib} & \SI{16}{Gib} \\
+        \midrule
+        \multirow{2}{2cm}{Software} & kernel & \multicolumn{2}{c}{Distribution} & \multicolumn{2}{c}{Bios Configuration} \\
+        \cmidrule(lr){2-6}
+        & Linux 3.2.0-4 & \multicolumn{2}{c}{Debian Wheezy}  & \multicolumn{2}{c}{No hyper threading}  \\
         \bottomrule
     \end{tabular}
-    \caption{Hardware configuration of Naskapi.}
+    \caption{Hardware and software configuration of Naskapi.}
     \label{tab:naskapi-hw}
 \end{table}
 
 As \gls{SOFA} is mainly used on personal machines and not \gls{HPC} ones, we ran our performance evaluation on a recent desktop machine called \emph{Naskapi}.
-The hardware specifications of this machine are described in \tbl{naskapi-hw}.
-It runs a \gls{Debian} \emph{Wheezy} on a Linux kernel $3.2.0$-$4$ with hyper threading disabled.
+The hardware and software specifications of this machine are described in \tbl{naskapi-hw}.
 
 
-The experimental methodology described in \sect{expe-methodo} evolved during this Ph.D thesis, hence the experiments presented here does not fit it perfectly.
+The experimental methodology described in \sect{expe-methodo} evolved during this Ph.D thesis, hence the experiments presented here do not fit it perfectly.
 Mostly the runs were independent but not randomized, and the experimental logs were not as complete as they should.
-Furthermore as \emph{Naskapi} is a desktop machine and not a node from a cluster, we did not deployed an image of the system.
-Therefore repeating these experiment in the exact same condition do not seem possible.
-Yet we distribute the experimental plan and the trace, which should make the experiment easy to reproduce on github: \url{https://github.com/dbeniamine/Sofa\_expe}.
+Furthermore, as \emph{Naskapi} is a desktop machine and not a node from a cluster, we did not deploy an image of the system.
+Hence, repeating these experiment in the exact same condition do not seem possible.
+Nevertheless, we distribute the experimental plan and the trace, which should make the experiment easy to reproduce on github: \url{https://github.com/dbeniamine/Sofa\_expe}.
 
 
 \subsection{Results and Discussions}
 
 To present the results of our evaluation, we will focus on two \gls{SOFA} scenes that illustrate the kind of results we obtained.
 The first scene is called \emph{linearQuadraticFrame}, for this scene the \gls{OpenMP} parallelization provides a speedup of $1.37$ with four threads.
-This speedup seems rather low, yet as the parallelization is only partial we need to determine if we can actually reach a higher speedup.
+This speedup seems rather low, yet, as the parallelization is only partial we need to determine if we can actually reach a higher speedup.
 However the second scene \emph{linearRigidAndAffineFrame} has a speedup of $0.87$ which means that the parallel version is slower than the sequential one.
-Thus our first goal is to understand why some scenes take advantage of this parallelization while some other are slowed down by it.
+These difference of performances probably means that theses scenes are not executing the same core.
+Our first goal is to understand why some part of \gls{SOFA} are more efficient with the \gls{OpenMP} parallelization while some other are slowed down by it.
 
 Before digging into the differences between these scenes, there are two noticeable similarities between them to discuss.
 First the idle time ratio reported by \gls{Likwid} showed that, for the sequential version of the code, during almost half of the simulation the processor is idle, which means that it spend a lot of time waiting for \glspl{I/O} or memory accesses.
-In parallel,  this idle time increases.
+For \gls{SOFA}, all the \glspl{I/O} occurs at the beginning of the execution, before the simulation loop, therefore, all the idle time captured in the simulation loop is due to memory accesses.
+In parallel executions,  this idle time increases.
 This behavior is expected as the \gls{OpenMP} based parallelization only affect some small parts of the code, hence as soon as the code is not in a parallel loop, $3$ threads out of $4$ are idle.
-Still it means that their is room for improvement even for the sequential version.
+Still, it means that there is room for improvement even for the sequential version.
 The second noticeable similarity is that the functions pointed by the developers only represent around \SI{30}{\%} of the simulation time, which means that there are some unknown hotspots left.
 
 From here, we know that there might be a memory issue (as the processor spend a lot of time idle).
-Moreover we have two scenes: one where the parallelization speed the execution up and one on which it slows it down.
-We compared the bandwidth and data volume going int each cache level and the main memory for the two scenes and for the functions indicated by the developers.
+%Moreover we have two scenes: one where the parallelization speed the execution up and one in which it slows it down.
+We compared the bandwidth and data volume going into each cache level and the main memory for the two scenes and for the functions indicated by the developers.
 Those functions are generic and thus their actual code varies depending on the parameters of the simulation.
-Therefore while the compared functions are similar in terms of role in the simulation, the manipulated data as well as the executed code is different for the two scenes.
+Therefore, while the compared functions are similar in terms of role in the simulation, the manipulated data as well as the executed code is different for the two scenes.
 
 \begin{figure}[htb]
     \centering
     \includegraphics[width=\textwidth]{SOFA_perfctr.pdf}
     \caption[SOFA likwid results.]{Differences of bandwidth and data volume, from L2 cache to main memory, between sequential and parallel execution of \gls{SOFA} on two different simulation scenes.
         \\
-        For both bandwidth and data volume, the value is normalized to the mean value of the corresponding sequential execution.
-        \\
-        For bandwidth, higher is better while for data volume lower is better.
+        %For both bandwidth and data volume, the value is normalized to the mean value of the corresponding sequential execution.
+        %\\
+        %For bandwidth, higher is better while for data volume lower is better.
     }
     \label{fig:SOFA-perfctr}
 \end{figure}
 
-\fig{SOFA-perfctr} shows the bandwidth (left side) and the data volume (right side) for the two functions (\emph{linearQuadraticFrame} above, \emph{linearRigidAndAffineFrame} below) from \texttt{L2} cache to the main memory.
+\fig{SOFA-perfctr} shows the bandwidth (left side) and the data volume (right side) for the two functions (\emph{linearQuadraticFrame} above, \emph{linearRigidAndAffineFrame} below) between \texttt{L2} cache to the main memory.
 Each point represents the mean of $60$ runs and the error bars represents the standard error.
 To make the plot more readable, we have normalized each value by dividing it by the value for the corresponding sequential run.
 Thus these plots show the evolution of the bandwidth and data volume when we use the \gls{OpenMP} version of \gls{SOFA}.
 
 We can see that for the first scene, both the bandwidth and data volume increases by a factor of $1.5$ in the cache and stays comparable in the main memory when we use the parallel version.
-This means that there are more useful data in the cache, either because each thread works on a smaller set of independent data which fit in the cache, or because they share data efficiently.
+Yet,in the parallel version, the variability of the bandwidth in parallel increase significantly and we are not able to explain this behavior with our traces.
+Still, the overall behavior shows that there are more useful data in the cache in parallel.
+If this was due to each thread working on a smaller set of independent data, the data volume in memory would decrease in parallel.
+As it is not the case, these useful data in the cache are due to an efficient data sharing between the threads.
 At the opposite, for the second scene, the bandwidth drops down at each level while the data volume stays still except at the \texttt{L3} level where it increases by a factor $2.5$.
 It is important to note that the \texttt{L3} cache is the only shared cache of this machine.
 It means that several threads are writing the same data, invalidating each other private cache and requiring the coherency protocol to interfere.
@@ -516,21 +529,21 @@ This behavior is called false sharing and is a well known performance issue that
 At this point we can say that false sharing occurs in this precise function, yet we do not know on which data structure.
 We could dig onto the code and try to understand the memory access pattern of each data structure to see where the false sharing does occurs.
 By looking at \gls{SOFA}'s code, we can see that the main difference between the two version of the function is that for \texttt{linearRigidAndAffineFrame} there is one more loop in the computations.
-Still this code manipulate several data through many indirections.
-Therefore determining on which data the false sharing is happening could be extremely slow.
-Furthermore this approach is not generic at all.
+However, this code manipulate several data through many indirections.
+Consequently, determining on which data the false sharing is happening could be extremely cumbersome.
+Furthermore, this approach is not generic at all.
 Once we have done it for one particular function, we would have to redo the same analysis and optimization for each potential hotspot.
 
-Moreover as we have seen with the runtime ratio, this particular false sharing issue only represent a small part of the execution.
-Therefore a more generic approach would be welcome.
+As we have seen with the runtime ratio, this particular false sharing issue only represent a small part of the execution.
+Therefore, a more generic approach would be welcome.
 
 From that point it seems clear that \gls{SOFA} is having memory performance issues.
 Yet, we need a generic tools to analyze its performances from the memory point of view.
 Such tool should be able to establish a complete diagnosis of the memory usage.
 To do so, this tool need to identify memory access patterns and differentiate the efficient ones from the others.
-Moreover to correct an inefficient pattern we need to know precisely why it is inefficient.
-Thus this tool should classify them in terms of performance issues.
-Finally it needs to localize these patterns which means determine where it occurs in term of data structure, which thread(s) are responsible for the accesses and to what lines of code it correspond.
+Moreover, to correct an inefficient pattern we need to know precisely why it is inefficient.
+Thus, this tool should classify them in terms of performance characteristics.
+Finally, it needs to localize these patterns which means determine where it occurs in term of data structure, which thread(s) are responsible for the accesses, to what lines of code and at what time it correspond.
 To sum up, this ideal tool will trace every memory access of an application and give to the user a list of inefficient patterns.
 For each pattern it will specify very precisely what kind of issue is occurring, where it happens and how we could fix it.
 

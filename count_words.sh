@@ -13,7 +13,7 @@ do
     echo "$file"
     for word in "${WORDS[@]}"
     do
-        res=$(grep -ci "\<$word\>" $file)
+        res=$(grep -v "^%" $file | grep -ci "\<$word\>")
         echo -e "\t$word: $res"
     done
 done
