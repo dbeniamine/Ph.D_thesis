@@ -5,108 +5,125 @@
 \definecolor{ColL1}{HTML}{BAE4BC}
 \definecolor{ColL2}{HTML}{7BCCC4}
 \definecolor{ColL3}{HTML}{43A2CA}
-\definecolor{ColM}{HTML}{0972BD}
+\definecolor{ColM}{HTML}{0868AC}
 \definecolor{ColS}{HTML}{FFFFFF}
 
 \pgfdeclarelayer{bg}
 \pgfdeclarelayer{bbg}
-\pgfsetlayers{bbg,bg,main}
+\pgfdeclarelayer{bbbg}
+\pgfsetlayers{bbbg,bbg,bg,main}
 
 
 \tikzset{
     box/.style={
         shape=rectangle,
+        text centered,
         draw,
-        inner sep=1.5pt,
     },
-    pics/core/.style args={#1#2}{
-        % Args: #1: nb PU, #2 core id
+    pics/core/.style args={#1#2#3#4}{
+        % Args: #1: nb PU, #2 core id, #3 direction: + or -
         code={
             \pgfmathtruncatemacro{\pmin}{#1*#2}
             \pgfmathtruncatemacro{\pmax}{\pmin+#1-1}
             %PUs
             \foreach \pu in {\pmin,...,\pmax}{
                 \pgfmathtruncatemacro{\pstep}{\pu-\pmin}
-                \node[box,fill=ColPU] (PU-\pu)at ($(0,0)+(0,-.7*\pstep)$) {PU\#\pu};
+                \node[box,fill=ColPU] (PU-\pu)at (0,#3.7*\pstep) {PU\#\pu};
             }
-            \node (inv) at ($(PU-\pmax)+(0,-.2)$) {};
             %Core ID
-            \node (name) at ($(PU-\pmin)!0.5!(PU-\pmax)+(0,1)$) {Core\##2};
+            \node (inv) at ($(PU-\pmin)#3(0,-.3)$) {};
+            \node[minimum width=3.3em] (name) at ($(PU-\pmin)!0.5!(PU-\pmax)#3(0,1)$) {Core\##2};
             % L1
             \begin{pgfonlayer}{bg}
                 \node[box,fill=ColCore,inner sep=.1pt, fit=(name) (PU-\pmin)
-                    (PU-\pmax) (inv)] (core-#2) {};
+                (PU-\pmax) (inv)] (core-#2) {};
             \end{pgfonlayer}
-            \draw[fill=ColL1] ($(core-#2.north west)+(0,.1)$) rectangle ($(core-#2.north east)+(0,.5)$)%
-                node[pos=.5] (l1) {L1};
+            \draw[fill=ColL1] ($(core-#2.#4 west)#3(0,.1)$) rectangle ($(core-#2.#4 east)#3(0,.5)$)%
+            node[pos=.5] (l1) {L1};
             % links
-            \draw (core-#2.north) -- ($(core-#2.north)+(0,.1)$);
-            \coordinate (l1-#2-n) at ($(core-#2.north)+(0,.5)$);
+            \draw (core-#2.#4) -- ($(core-#2.#4)#3(0,.1)$);
+            \coordinate (l1-#2-n) at ($(core-#2.#4)#3(0,.5)$);
         }
     },
-    pics/l2group/.style args={#1#2}{
-        % Args: #1: nb Cores, #2 group id
+    pics/l2group/.style args={#1#2#3#4}{
+        % Args: #1: nb Cores, #2 group id, #3 direction: + or -
         code={
             \pgfmathtruncatemacro{\cmin}{#1*#2}
             \pgfmathtruncatemacro{\cmax}{\cmin+#1-1}
             % Cores
             \foreach \core in {\cmin,...,\cmax}{
                 \pgfmathtruncatemacro{\cstep}{\core-\cmin}
-                \draw ($(0,0)+(1.6*\cstep,0)$) pic {core={2}{\core}};
+                \draw (1.4*\cstep,0) pic[font=\tiny] {core={2}{\core}{#3}{#4}};
             }
             % L2
-            \draw[fill=ColL2] ($(core-\cmin.north west)+(0,.6)$) rectangle
-                ($(core-\cmax.north east)+(0,1.1)$) node[pos=.5]{L2};
+            \draw[fill=ColL2] ($(core-\cmin.#4 west)#3(0,.6)$) rectangle
+            ($(core-\cmax.#4 east)#3(0,1.1)$) node[pos=.5]{L2};
             % Coordinates for L3
-            \coordinate (l2g-#2-w) at ($(core-\cmin.north west)+(0,1.1)$);
-            \coordinate (l2g-#2-e) at ($(core-\cmax.north east)+(0,1.1)$);
+            \coordinate (l2g-#2-w) at ($(core-\cmin.#4 west)#3(0,1.1)$);
+            \coordinate (l2g-#2-e) at ($(core-\cmax.#4 east)#3(0,1.1)$);
             %links
             \foreach \core in {\cmin,...,\cmax}{
-                \draw (l1-\core-n) -- ($(core-\core.north)+(0,.6)$);
+                \draw (l1-\core-n) -- ($(core-\core.#4)#3(0,.6)$);
             }
         }
     },
-    pics/socket/.style args={#1#2}{
-        % Args: #1: nb l2 groups, #2 socket id
+    pics/socket/.style args={#1#2#3#4}{
+        % Args: #1: nb l2 groups, #2 socket id, #3 arguments for underlying pics
         code={
             \pgfmathtruncatemacro{\lmin}{#1*#2}
             \pgfmathtruncatemacro{\lmax}{\lmin+#1-1}
             % Cores
             \foreach \lg in {\lmin,...,\lmax}{
-                \draw ($(0,0)+(3.2*\lg,0)$) pic {l2group={2}{\lg}};
+                \pgfmathtruncatemacro{\lgstep}{\lg-\lmin}
+                \draw (2.8*\lgstep,0) pic[font=\small] {l2group={2}{\lg}{#3}{#4}};
             }
-            % L3
-            \draw[fill=ColL3] ($(l2g-\lmin-w)+(0,.1)$) rectangle ($(l2g-\lmax-e)+(0,.5)$)%
-                node[pos=.5]{L3};
-            % Coordinates for Mem
-            \coordinate (s-#2-w) at ($(l2g-\lmin-w)+(0,.5)$);
-            \coordinate (s-#2-e) at ($(l2g-\lmax-e)+(0,.5)$);
-            % links
-            \foreach \lg in {\lmin,...,\lmax}{
-                \draw ($(l2g-\lg-w)!.5!(l2g-\lg-e)$) --
-                    ($(l2g-\lg-w)!.5!(l2g-\lg-e)+(0,.1)$);
+           % L3
+            \draw[fill=ColL3] ($(l2g-\lmin-w)#3(0,.1)$) rectangle ($(l2g-\lmax-e)#3(0,.5)$)%
+            node[pos=.5]{L3};
+           % Coordinates for Mem
+            \coordinate (s-#2-w) at ($(l2g-\lmin-w)#3(0,.5)$);
+            \coordinate (s-#2-e) at ($(l2g-\lmax-e)#3(0,.5)$);
+           % links
+           %\foreach \lg in {\lmin,...,\lmax}{
+           %    \draw ($(l2g-\lg-w)!.5!(l2g-\lg-e)$) --
+           %        ($(l2g-\lg-w)!.5!(l2g-\lg-e)#3(0,.1)$);
+           %}
+           % CPU
+            \ifthenelse{\equal{#3}{+}}{
+                \node (minnode) at (-.6,-.3) {};
+            }{
+                \node (minnode) at (-.6,.3) {};
             }
-            % CPU
-            \node (minnode) at ($(-.7,-1)+(3.2*\lmin,0)$) {};
-            \node (maxnode) at ($(l2g-\lmax-e)+(-.1,1)$) {};
-            \node (sockname) at ($(l2g-\lmin-e)+(0,.8)$) {Socket \##2};
+            \node (maxnode) at ($(l2g-\lmax-e)#3(0,1)$) {};
+            \node (sockname) at ($(l2g-\lmin-e)#3(0,.8)$) {Socket \##2};
 
             \begin{pgfonlayer}{bbg}
                 \node[box,fill=ColS,fit=(minnode) (maxnode)] (cpu-#2) {};
             \end{pgfonlayer}
-            % Memory
-            \draw[fill=ColM] ($(cpu-#2.north west)+(0,.5)$) rectangle ($(cpu-#2.north east)+(0,1.5)$)%
-                node[pos=.5]{Memory bank \##2};
+           % Memory
+            \draw[fill=ColM,text=white] ($(cpu-#2.#4 west)#3(0,.5)$) rectangle ($(cpu-#2.#4 east)#3(0,1.5)$)%
+            node[pos=.5]{Memory bank \##2};
 
-            \draw (cpu-#2.north) -- ($(cpu-#2.north)+(0,.5)$);
+            \draw[very thick] (cpu-#2.#4) -- ($(cpu-#2.#4)#3(0,.5)$);
 
         }
     },
 }
 
 \begin{tikzpicture}[font=\small, every pic/.style={scale=.9}]
-    \pic at (0,0) {socket={2}{0}};
-    \pic at (.5,0) {socket={2}{1}};
-    \draw (cpu-0.south) |- ($(cpu-0.south)!.5!(cpu-1.south)+(0,-1)$) -| (cpu-1.south);
+    \pic at (0,0)  {socket={2}{0}{+}{north}};
+    \pic at (6.5,0)  {socket={2}{1}{+}{north}};
+    \pic at (0,-2) {socket={2}{2}{-}{south}};
+    \pic at (6.5,-2) {socket={2}{3}{-}{south}};
+
+    \begin{pgfonlayer}{bbbg}
+        \draw[line width=1em] (cpu-0) -- (cpu-2);
+        \draw[line width=1em] (cpu-0) -- (cpu-1);
+        \draw[line width=.3em]  (cpu-0) -- (cpu-3);
+        \draw[line width=1em] (cpu-1) -- (cpu-3);
+        \draw[line width=1em] (cpu-2) -- (cpu-3);
+        \draw[line width=.3em]  (cpu-1) -- (cpu-2);
+    \end{pgfonlayer}
+
 \end{tikzpicture}
 % vim: et si sta lbr  sw=4 ts=4 spelllang=en_us
