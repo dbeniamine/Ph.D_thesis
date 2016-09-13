@@ -145,6 +145,7 @@ Therefore low level tools such as \gls{Likwid} are well suited as they can both 
 
 \section{Experimental Methodology}
 \label{sec:expe-methodo}
+\DB{Ajouter des extraits de scripts}
 
 In computer science we can easily monitor our experiments and restart them quickly if something goes wrong.
 At the opposite, in other domains, such as biology,  this reactivity is not possible, scientist are forced to write very precise protocols to avoid loosing large amounts of time and money.
@@ -517,7 +518,9 @@ To make the plot more readable, we have normalized each value by dividing it by 
 Thus these plots show the evolution of the bandwidth and data volume when we use the \gls{OpenMP} version of \gls{SOFA}.
 
 We can see that for the first scene, both the bandwidth and data volume increases by a factor of $1.5$ in the cache and stays comparable in the main memory when we use the parallel version.
-Yet,in the parallel version, the variability of the bandwidth in parallel increase significantly and we are not able to explain this behavior with our traces.
+Yet, in the parallel version, the variability of the memory bandwidth increase significantly
+and we are not able to explain this behavior with our traces.
+We can see the same behavior for the second scene and the memory data volume.
 Still, the overall behavior shows that there are more useful data in the cache in parallel.
 If this was due to each thread working on a smaller set of independent data, the data volume in memory would decrease in parallel.
 As it is not the case, these useful data in the cache are due to an efficient data sharing between the threads.
@@ -535,13 +538,14 @@ Furthermore, this approach is not generic at all.
 Once we have done it for one particular function, we would have to redo the same analysis and optimization for each potential hotspot.
 
 As we have seen with the runtime ratio, this particular false sharing issue only represent a small part of the execution.
+Moreover, our analysis highlighted some variability in the memory bandwidth and data volume in parallel that we are not able to explain.
 Therefore, a more generic approach would be welcome.
 
 From that point it seems clear that \gls{SOFA} is having memory performance issues.
 Yet, we need a generic tools to analyze its performances from the memory point of view.
 Such tool should be able to establish a complete diagnosis of the memory usage.
 To do so, this tool need to identify memory access patterns and differentiate the efficient ones from the others.
-Moreover, to correct an inefficient pattern we need to know precisely why it is inefficient.
+Additionally, to correct an inefficient pattern we need to know precisely why it is inefficient.
 Thus, this tool should classify them in terms of performance characteristics.
 Finally, it needs to localize these patterns which means determine where it occurs in term of data structure, which thread(s) are responsible for the accesses, to what lines of code and at what time it correspond.
 To sum up, this ideal tool will trace every memory access of an application and give to the user a list of inefficient patterns.
