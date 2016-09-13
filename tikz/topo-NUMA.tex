@@ -104,7 +104,7 @@
             \draw[fill=ColM,text=white] ($(cpu-#2.#4 west)#3(0,.5)$) rectangle ($(cpu-#2.#4 east)#3(0,1.5)$)%
             node[pos=.5]{Memory bank \##2};
 
-            \draw[very thick] (cpu-#2.#4) -- ($(cpu-#2.#4)#3(0,.5)$);
+            \draw[line width=.5em] (cpu-#2.#4) -- ($(cpu-#2.#4)#3(0,.5)$);
 
         }
     },
@@ -117,12 +117,12 @@
     \pic at (6.5,-2) {socket={2}{3}{-}{south}};
 
     \begin{pgfonlayer}{bbbg}
-        \draw[line width=1em] (cpu-0) -- (cpu-2);
-        \draw[line width=1em] (cpu-0) -- (cpu-1);
-        \draw[line width=.3em]  (cpu-0) -- (cpu-3);
-        \draw[line width=1em] (cpu-1) -- (cpu-3);
-        \draw[line width=1em] (cpu-2) -- (cpu-3);
-        \draw[line width=.3em]  (cpu-1) -- (cpu-2);
+        \draw[line width=.5em] (cpu-0) -- (cpu-2);
+        \draw[line width=.5em] (cpu-0) -- (cpu-1);
+        \draw[line width=.2em]  (cpu-0) -- (cpu-3);
+        \draw[line width=.5em] (cpu-1) -- (cpu-3);
+        \draw[line width=.5em] (cpu-2) -- (cpu-3);
+        \draw[line width=.2em]  (cpu-1) -- (cpu-2);
     \end{pgfonlayer}
 
 \end{tikzpicture}
