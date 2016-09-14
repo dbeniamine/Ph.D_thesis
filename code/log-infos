@@ -1,0 +1,38 @@
+exec > >(tee $OUTPUT) 2>&1
+
+#Echo start time
+echo "Expe started at $START_TIME"
+#Echo args
+echo "#### Cmd line args : ###"
+echo "$CMDLINE"
+echo "EXP_NAME $EXP_NAME"
+echo "OUTPUT $OUTPUT"
+echo "RUN $RUN"
+echo "FIRST: $FIRSTRUN"
+echo "LAST: $LASTRUN"
+echo "########################"
+# DUMP environement important stuff
+echo "#### Hostname: #########"
+hostname
+echo "#### Kernel:   #########"
+uname -a
+echo "#### Path:     #########"
+echo "$PATH"
+echo "########################"
+echo "##### git log: #########"
+git log | head
+echo "########################"
+echo "#### git diff: #########"
+git diff
+echo "########################"
+lstopo --of txt
+cat /proc/cpuinfo
+echo "########################"
+
+
+#DUMPING scripts
+cp -v $0 $EXP_DIR/
+cp -v ./*.sh $EXP_DIR/
+cp -v *.pl $EXP_DIR/
+cp -v *.rmd  $EXP_DIR/
+cp -v Makefile  $EXP_DIR/

@@ -1,0 +1,31 @@
+do_run()
+{
+    run=$1
+    conf=$2
+    benchname=$3
+
+    benchname=$(basename $bench)
+    echo "$benchname"
+
+    LOGDIR="$EXP_DIR/$benchname/run-$run"
+	echo $LOGDIR
+    mkdir -p $LOGDIR
+
+    set -x
+    # Prepare run
+    if [ ! -z "${PRE_ACTIONS[$conf]}" ]
+    then
+        bash -c "${PRE_ACTIONS[$conf]}"
+    fi
+
+    # Do experiment
+    cmd="${TARGETS[$conf]} $bench"
+    $cmd > $LOGDIR/$conf.log 2> $LOGDIR/$conf.err
+
+    # Restore everything
+    if [ ! -z "${POST_ACTIONS[$conf]}" ]
+    then
+        bash -c "${POST_ACTIONS[$conf]}"
+    fi
+    set +x
+}

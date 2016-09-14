@@ -312,11 +312,14 @@ We consider that a trace is \textbf{self explanatory} if and only if we can easi
 \end{itemize}
 To do so, all our experimental scripts starts the same way: they first create a new directory that will hold the traces.
 Then they copy themselves with all the scripts which are inside their directory to this new directory.
-After that they duplicate their output to a file in this new directory and log every sensitive meta data.
+After that they duplicate their output to a file in this new directory and log every sensitive meta data as show in \lstr{log}.
 During the experiment, each command is echoed before executing it.
 Regarding the data analysis we use \gls{R} as it provides a large set of reliable statistic analysis libraries.
 Additionally, thanks to \gls{R-markdown}, we can produce a standalone structured output that contains the original questions, our assumptions, the results and plots, our observations and comments.
 Finally, before distributing an experimental trace, we write a small \texttt{Readme} that explain the file hierarchy and the experiment design (although these informations could be recovered from the meta data and by reading the experiment code).
+
+\lstinputlisting[caption={Logging experimental informations.}, label=lst:log, float=htb,language=bash]{code/log-infos}
+
 
 \begin{centering}
     \begin{minipage}[t]{.48\textwidth}
@@ -390,10 +393,12 @@ While, if we randomize the runs, the performance drop will affect several runs (
 As a result we will observe abnormal results for the impacted sizes and conclude that something might have interfered.
 To do so, our experimental scripts generate a list of runs that should be executed, shuffle it and then execute them in this randomized order.
 
+\lstinputlisting[caption={Execution of a run.}, label=lst:run, float=htb,language=bash]{code/do-run}
+
 Each run consists of three step: a pre-command that can set specific environment values, the actual command that execute the benchmark and the post-command that can save data, pre-process it, compute metrics must restore the normal state.
 Pre-processing data during the experiment can reduce the raw trace, and interfere with the raw analysis, but it is sometimes unavoidable, for instance when some evaluated tools generate binary traces that can only be interpreted inside the experimental environment.
 The first and last steps are not mandatory, however any environment change must be restored on the last step.
-Each of the commands executed by these 3 steps are logged before execution.
+Each of the commands executed by these 3 steps are logged before execution as shown in \lstr{run}.
 
 \subsubsection{Distribution}
 
