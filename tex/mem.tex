@@ -24,19 +24,134 @@ As these caches are small, every time a data is added in a cache it replaces (ev
 Several mechanisms where designed to guess which data should be in the cache and which one should be evicted.
 As a result, a developer seeking for performances must consider the architecture of these caches and the way the work to benefit from them.
 
-\subsection{Caches}
+\subsection{Memory Caches}
 
-Although modern architectures embed a complex cache hierarchy, we will present the basic principles of these cache on an hypothetical machine with only one level of cache for the sake of simplicity.
+% Locality
+There are two phenomena called \emph{spatial locality} and \emph{temporal locality} that can be observed in most programs and that are the main principles used for cache optimization.
+Spatial locality is the fact that most programs do not usually access the memory in a completely random way, but they usually access data that are near to each other in a small chunk of time.
+Similarly, temporal locality is the fact that a memory address is often used several times during a small interval of time.
+Consequently the main role of caches is to keep data that have already been accessed close to the \gls{CPU} when they are reused to reduce the number of actual memory accesses.
 
-\begin{itemize}
-    \item Locality space / time
-    \item 1 level cache
-    \item Storage / eviction mechanisms
-    \item Cache line
-    \item Associativity
-    \item Hierarchy and sharing
-    \item Examples: Bad align / false sharing
-\end{itemize}
+\subsubsection{Cache lines and alignment}
+
+To benefit even more from temporal locality, the memory is divided on lines (usually \SI{64}{bytes}), and every time an address must be fetched from the main memory, the whole line is copied to the cache.
+Therefore accessing $8$ successive doubles (usually one double equals \SI{8}{bytes}) requires only one memory access if they all are in the same line of cache.
+As a result, aligning data structure to cache line can improve the memory access time.
+
+\begin{figure}[htb]
+    \centering
+    \input{tikz/bad-align}
+    \caption[Example of bad alignment.]{Retrieving two lines of cache with one or two fetches depending on the alignment of the lines.}
+    \label{fig:bad-align}
+\end{figure}
+
+For instance if we consider accessing an array of two lines of caches as illustrated in \fig{bad-align}.
+If the data structure is aligned to cache lines, it will take two accesses to retrieve the whole data structure, and no unused data will be introduced in the cache.
+While if it is not correctly aligned, not only one more memory fetch will be required but we will introduce one useless line inside the cache.
+As caches are designed to keep only a restricted number of data, inserting on line inside a cache means evicting another one, thus, introducing unused data must be avoided as much as possible.
+
+\subsubsection{Cache management policies}
+
+When an address is accessed, the \gls{CPU} must search for the corresponding line in the cache.
+If it is not present, fetch it from the memory and decide where to copy it into the cache, which means choosing one line to evict.
+To make the cache efficient, these decision must be done quickly.
+
+There are three distinct ways to decide where a line should be placed in the cache.
+The simplest way to do so is called \emph{direct mapping} and consists in associating each memory line to one specific line of cache in a round robin way: the line number $l$ can only be in the cache line $l \mod L$ where $L$ is the total number of available lines in the cache.
+With this policy it is only required to look at one line of cache to check whether a line of memory is present or not in the cache.
+Furthermore, it is not required to decide which line should be evicted as their is only one line possible.
+Still, this policy is inefficient with some memory patterns, for instance when a program accesses data regularly spaced in the memory.
+Indeed, for such pattern, only a small subset of the cache will be used.
+At the opposite, \emph{fully associative caches} allows any memory line to be mapped anywhere in the cache.
+As a result we always exploit the maximum size of the cache, but it requires to look at the whole cache to find if a line is present, and deciding which line should be evicted.
+Usually caches are \emph{N-way associative} which is a compromise between those two policies.
+A N-way associative cache is divided in $N$ sets and the memory line number $l$ could be in any line of the set number $l \mod N$.
+This associativity can be used to create (virtual) partitions in the cache and then allocate data structures in these partition giving more cache to the ones that are more reused and thus will benefit from it~\cite{Perarnau11Controlling}.
+
+Choosing the best line to evict is extremely complex.
+Indeed a simple and efficient (but not optimal) policy would be to evict the line with the highest \emph{Reuse Distance}, where the \emph{Reuse distance} for a line $l$ is the number of different lines accessed between two accessed to $l$.
+Yet, computing this reuse distance requires to know each memory access that will happen during the execution.
+Therefore, this policy is not applicable and usually caches uses to evict the \acrfull{LRU} line that could be replaced by the one fetched.
+
+\subsubsection{A naive example}
+
+\begin{figure}[htb]
+    \centering
+    \input{tikz/mat-mult}
+    \caption[Example of non linear memory accesses.]{Example of non linear memory accesses: the naive matrix multiplication.}
+    \label{fig:mat-mult}
+\end{figure}
+
+The naive matrix multiplication is a good illustration of how a simple program can benefit of the caches or not.
+If we multiply two matrices of $8192*8192$ doubles, using the most naive (sequential) algorithm, as illustrated in \fig{mat-mult}.
+For the matrices $A$ and $C$, this algorithm loops over a whole row before going to the next one, while it go through $B$ columns first.
+To understand why this pattern matters, we have to consider the memory representation of these matrices.
+As the memory address space has only one dimension, a matrix is a contiguous block of memory.
+Usually it is represented row first, which means that $A[i][j]$ is actually $A[i*N+j]$ where $N$ is the size of a row.
+This means that, when we loop through a matrix row first, we scan linearly the address space, while if we do it column first, we jump of $N$ elements between two accesses.
+In our example, the first access to a row of $B$ will trigger a cache miss, and the whole cache line will be fetched.
+Before we access the second element of this row, we will have to fetch one line of cache for each row of the matrix which means $8192*64=512$Kb which is often more than the size that the L2 cache can accommodate.
+Therefore each access to $B$ will trigger at least a L2 cache miss resulting in a lot of traffic on the bus memory and some contention.
+With huge matrices, it may not even fit in the L3 cache resulting in contention in the memory bus.
+The simplest way to fix this issue (although it is not the optimal algorithm for the matrix multiplication) consists in swapping the two inner loop of the algorithm, as shown by the dotted arrows.
+Indeed the order of the operations does not change the results of the multiplication (all computations are independent in this example) this swap only change the order of the accesses concerning the matrix $B$.
+
+Recent caches also embed a prefecther that try to detect memory access pattern to retrieve several line of cache at the same time from the main memory.
+This mechanism is particularity efficient with linear accesses.
+Yet, for sparse accesses it might prefetch unused lines evicting potentially useful ones.
+Consequently, this mechanism amplify the impact of the accesses linearity.
+
+\subsubsection{Memory caches and parallelism}
+
+\begin{figure}[htb]
+    \centering
+    \input{tikz/topo-single.tex}
+    \caption{Topology of a quad core parallel machine.}
+    \label{fig:topo-single}
+\end{figure}
+
+As increasing by a factor two the frequency of a \gls{CPU} requires much more energy than using two cores at the same frequency, vendors started to build more and more parallel \glspl{CPU}.
+\DB{Ref}
+As a result, modern \glspl{CPU} embed several cores and do not have one cache but a hierarchy of caches.
+\fig{topo-single} depicts a quad core machine with hyper threading enabled (two processing unit inside one physical core).
+This machine embed three levels of cache, the first one is private for each core, while the second one is shared by half the cores and the last one is shared by every cores.
+
+A consequence of that hierarchy is that the physical location of thread sharing data can have a considerable impact on the performances.
+Indeed if two thread of the same core reads the same line, the first one will copy it to the L1 cache and the second one will access it extremely fast.
+If they are executed inside different cores, the sharing will be efficient at the lowest common level (L2 or L3).
+At the opposite, if two threads writes the same data, a conflict occurs and must be solved by the cache coherency protocol.
+The coherency is done at the lowest shared level of cache and requires to lock the cache subsystem.
+Therefore conflicts are extremely costly, and must be avoided when possible, or at least must occurs between threads as close as possible to avoid locking the L3 cache.
+
+\begin{figure}[htb]
+    \centering
+    \input{tikz/false-sharing}
+    \caption[Example of false sharing.]{Two threads writing 4 consecutive doubles on the same line of cache, without any actual sharing, resulting in false sharing and an easy fix by padding the data structure.}
+    \label{fig:false-sharing}
+\end{figure}
+
+For instance, we  consider a simple example where two threads are working on a small array of $8$ doubles.
+As a double is usually coded on $8$ bytes, this array is exactly the size of one cache line.
+Each thread is doing independent computations on a half of the array as illustrated in \fig{false-sharing}.
+The first access will copy the whole array from the memory to all the caches of the thread that triggers it.
+When the second thread reads the array, it will copy it from the lowest shared cache to its private cache.
+If the threads were only reading it, no more memory access would be required and the performance will be optimal.
+Yet, each thread will update the value of each entry of its array after its computation.
+Every time a thread writes a value of the array, it invalidates the whole line.
+Therefore the coherency protocol must interfere at the lowest shared level.
+At the end of the day, each time a thread writes a value, the other one needs to update its line from the L2 or L3 cache, while the two threads are not actually sharing any data.
+Hence the name false sharing.
+Not only the accesses to this array are inefficient but it generates lots of useless data traffic in the memory bus which can create some contention slowing down the whole application.
+The easiest way to fix such issues, consists in padding the data structure, which mean introducing zeros between each element of the data structure so that each thread works on a different cache line.
+
+\subsection{Not Uniform Memory Accesses}
+
+\begin{figure}[htb]
+    \centering
+    \input{tikz/topo-NUMA.tex}
+    \caption{Topology of a 32 cores NUMA machine.}
+    \label{fig:topo-NUMA}
+\end{figure}
 
 \begin{table}[htb]
     \centering
@@ -62,165 +177,55 @@ Although modern architectures embed a complex cache hierarchy, we will present t
 }
 \label{tab:mem-latency}
 \end{table}
-
-Each socket of our hypothetical machine is composed of three level of caches as we can see in \fig{topo-NUMA}.
-As some caches are shared by several threads, they need to maintain some meta data on each data they contain to ensure data coherency.
-If each byte of memory were handled independently in the caches, the probability that a conflicting access occurs would be minimal.
-Yet, more than half of the cache size would be used by meta data.
-At the opposite, if the coherency were handled at the page granularity (\SI{4}{Kb}), conflicting access would occurs all the time defeating the purpose of the caches.
-In the end the caches works at a smaller granularity called \emph{cache line}.
-A cache line is usually \SI{64}{bytes}.
-Conflicts are resolved at the lower level of cache common to the threads involved.
-Therefore, the farther the threads are, the more costly it will be to solve the conflict.
-Thus, to optimize the performances of an application we must keep the threads working on the same data as close as possible.
-
-When a thread access a data, it look for the corresponding cache line in all its L1 cache.
-If the line is not present, a L1 miss occurs, and the threads looks in the L2.
-This goes recursively until the data must be retrieved from the main memory.
-Once the line is found, it is inserted into each caches of the thread.
-As the size of a cache is finite, inserting a line means evicting another one.
-The optimal cache line to evict is the one that will be used in the longest time.
-Obviously finding this line is impossible as it requires to predict the future.
-Therefore caches usually use the \acrfull{LRU} line.
-
-If a cache line could be inserted anywhere in the cache, the \gls{CPU} would have to go through all the cache for every miss.
-Furthermore it will need to compare the timestamp of every lines to find the \gls{LRU}.
-Therefore caches are usually $N$-way associative which means that each line can only go in $N$ different position (associative set) in the cache.
-All the lines of a same page are part of the same associative set.
-Thus, this associativity can be used to create partitions in the cache and then allocate data structures in these partition to give more cache to the ones that will benefit from it~\cite{Perarnau11Controlling}.
-
-Finally, the cache prefecther try to detect memory access pattern to retrieve several line of cache at the same time from the main memory.
-This mechanism is particularity efficient with linear accesses.
-Yet, for sparse accesses it might prefetch unused lines evicting potentially useful ones.
-\DB{AJouter Micro Benchmarks}
-
-\begin{figure}[htb]
-    \centering
-    \input{tikz/bad-align}
-    \caption[Example of bad alignment.]{Retrieving two lines of cache with one or two fetches depending on the alignment of the lines.}
-    \label{fig:bad-align}
-\end{figure}
-
-To benefit from these mechanisms, it is crucial to align our data structures to the cache lines.
-For instance if we consider an array of two lines of caches.
-Thanks to the prefetcher if the data structure is aligned to cache lines, the first access will retrieve the whole data structure.
-While if it is not correctly aligned, not only two memory accesses will be required but we will introduce two useless lines inside the cache.
-Thus evict two potentially useful lines.
-\fig{bad-align} illustrates this simple example.
-
-\begin{figure}[htb]
-    \centering
-    \input{tikz/false-sharing}
-    \caption[Example of false sharing.]{Two threads writing 4 consecutive doubles on the same line of cache, without any actual sharing, resulting in false sharing and an easy fix by padding the data structure.}
-    \label{fig:false-sharing}
-\end{figure}
-
-Yet, aligning correctly our data structures is not enough for parallel code.
-For instance, we  consider a simple example where two threads are working on a small array of $8$ doubles.
-As a double is usually coded on $8$ bytes, this array is exactly the size of one cache line.
-Each thread is doing independent computations on a half of the array as illustrated in \fig{false-sharing}.
-The first access will copy the whole array from the memory to all the caches of the thread that triggers it.
-When the second thread reads the array, it will copy it from the lowest shared cache to its private cache.
-If the threads were only reading it, no more memory access would be required and the performance will be optimal.
-Yet, each thread will update the value of each entry of its array after its computation.
-Every time a thread writes a value of the array, it invalidate the whole line.
-Therefore the coherency protocol must interfere at the lowest shared level.
-In the end of the day, each time a thread writes a value, the other one needs to update its line from the L2 or L3 cache, while the two threads are not actually sharing any data.
-Hence the name false sharing.
-Not only the accesses to this array are inefficient but it generate lot of useless data traffic in the caches bus which can create some contention slowing down the whole application.
-The easiest way to fix such issues, consists in padding the data structure. which mean introducing zeros the middle of the data structure so that each thread works on a different cache line.
-
-\begin{figure}[htb]
-    \centering
-    \input{tikz/mat-mult}
-    \caption[Example of non linear memory accesses.]{Example of non linear memory accesses: the naive matrix multiplication.}
-    \label{fig:mat-mult}
-\end{figure}
-
-\DB{SPEAK of WS}
-
-As soon as we work on data structures bigger and more complex than the one presented before, the order of the accesses starts to matter.
-For instance if we multiply two matrices of $8192*8192$ doubles, using the most naive (sequential) algorithm, as illustrated in \fig{mat-mult}.
-For the matrices $A$ and $C$, this algorithm loop over a whole row before going to the next one, while it go through $B$ column first.
-To understand why this patterns matters and how, we have to consider the memory representation of these matrices.
-As the memory address space only posses one dimension, a matrix is a contiguous block of memory.
-Usually it is represented row first, which means that $A[i][j]$ is actually $A[i*N+j]$ where $N$ is the size of a row.
-This means that when we loop through a matrix row first, we scan linearly the address space, while if we do it column first, we jump of $N$ elements between two accesses.
-In our example, the first access to a row of $B$ will trigger a cache miss, thus the whole cache line will be fetched.
-Before we access the second element of this row, we will have to fetch one line of cache for each row of the matrix which means $8192*64=512$Kb which is often more than the size of the L2 cache.
-Therefore each access to $B$ will trigger at least a L2 cache miss resulting on a lot of traffic on the bus memory and some contention.
-With huge matrices, it may not even fit in the L3 cache resulting in contention in the memory bus.
-The simplest way to fix this issue (although it is not the optimal algorithm for the matrix multiplication) consists in swapping the two inner loop of the algorithm, as shown by the dotted arrows.
-Indeed the order of the operations does not change the results of the multiplication this swap only change the order of the accesses concerning the matrix $B$.
-
-\subsection{Memory}
-
-\begin{itemize}
-    \item prefetcher
-    \item NUMA, latence, contention
-\end{itemize}
-
-\begin{figure}[htb]
-    \centering
-    \input{tikz/topo-NUMA.tex}
-    \caption{An simple example of NUMA topology}
-    \label{fig:topo-NUMA}
-\end{figure}
-
-At the same time, vendors started to build more and more parallel \glspl{CPU}.
-Indeed increasing by a factor two the frequency of a \gls{CPU} requires much more energy than using two cores at the same frequency.
-\DB{Ref}
-Moreover increasing the parallelisms inside a chip is complex as it requires to fit more condensate in a limited space hence producing more heat.
-Therefore modern computers often embed two or more sockets.
+Increasing the parallelisms inside a chip means fitting more transistors in a limited space.
+Therefore, it requires to reduce the size of the transistors and find a way to dissipate the heat produced by them.
+Consequently it is not possible to increase indefinitely this parallelism.
+As a results, modern computers often embed several \glspl{CPU} sockets to overpass this limitation.
 A machine with several sockets we can either give them a uniform access to the memory by sharing the memory bus or split the memory into banks and giving non uniform access to the sockets, such machine is called \gls{NUMA}.
 While the first option seems simpler to use, it means that the bandwidth is shared by all the threads, therefore contention can easily appear.
 At the opposite, the second option provides a maximal bandwidth for each socket.
-\fig{topo-NUMA} depicts a minimalistic \gls{NUMA} machine.
-Still, writing code that uses efficiently this specific architecture remains the burden of the developer who therefore needs to explicitly consider the physical location of its data.
+\fig{topo-NUMA} depicts a \gls{NUMA} machine, we can see that each socket has a privileged access to one memory bank.
+Furthermore, the sockets are linked via an all to all interconnect but all the connection are not equivalent.
+As a result the socket zero has a direct access to memory bank zero, a slower one to banks one and two and a slower access to bank three.
+Writing code that uses efficiently this specific architecture remains the burden of the developer who therefore needs to explicitly consider the physical location of its data.
+\tbl{mem-latency} provides approximate access latency depending on the memory hierarchy level for  the \gls{Intel} I7 Xeon 5500 Series.
 
-To use \gls{NUMA} machines efficiently, we need to understand how the \gls{OS} handle the memory.
-From the \gls{OS} point of view, the memory is split into contiguous chunks called pages, usually one page correspond to \SI{4}{Kb}.
-Every userspace programs work on virtual page, which means that when a program accesses an address, the \gls{OS} must first translate it to find the actual physical address of the page.
-This pagination is used to provide the abstractions of virtual memory and the memory isolation.
-Linux is a lazy \gls{OS} thus it will never map a page until a program has wrote something on it.
-Indeed if a program reads the contents of a new page, Linux can simply return a zero.
+To use \gls{NUMA} machines efficiently, we need to understand how the \gls{OS} handles the memory.
+From the \gls{OS} point of view, the memory is split into contiguous chunks called pages, usually one page corresponds to \SI{4}{Kb} (some \gls{HPC} applications uses huge pages of \SI{4}{Gb}).
+Each userspace program works on virtual pages, which means that, when it accesses an address, the \gls{OS} must first translate it to find the actual physical address of the page.
+This pagination is used to provide the abstraction of virtual memory and the memory isolation.
+\gls{Linux} is a lazy \gls{OS} thus it will never map a page until a program has written something to it.
+Indeed if a program reads the contents of a new page, \gls{Linux} can simply return a zero.
 To do so, one page full of zeroes is always present in the memory and any virtual page points to this specific page until a program write it.
 This means that the physical location of a piece of data is determined the first time that a program write something on the page on which it has been allocated.
 At this point, the \gls{OS} needs to decide where it is going to map the page.
 One of the most classic and simplest policy, used by most \glspl{OS} is the first touch~\cite{Marchetti95Using}.
-This policy maps a page on the closest memory bank to the socket where the thread responsible for the first access is executing.
-As a result, the thread initializing a data structure will determine its mapping.
+This policy maps a page to the closest memory bank to the socket where the thread responsible for the first access is executing.
+As a result, the thread(s) initializing a data structure will determine its mapping.
 
-A classic performance issue with \gls{NUMA} machines consist in initializing all the data structures with only one thread.
-When doing so all pages are mapped on the same memory bank, and each access from another socket will be remote thus slow.
+A classic performance issue with \gls{NUMA} machines comes from the initialization of all the data structures using only one thread.
+When doing so, all pages are mapped on the same memory bank, and each further access from another socket will be remote and, thus slow.
 An easy way to overpass this issue for small computational kernels consists in running a loop of computation on the data before initializing them.
-Indeed, by doing so each page will be mapped as close as possible to the first thread that will actually used it.
-Yet, this approach is more a hack than a real solution and is not suitable for larger programs.
-Moreover, if two independents and small data structures are allocated on the same page they will be mapped on the same memory bank.
+Indeed, by doing so each page will be mapped as close as possible to the first thread that will actually use it.
 Therefore Kleen et al. developed an interface to map the pages on \gls{NUMA} machines~\cite{Kleen05NUMA}.
 This \gls{API} can be accessed either via the \texttt{numactl} command or via a library called \texttt{libnuma}.
 The \texttt{numactl} command is useful to apply a global policy on all the page of the application.
 It is often used to apply the \emph{interleave} policy that distribute the pages over the \gls{NUMA} nodes in a round robin way.
 While it does not reduce the overall number of remote accesses, it distribute them among the nodes and therefore reduces the contention when there are more than two sockets.
-At the opposite the \texttt{libnuma} provides fine grain page and thread mapping.
-The user can use it to explicitly allocate data structures and bind threads on nodes.
-Still finding the optimal mapping for one machine not trivial.
-Furthermore mapping threads and data structures in an adaptive way is even harder.
-Therefore several tools were developed to automatically map threads and pages online~\cite{Diener14kMAF,Corbet12Toward}.
-Such tools counts remote accesses for each pages, and when move them when they are accessed more remotely than locally.
+At the opposite the \texttt{libnuma} provides fine grain pages and threads mapping.
+The user can use it to explicitly allocate data structures and bind threads to nodes.
+Still, finding the optimal mapping for one machine is not trivial and, mapping threads and data structures in an adaptive way is even harder.
+Therefore, several tools were developed to automatically map threads and pages online~\cite{Diener14kMAF,Corbet12Toward}.
+Such tools count remote accesses for each page, and move them when they are more accessed remotely than locally.
 
-\subsection{From the OS point of view}
-
-\begin{itemize}
-    \item Pagination
-    \item Consequences for NUMA (first touch / mapping)
-\end{itemize}
+While adaptive tools often improve the performances, they cannot reach the same performances as an application optimized while considering memory issues.
+Indeed, these tools, by conception, requires a time to detect inefficient patterns and adapt and consequently lose opportunities of optimizations.
 
 To conclude, using efficiently the memory is challenging.
 Indeed, due to the organization of the memory in pages and cache lines, we must consider where and how our data structures are allocated.
 Furthermore the hierarchical organization of the memory and the cache must be correlated with the thread placement and data sharing.
-In the end of the day, the developer must consider the machine architecture and the memory access patterns over the address space, time and threads.
-Therefore visualizing the memory access pattern of an application is a great help to optimize it.
+In summary, the developer must consider the machine architecture and the memory access patterns over the address space, time and threads.
+Therefore visualizing the memory access patterns of an application is a great help to optimize it.
 
 \section{Existing tools}
 \label{sec:mem-tools}

@@ -1,17 +1,12 @@
 exec > >(tee $OUTPUT) 2>&1
 
-#Echo start time
 echo "Expe started at $START_TIME"
-#Echo args
 echo "#### Cmd line args : ###"
 echo "$CMDLINE"
 echo "EXP_NAME $EXP_NAME"
 echo "OUTPUT $OUTPUT"
-echo "RUN $RUN"
-echo "FIRST: $FIRSTRUN"
-echo "LAST: $LASTRUN"
+echo "NUMBER OF RUNS $RUN"
 echo "########################"
-# DUMP environement important stuff
 echo "#### Hostname: #########"
 hostname
 echo "#### Kernel:   #########"
@@ -29,8 +24,7 @@ lstopo --of txt
 cat /proc/cpuinfo
 echo "########################"
 
-
-#DUMPING scripts
+# Copying scripts
 cp -v $0 $EXP_DIR/
 cp -v ./*.sh $EXP_DIR/
 cp -v *.pl $EXP_DIR/

@@ -43,19 +43,23 @@
                 \node[anchor=south] at ($(#2-base)+(\eltsz*2*\arrsz,1)$) {2};
                 % Grey padding:
                 \begin{pgfonlayer}{bg}
-                \foreach \step in {1,...,#4}{
-                    \pgfmathtruncatemacro{\pad}{(\step-1)*(#5+\harrsz)}
-                    \pgfmathtruncatemacro{\first}{\eltsz*(#3+\pad)}
-                    \path[hatch] ($(#2-base)+(\first,0)$) rectangle
-                            ($(#2-base)+(\first+\harrsz*\eltsz,0+1)$);
-                }
+                    \foreach \step in {1,...,#4}{
+                        \ifthenelse{\equal{#5}{0}}{
+                            \pgfmathtruncatemacro{\first}{\arrsz+\step-1}
+                        }{
+                            \pgfmathtruncatemacro{\first}{\step*(#5+1)-1}
+                        }
+                        \path[hatch] ($(#2-base)+(\first*\eltsz,0)$) rectangle
+                                ($(#2-base)+(\first*\eltsz+\eltsz,0+1)$);
+                    }
                 \end{pgfonlayer}
                 % Threads
+                \pgfmathtruncatemacro{\thsize}{\harrsz*(#5+1)*\eltsz}
                 \draw[arr,Col0] ($(#2-base)+(.5,.5)$) -- node[above,pos=.5] {Thread 0}
-                    ($(#2-base)+(\harrsz*\eltsz-.5,.5)$);
-                \pgfmathtruncatemacro{\first}{\eltsz*(\harrsz+#5)}
+                    ($(#2-base)+(\thsize-.5,.5)$);
+                \pgfmathtruncatemacro{\first}{\thsize}
                 \draw[arr,Col1] ($(#2-base)+(\first+.5,.5)$) -- node[above,pos=.5] {Thread 1}
-                    ($(#2-base)+(\first+\harrsz*\eltsz-.5,.5)$);
+                    ($(#2-base)+(\first+\thsize-.5,.5)$);
             }
         }
     },
@@ -64,9 +68,9 @@
 
 
 \begin{tikzpicture}[font=\small]
-    \node[myarray={\tabsz}{fs}{\arrsz}{2}{1}] (cache) at (0,0) {\textbf{False sharing:}};
+    \node[myarray={\tabsz}{fs}{\harrsz}{\arrsz}{0}] (cache) at (0,0) {\textbf{False sharing:}};
 
-    \node[myarray={\tabsz}{pad}{\harrsz}{2}{\harrsz}] (cache) at (0,-2) {\textbf{No false sharing (padding):}};
+    \node[myarray={\tabsz}{pad}{\harrsz}{\arrsz}{1}] (cache1) at (0,-2) {\textbf{No false sharing (padding):}};
 
 \end{tikzpicture}
 % vim: et si sta lbr  sw=4 ts=4 spelllang=en_us

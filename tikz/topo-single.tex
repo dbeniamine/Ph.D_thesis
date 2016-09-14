@@ -53,7 +53,7 @@
             % Cores
             \foreach \core in {\cmin,...,\cmax}{
                 \pgfmathtruncatemacro{\cstep}{\core-\cmin}
-                \draw (1.4*\cstep,0) pic[font=\tiny] {core={2}{\core}{#3}{#4}};
+                \draw (1.7*\cstep,0) pic {core={2}{\core}{#3}{#4}};
             }
             % L2
             \draw[fill=ColL2] ($(core-\cmin.#4 west)#3(0,.6)$) rectangle
@@ -75,11 +75,11 @@
             % Cores
             \foreach \lg in {\lmin,...,\lmax}{
                 \pgfmathtruncatemacro{\lgstep}{\lg-\lmin}
-                \draw (2.8*\lgstep,0) pic[font=\footnotesize] {l2group={2}{\lg}{#3}{#4}};
+                \draw (3.4*\lgstep,0) pic {l2group={2}{\lg}{#3}{#4}};
             }
            % L3
             \draw[fill=ColL3] ($(l2g-\lmin-w)#3(0,.1)$) rectangle ($(l2g-\lmax-e)#3(0,.5)$)%
-            node[pos=.5,font=\small]{L3};
+            node[pos=.5]{L3};
            % Coordinates for Mem
             \coordinate (s-#2-w) at ($(l2g-\lmin-w)#3(0,.5)$);
             \coordinate (s-#2-e) at ($(l2g-\lmax-e)#3(0,.5)$);
@@ -95,14 +95,14 @@
                 \node (minnode) at (-.6,.3) {};
             }
             \node (maxnode) at ($(l2g-\lmax-e)#3(0,1)$) {};
-            \node (sockname) at ($(l2g-\lmin-e)#3(0,.8)$) {Socket \##2};
+            \node (sockname) at ($(l2g-\lmin-e)#3(0,.8)$) {CPU};
 
             \begin{pgfonlayer}{bbg}
                 \node[box,fill=ColS,fit=(minnode) (maxnode)] (cpu-#2) {};
             \end{pgfonlayer}
            % Memory
             \draw[fill=ColM,text=white] ($(cpu-#2.#4 west)#3(0,.5)$) rectangle ($(cpu-#2.#4 east)#3(0,1.5)$)%
-            node[pos=.5]{Memory bank \##2};
+            node[pos=.5]{Memory};
 
             \draw[line width=.5em] (cpu-#2.#4) -- ($(cpu-#2.#4)#3(0,.5)$);
 
@@ -112,18 +112,5 @@
 
 \begin{tikzpicture}[font=\small, every pic/.style={scale=.9}]
     \pic at (0,0)  {socket={2}{0}{+}{north}};
-    \pic at (6.5,0)  {socket={2}{1}{+}{north}};
-    \pic at (0,-2) {socket={2}{2}{-}{south}};
-    \pic at (6.5,-2) {socket={2}{3}{-}{south}};
-
-    \begin{pgfonlayer}{bbbg}
-        \draw[line width=.5em] (cpu-0) -- (cpu-2);
-        \draw[line width=.5em] (cpu-0) -- (cpu-1);
-        \draw[line width=.2em]  (cpu-0) -- (cpu-3);
-        \draw[line width=.5em] (cpu-1) -- (cpu-3);
-        \draw[line width=.5em] (cpu-2) -- (cpu-3);
-        \draw[line width=.2em]  (cpu-1) -- (cpu-2);
-    \end{pgfonlayer}
-
 \end{tikzpicture}
 % vim: et si sta lbr  sw=4 ts=4 spelllang=en_us

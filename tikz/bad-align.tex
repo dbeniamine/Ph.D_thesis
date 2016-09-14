@@ -20,7 +20,7 @@
 \def\balign{.6}
 \pgfmathparse{\balign*\eltsz}
 \edef\balignsz{\pgfmathresult}
-\def\nlines{2}
+\def\nlines{1}
 \pgfmathparse{\nlines-\balign}
 \edef\resid{\pgfmathresult}
 
@@ -54,23 +54,33 @@
     \begin{pgfonlayer}{bg}
         \node[myarray={2}{ColG,mydash}{0}{invb},txtnode] (d0) at (\balignsz,0) {};
         \path[pattern=north east lines, pattern color=ColB] (0,\vshift) rectangle ($(0,\vshift)+(\balignsz,1)$);
-        \path[pattern=north east lines, pattern color=ColB] (\balignsz+\eltsz*2,\vshift) rectangle (4*\eltsz,1+\vshift);
+        \path[pattern=north east lines, pattern color=ColB] (\balignsz+\eltsz*2,\vshift) rectangle (3*\eltsz,1+\vshift);
     \end{pgfonlayer}
 
-    \draw[mybrace] (0,\vshift) -- (2*\eltsz,\vshift) node [midway,below=1em]
-        {Fetch 0: \colg{\resid~useful lines} / \colb{\balign~useless lines}};
-    \draw[mybrace] (2*\eltsz,\vshift) -- (4*\eltsz,\vshift) node [midway,below=1em]
-        {Fetch 1: \colg{\balign~useful lines} / \colb{\resid~useless lines}};
+    \draw[mybrace] (0,\vshift) -- (1*\eltsz,\vshift) node [midway,below=1em]
+        {Fetch 0};
+    \draw[mybrace] (\eltsz,\vshift) -- (2*\eltsz,\vshift) node [midway,below=1em]
+        {Fetch 1};
+
+    \draw[mybrace] (2*\eltsz,\vshift) -- (3*\eltsz,\vshift) node [midway,below=1em]
+        {Fetch 2};
+
+    \node[anchor=west] at (0,2*\vshift)
+    {\textbf{Total:} \colb{3 fetches}, \colg{2~useful lines} / \colb{1~useless line}};
 
     %% Good alignment
-        \node[myarray={4}{none}{1}{good},txtnode] (good) at (0,-3) {\colg{\textbf{Good alignment:}}};
+    \node[myarray={4}{none}{1}{good},txtnode] (good) at (0,3*\vshift) {\colg{\textbf{Good alignment:}}};
 
     \begin{pgfonlayer}{bg}
-        \node[myarray={2}{ColG,mydash}{0}{invg},txtnode] (d1) at (0,-3) {};
+        \node[myarray={2}{ColG,mydash}{0}{invg},txtnode] (d1) at (0,3*\vshift) {};
     \end{pgfonlayer}
 
-    \draw[mybrace] (0,\vshift-3) -- (2*\eltsz,\vshift-3) node [midway,below=1em]
-        {Fetch 0: \colg{2~useful lines} / \colb{0~useless lines}};
+    \draw[mybrace] (0,\vshift+3*\vshift) -- (\eltsz,\vshift+3*\vshift) node
+        [midway,below=1em] {Fetch 0};
+    \draw[mybrace] (\eltsz,\vshift+3*\vshift) -- (2*\eltsz,\vshift+3*\vshift) node
+        [midway,below=1em] {Fetch 1};
+    \node[anchor=west] at (0,5*\vshift)
+    {\textbf{Total:} \colg{2 fetches}, \colg{2~useful lines} / \colb{0~useless lines}};
 
 \end{tikzpicture}
 % vim: et si sta lbr  sw=4 ts=4 spelllang=en_us
