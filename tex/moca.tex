@@ -1,163 +1,5 @@
 %!TEX encoding=UTF-8 Unicode
-\chapter{Collecting Memory Traces}
-
-As the memory patterns of an application have a considerable impact on its performances, memory traces can be a great help to understand and optimize  it.
-An ideal memory trace should provide enough information to build a map of the memory accesses over the time.
-To do so it should collect be \emph{detailed}, \emph{precise} and \emph{complete} traces as defined in~\ref{def:traces}.
-Still, collecting such a trace is challenging as there is no hardware help comparable to performance counters to do it non intrusively.
-Therefore, memory trace collection tools must work at the \gls{OS} or software level.
-
-In this chapter we present our main contributions that consists in two different memory trace collection tools:
-\begin{itemize}
-    \item The first one, called \gls{Tabarnac}, relies on a low overhead and lock free instrumentation library to provide a global overview of the memory usage.
-        It is designed specifically to inspect \gls{NUMA} related issues.
-        This tool also provides simple yet meaningful visualizations.
-        \gls{Tabarnac} was published at \gls{VPA} 2015 a \gls{SC} workshop~\cite{Beniamine15TABARNAC}.
-        Furthermore it is distributed as a free software under the \gls{GPL} license: \url{https://github.com/dbeniamine/Tabarnac}.
-        This work is the result of a collaboration with M. Diener and P.O.A Navaux from the informatica team of the \gls{UFRGS}, Porto Alegre, Brazil.
-    \item The second tool, \gls{Moca}, addresses the challenge of collecting \emph{detailed}, \emph{precise} and \emph{complete} memory traces with temporal information.
-        It relies on an \gls{OS} level mechanism called page fault interception and injection.
-        This work is the subject of two Inria research reports~\cite{Beniamine15Memory,Beniamine16Moca} and has been submitted at \gls{PMBS} 2016, a \gls{SC} workshop.
-        As the previous tool, \gls{Moca} is distributed under the \gls{GPL} license: \url{https://github.com/dbeniamine/Moca}.
-\end{itemize}
-
-This chapter presents first the design and usage of \gls{Tabarnac} through a use case and discuss the obtained results, the overhead and limits of \gls{Tabarnac} in \sect{Tabarnac}.
-Then we present the challenges raised by \gls{Moca}, its design and an experimental validation including an extensive comparison with existing memory trace collection tools in \sect{Moca}.
-Finally we provide our conclusions on memory traces collection in \sect{tracing-cncl}.
-
-
-\section{Tabarnac: Global view of the memory usage}
-\label{sec:Tabarnac}
-
-\acrfull{Tabarnac} is our first attempt to collect memory traces and use them for performance optimizations.
-As previous work~\cite{Beniamine13Cartographier} showed how difficult it is to capture \emph{complete} memory traces with temporal information, this tools focuses on the global behavior.
-Furthermore it aims specifically at improving \gls{NUMA} related performance issues.
-
-\subsection{Design}
-
-On \gls{NUMA} machines, optimizing memory performances often means reducing the number of remote accesses.
-Indeed, to optimize the performances a memory page must be mapped to a physical memory bank as close as possible to the threads that actually uses it.
-Therefore to optimize memory performances on \gls{NUMA} system, it is required to know how much each page is accessed by each thread.
-\gls{Tabarnac} is designed to collect specifically this information.
-
-\subsubsection{Trace collection}
-
-\gls{Tabarnac} is based on \gls{Numalyze}~\cite{Diener15Characterizing} instrumentation which rely on the \gls{Pin}~\cite{Luk05Pin} library.
-This instrumentation is lock free by design: it traps on each memory accesses but only maintain one counter per pages and per threads.
-Adaptive \gls{NUMA} mapping tools collect similar traces but uses them online to decide whether they should a memory page from a node to another.
-\gls{Numalyze} was originally designed to estimate the efficiency of such tools.
-Indeed, adaptive tools works with partial traces as they need to decide of page migration before the end of the execution.
-Thus, comparing the mapping obtained with a partial trace to the one obtained with the complete trace helps deciding the minimum size of partial trace required to decide on an efficient page mapping.
-
-\begin{algorithm}[htb]
-    \begin{algorithmic}
-        \Function{mem\_access}{unsigned long address, int threadId, char type}
-            \State uint64\_t page = address >> page\_bits;
-            \State accesses[threadId][page][type]++;
-        \EndFunction
-    \end{algorithmic}
-    \caption{Handling of memory accesses by Tabarnac.}
-    \label{alg:Tabarnac}
-\end{algorithm}
-
-
-We proposed to expand these traces and use them for offline analysis.
-While \gls{Numalyze} only collects one counter per page and per thread, our instrumentation also differentiate reads and writes, as shown in \alg{Tabarnac}.
-This distinction is important for memory analysis as reads and writes do not have the same impact on performances.
-Furthermore, an easy way to reduce the number of remote accesses produced by a data structure is to duplicate it and map a copy to each node, but this optimization is only useful to mostly read data structures.
-Moreover as page numbers are not really meaningful for humans, we added contextual information to \gls{Numalyze} traces.
-Indeed, \gls{Tabarnac} also collects data structure information by three different means.
-First: each time a thread is created, it compute its stack bounds and create a virtual structure named \texttt{Stack\#N} where $N$ is the thread~Id.
-Then every time a binary file is loaded (main file or shared library), it inspect the binary, looking for static data structures.
-Finally it intercept every call the \texttt{malloc} functions family, keeping track of allocated data structures.
-Only structures that are bigger than one page (usually $4$Kib in current x86\_64 architectures) are recorded as our analysis granularity is the memory page.
-The data structure informations (name, size and address) are only used to generate the visualization, after the end of the instrumentation.
-The name detection of allocated data structure is heuristic and based on source code analysis.
-
-At the end of the execution, the tool generate three \texttt{csv} files.
-The first contains the list of pages and the number of reads and writes per thread.
-The second contains the list of structures with their names, sizes and start addresses, the last file contains the stacks size and addresses.
-Then, a \gls{R-markdown} script which reads the trace, retrieves the page to data structure mapping and generates the final visualization presented.
-
-\gls{Tabarnac} only depends on \gls{Pin} for the trace collection and \gls{R} for the visualization, and can thus be installed easily.
-If all the R library required to generate the visualization are not present, it is able to install them automatically.
-By default \gls{Tabarnac} generate both the memory trace and the visualization, but the user can also do the trace and visualization separately on different machines.
-
-\subsubsection{Visualization}
-
-Once the data collection phase is done, \gls{Tabarnac} uses a \gls{R-markdown} script to generate the visualization (as an HTML page).
-This visualization provides a summary of the trace through several plots\footnote{
-    Full examples of \gls{Tabarnac}'s output are available at:\\ \url{http://dbeniamine.github.io/Tabarnac/examples}.}.
-It aims at showing how pages are shared inside each data structures.
-Therefore, it provides two types of plots, the first aims at showing the importance of each data structure, while the second describe the sharing patterns inside these data structures.
-Each plot is introduced by an explanation of its presentation, what common issues it can help to understand and provides suggestions on how to fix these issues.
-The visualization starts with a small introduction, summarizing the main principles while developing for \gls{NUMA} machines, and shows the hardware topology of the analyzed machine extracted
-with Hwloc~\cite{Broquedis10hwloc}.
-
-After the introduction, the visualization focuses on the usage of data structures.
-Some structures are not displayed if less than $0.01\%$ of the total accesses happen on them.
-This is done to make the output more readable by focusing on the most important structures.
-However, it is possible to ask \gls{Tabarnac} not to ignore them for a more detailed view.
-
-\begin{figure}[htb]
-    \centering
-    \begin{subfigure}{.49\linewidth}
-        \includegraphics[width=\linewidth]{tabarnac/example_sz}
-        \caption{Structures size.}
-        \label{fig:example_sz}
-    \end{subfigure}
-    \begin{subfigure}{.49\linewidth}
-        \includegraphics[width=\linewidth]{tabarnac/example_rw}
-        \caption{Number of accesses per structures.}
-        \label{fig:example_rw}
-    \end{subfigure}
-    \caption{Global views of the memory usage.}
-    \label{fig:example_plot1}
-\end{figure}
-
-The first series of plots presents information concerning the relative importance of the data structures.
-It consists of two plots, showing first the size of each data structure, as in Figure~\ref{fig:example_sz}, then the number of reads and writes in each structure (Figure~\ref{fig:example_rw}).
-These plots give a general idea of the importance of the structures used by the parallel application.
-Moreover, knowing the read/write behavior is very useful as it determines the possible optimizations.
-For instance, small data structures written only during initialization (or very rarely) can be relatively easily
-duplicated, such that each \gls{NUMA} node works on a local copy.
-
-\begin{figure}[htb]
-    \centering
-    \begin{subfigure}{.49\linewidth}
-        \includegraphics[width=\linewidth]{tabarnac/example_ft}
-        \caption{First touch distribution.}
-        \label{fig:example_ft}
-    \end{subfigure}
-    \begin{subfigure}{.49\linewidth}
-        \includegraphics[width=\linewidth]{tabarnac/example_dist}
-        \caption{Per thread access distribution.}
-        \label{fig:example_dist}
-    \end{subfigure}
-    \caption{Per structure view of the memory usage.}
-    \label{fig:example_by_structs}
-\end{figure}
-
-The second series of plots is the most important one.
-It shows for each page of each structure which thread was responsible for the first touch (Figure~\ref{fig:example_ft}).
-This information is important as the default policy for \gls{Linux} and most other operating systems is to map a page as close as possible to the first thread accessing it.
-If the first touch distribution does not fit the actual access distribution, the default mapping performed by \gls{Linux} might not be efficient.
-To address this issue, the developer can either correct the first touch or do some manual data mapping to ensure better memory access locality and balance during the execution.
-
-Finally, \gls{Tabarnac} shows the density of accesses performed by each thread and the global distribution.
-In the example shown in Figure~\ref{fig:example_dist}, each horizontal line represents the number of accesses to one page, there is one line per thread and one for the average number of accesses.
-Moreover, for each thread the average number of accesses to the structure is displayed.
-Darker points indicate more memory accesses to the page. This visualization gives an easy way to understand the data sharing between threads, as well as the balance between pages and
-threads.
-These plots can be used to identify inefficient memory sharing and to determine the best \gls{NUMA} mapping policy.
-
-\subsection{Experimental validation}
-
-\Input{tabarnac-expe}
-
-
-\section{Moca: Collecting fine grain traces}
-\label{sec:Moca}
+\chapter{Collecting fine grain memory traces}
 
 \gls{Tabarnac} manage to keep it's overhead reasonable by two means.
 First is sees the memory at the granularity of the page, loosing any information about the internal usage of a page.
@@ -165,8 +7,19 @@ While this is enough to debug issues specific to \gls{NUMA}, it is not \emph{det
 Second, it does not collect any temporal information, reducing the size of its trace and avoiding to maintain temporal order.
 An instrumentation similar to \gls{Tabarnac} but with temporal information with a finer grain than the page would have a considerable overhead.
 Therefore it is required to find a lighter mean to collect memory traces.
+This chapter presents \gls{Moca}, a memory trace collection system that  relies on an \gls{OS} level mechanism called page fault interception and injection.
+\gls{Moca} addresses the challenge of collecting \emph{detailed}, \emph{precise} and \emph{complete} traces, that is with temporal information.
 
-\subsection{Background knowledge}
+This work is the subject of two Inria research reports~\cite{Beniamine15Memory,Beniamine16Moca} and has been submitted at \gls{PMBS} 2016, a \gls{SC} workshop.
+As the previous tool, \gls{Moca} is distributed under the \gls{GPL} license: \url{https://github.com/dbeniamine/Moca}.
+
+This chapter presents first some background knowledge required to understand \gls{Moca} design in \sect{moca-bg}.
+Then we discuss the implementation details of \gls{Moca} in \sect{moca-design}.
+After that present an experimental validation including an extensive comparison with existing memory trace collection tools in \sect{moca-expe}.
+Finally we provide our conclusions about memory traces collection in \sect{moca-cncl}.
+
+\section{Background knowledge}
+\label{sec:moca-bg}
 
 Page faults interception is often used to collect information about memory usage at the run time.
 Such a mechanism has been used in several existing works : in parallel garbage collectors~\cite{Boehm91Mostly}, in memory checkpointing~\cite{Heo05Spaceefficient} or in the domain of virtualization to provide the hypervisor with information about the memory usage of the guest \gls{OS}~\cite{Jones06Geiger}.
@@ -183,7 +36,7 @@ As a consequence, they require a relatively small data structure in memory for t
 To reach a satisfying \emph{precision}, \gls{Moca} has to maintain in memory both the trace data and the set of faked invalid pages.
 Overall, storing and exploiting efficiently these data within the kernel space and outputting them in real time to the user space is a challenge and is the main contribution of our work.
 
-\subsection{Design}
+\section{Design}
 \label{sec:moca-design}
 
 \gls{Moca} consist of a Linux kernel module that can be loaded at runtime,  a script in charge of both loading this module with the proper parameters and launching the monitored application on the user behalf and an optional library able retrieve data structures information.
@@ -205,7 +58,7 @@ Naming the data structures by call stack instead of by looking at the source cod
 Our context library is lightweight, the added cost is the cost of a regular execution added to a small constant overhead for each binary opened and each allocation performed.
 Thus the overhead of using \gls{Moca} and the library is basically \gls{Moca} overhead plus one time the normal execution time.
 
-\subsubsection{Page faults interception and injection}
+\subsection{Page faults interception and injection}
 
 \gls{Moca} collects \emph{complete} traces in the sense that the exact set of pages accessed by the application is deduced from the collected events at all times during the execution.
 Thus, it is \emph{complete} at the page granularity.
@@ -238,7 +91,7 @@ Furthermore, the remaining memory accesses, which are collected, are trapped usi
 Both are lightweight mechanisms, which means that the overall instrumentation overhead of \gls{Moca} is likely to be low.
 Indeed, instrumentation based methods often work at a high granularity, collecting few information, in order to keep their naturally high overhead in control.
 
-\subsubsection{Internal design}
+\subsection{Internal design}
 
 During the execution, our \gls{Linux} kernel module needs to store three kinds of information:
 
@@ -408,14 +261,14 @@ To avoid that, \gls{Moca} stores for each CPU the last address that faulted, and
 %user. Nevertheless, reasonable defaults have been defined from the experimental study
 %detailed in section~\ref{sec:expe-param}.
 
-\subsection{Experimental validation}
-\label{sec:Tools-Comp}
+\section{Experimental validation}
+\label{sec:moca-expe}
 
 We compare \gls{Moca} and \gls{Tabarnac} to other existing memory analysis tools.
 In a first time, we present their main differences in terms of portability and capabilities.
 Then, we present two sequences of quantitative experiments, one that outlines the importance of the default parameters chosen for our \gls{Moca} and the other that compares the precision and performance of all the tools.
 
-\subsubsection{Methodology}
+\subsection{Methodology}
 
 Our main experiments were run on  machines from \gls{Grid5000} \texttt{Edel}
 cluster (Intel machines).
@@ -554,7 +407,7 @@ All the files required to reproduce the experiments described here or the analys
 %Finally, at the most comprehensive level, we provide a git repository that includes our deployment environment, dependencies to all the tools and files required and instructions that explain how to reproduce the experiment with or without access to \gls{Grid5000}.
 
 
-\subsubsection{Moca validation}
+\subsection{Moca validation}
 \label{sec:expe-param}
 
 Before comparing \gls{Moca} to existing tools, we need to evaluate the impact of the wakeup intervals (logging daemon and monitoring thread) on the trace \emph{precision} and on the overhead.
@@ -588,7 +441,7 @@ The fact that variations in execution time result in matching variations in the 
 Overall these variations are not significant as all the confidence intervals intersect.
 Finally we have chosen a logging interval of \SI{0.5}{s}, the median value, in order to avoid unnoticed effect caused by extremum values.
 
-\subsubsection{Comparison to other memory trace collection tools}
+\subsection{Comparison to other memory trace collection tools}
 
 Preliminary experiments showed us that \gls{Mitos} capture by default way less distinct pages than \gls{Tabarnac} and \gls{Moca}.
 Thus, we tried to change \gls{Mitos} sampling period in order to make it capture as many pages as possible, we name this version MitosTun.
@@ -712,8 +565,6 @@ overhead as \gls{MemProf} as it capture the same amount of data.
 Finally, we can see, as expected, that adding one execution with a Pin instrumentation to retrieve data structures information (MocaPin) only adds a small overhead to the whole \gls{Moca} execution.
 For several benchmarks this difference is so small that we cannot distinguish it from \gls{Moca} usual overhead.
 
-%\subsection{Summary}
-%\label{sec:expe-cncl}
 \subsection{Results and discussion}
 
 We have tested \gls{Moca} with various applications and using several parameters.
@@ -724,9 +575,8 @@ Nevertheless, compared to the only other tool able to collect a superset of the 
 Collecting such a superset with \gls{MemProf} and \gls{Mitos}, and provide the same guarantee, would require to sample all the memory instructions, which is not possible.
 At the end of the day, \gls{Moca} is the only tool able to provide a detailed trace with temporal, spacial and sharing information while providing guarantees on the information lost during the sampling.
 
-
 \section{Conclusions}
-\label{sec:tracing-cncl}
+\label{sec:moca-cncl}
 
 We addressed the issue of memory accesses collection for multithreaded applications.
 This is a key challenge in high performance computing as memory is often a performance bottleneck.

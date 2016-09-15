@@ -1,11 +1,155 @@
 %!TEX encoding=UTF-8 Unicode
 %!TEX root=../thesis.tex
+\chapter{Collecting and analyzing global memory traces}
+
+As the memory patterns of an application have a considerable impact on its performances, memory traces can be a great help to understand and optimize  it.
+An ideal memory trace should provide enough information to build a map of the memory accesses over the time.
+To do so it should collect be \emph{detailed}, \emph{precise} and \emph{complete} traces as defined in~\ref{def:traces}.
+Still, collecting such a trace is challenging as there is no hardware help comparable to performance counters to do it non intrusively.
+Therefore, memory trace collection tools must work at the \gls{OS} or software level.
+
+This chapter presents \gls{Tabarnac}, our first attempt to collect memory traces and use them for performance optimizations.
+Previous work~\cite{Beniamine13Cartographier} showed how difficult it is to capture \emph{complete} memory traces with temporal information.
+Therefore \gls{Tabarnac} focuses on the global memory behavior.
+Furthermore it aims specifically at improving \gls{NUMA} related performance issues.
+\gls{Tabarnac}, relies on a low overhead and lock free instrumentation library to provide a global overview of the memory usage.
+Moreover,  it also provides simple yet meaningful visualizations.
+
+The contribution presented in this chapter were published at \gls{VPA} 2015 a \gls{SC} workshop~\cite{Beniamine15TABARNAC}.
+Furthermore \gls{Tabarnac} is distributed as a free software under the \gls{GPL} license: \url{https://github.com/dbeniamine/Tabarnac}.
+This work is the result of a collaboration with M. Diener and P.O.A Navaux from the informatica team of the \gls{UFRGS}, Porto Alegre, Brazil.
+
+This chapter first presents the design and usage of \gls{Tabarnac} in \sect{tab-design}.
+Then \sect{tab-expe} present an experimental validation of \gls{Tabarnac} including performance optimization of well known benchmarks and overhead analysis.
+Finally we discuss the results obtained with \gls{Tabarnac} in \sect{tab-cncl}.
+
+\section{Design}
+\label{sec:tab-design}
+
+On \gls{NUMA} machines, optimizing memory performances often means reducing the number of remote accesses.
+Indeed, to optimize the performances a memory page must be mapped to a physical memory bank as close as possible to the threads that actually uses it.
+Therefore to optimize memory performances on \gls{NUMA} system, it is required to know how much each page is accessed by each thread.
+\gls{Tabarnac} is designed to collect specifically this information.
+
+\subsection{Trace collection}
+
+\gls{Tabarnac} is based on \gls{Numalyze}~\cite{Diener15Characterizing} instrumentation which rely on the \gls{Pin}~\cite{Luk05Pin} library.
+This instrumentation is lock free by design: it traps on each memory accesses but only maintain one counter per pages and per threads.
+Adaptive \gls{NUMA} mapping tools collect similar traces but uses them online to decide whether they should a memory page from a node to another.
+\gls{Numalyze} was originally designed to estimate the efficiency of such tools.
+Indeed, adaptive tools works with partial traces as they need to decide of page migration before the end of the execution.
+Thus, comparing the mapping obtained with a partial trace to the one obtained with the complete trace helps deciding the minimum size of partial trace required to decide on an efficient page mapping.
+
+\begin{algorithm}[htb]
+    \begin{algorithmic}
+        \Function{mem\_access}{unsigned long address, int threadId, char type}
+            \State uint64\_t page = address >> page\_bits;
+            \State accesses[threadId][page][type]++;
+        \EndFunction
+    \end{algorithmic}
+    \caption{Handling of memory accesses by Tabarnac.}
+    \label{alg:Tabarnac}
+\end{algorithm}
+
+
+We proposed to expand these traces and use them for offline analysis.
+While \gls{Numalyze} only collects one counter per page and per thread, our instrumentation also differentiate reads and writes, as shown in \alg{Tabarnac}.
+This distinction is important for memory analysis as reads and writes do not have the same impact on performances.
+Furthermore, an easy way to reduce the number of remote accesses produced by a data structure is to duplicate it and map a copy to each node, but this optimization is only useful to mostly read data structures.
+Moreover as page numbers are not really meaningful for humans, we added contextual information to \gls{Numalyze} traces.
+Indeed, \gls{Tabarnac} also collects data structure information by three different means.
+First: each time a thread is created, it compute its stack bounds and create a virtual structure named \texttt{Stack\#N} where $N$ is the thread~Id.
+Then every time a binary file is loaded (main file or shared library), it inspect the binary, looking for static data structures.
+Finally it intercept every call the \texttt{malloc} functions family, keeping track of allocated data structures.
+Only structures that are bigger than one page (usually $4$Kib in current x86\_64 architectures) are recorded as our analysis granularity is the memory page.
+The data structure informations (name, size and address) are only used to generate the visualization, after the end of the instrumentation.
+The name detection of allocated data structure is heuristic and based on source code analysis.
+
+At the end of the execution, the tool generate three \texttt{csv} files.
+The first contains the list of pages and the number of reads and writes per thread.
+The second contains the list of structures with their names, sizes and start addresses, the last file contains the stacks size and addresses.
+Then, a \gls{R-markdown} script which reads the trace, retrieves the page to data structure mapping and generates the final visualization presented.
+
+\gls{Tabarnac} only depends on \gls{Pin} for the trace collection and \gls{R} for the visualization, and can thus be installed easily.
+If all the R library required to generate the visualization are not present, it is able to install them automatically.
+By default \gls{Tabarnac} generate both the memory trace and the visualization, but the user can also do the trace and visualization separately on different machines.
+
+\subsection{Visualization}
+
+Once the data collection phase is done, \gls{Tabarnac} uses a \gls{R-markdown} script to generate the visualization (as an HTML page).
+This visualization provides a summary of the trace through several plots\footnote{
+    Full examples of \gls{Tabarnac}'s output are available at:\\ \url{http://dbeniamine.github.io/Tabarnac/examples}.}.
+It aims at showing how pages are shared inside each data structures.
+Therefore, it provides two types of plots, the first aims at showing the importance of each data structure, while the second describe the sharing patterns inside these data structures.
+Each plot is introduced by an explanation of its presentation, what common issues it can help to understand and provides suggestions on how to fix these issues.
+The visualization starts with a small introduction, summarizing the main principles while developing for \gls{NUMA} machines, and shows the hardware topology of the analyzed machine extracted
+with Hwloc~\cite{Broquedis10hwloc}.
+
+After the introduction, the visualization focuses on the usage of data structures.
+Some structures are not displayed if less than $0.01\%$ of the total accesses happen on them.
+This is done to make the output more readable by focusing on the most important structures.
+However, it is possible to ask \gls{Tabarnac} not to ignore them for a more detailed view.
+
+\begin{figure}[htb]
+    \centering
+    \begin{subfigure}{.49\linewidth}
+        \includegraphics[width=\linewidth]{tabarnac/example_sz}
+        \caption{Structures size.}
+        \label{fig:example_sz}
+    \end{subfigure}
+    \begin{subfigure}{.49\linewidth}
+        \includegraphics[width=\linewidth]{tabarnac/example_rw}
+        \caption{Number of accesses per structures.}
+        \label{fig:example_rw}
+    \end{subfigure}
+    \caption{Global views of the memory usage.}
+    \label{fig:example_plot1}
+\end{figure}
+
+The first series of plots presents information concerning the relative importance of the data structures.
+It consists of two plots, showing first the size of each data structure, as in Figure~\ref{fig:example_sz}, then the number of reads and writes in each structure (Figure~\ref{fig:example_rw}).
+These plots give a general idea of the importance of the structures used by the parallel application.
+Moreover, knowing the read/write behavior is very useful as it determines the possible optimizations.
+For instance, small data structures written only during initialization (or very rarely) can be relatively easily
+duplicated, such that each \gls{NUMA} node works on a local copy.
+
+\begin{figure}[htb]
+    \centering
+    \begin{subfigure}{.49\linewidth}
+        \includegraphics[width=\linewidth]{tabarnac/example_ft}
+        \caption{First touch distribution.}
+        \label{fig:example_ft}
+    \end{subfigure}
+    \begin{subfigure}{.49\linewidth}
+        \includegraphics[width=\linewidth]{tabarnac/example_dist}
+        \caption{Per thread access distribution.}
+        \label{fig:example_dist}
+    \end{subfigure}
+    \caption{Per structure view of the memory usage.}
+    \label{fig:example_by_structs}
+\end{figure}
+
+The second series of plots is the most important one.
+It shows for each page of each structure which thread was responsible for the first touch (Figure~\ref{fig:example_ft}).
+This information is important as the default policy for \gls{Linux} and most other operating systems is to map a page as close as possible to the first thread accessing it.
+If the first touch distribution does not fit the actual access distribution, the default mapping performed by \gls{Linux} might not be efficient.
+To address this issue, the developer can either correct the first touch or do some manual data mapping to ensure better memory access locality and balance during the execution.
+
+Finally, \gls{Tabarnac} shows the density of accesses performed by each thread and the global distribution.
+In the example shown in Figure~\ref{fig:example_dist}, each horizontal line represents the number of accesses to one page, there is one line per thread and one for the average number of accesses.
+Moreover, for each thread the average number of accesses to the structure is displayed.
+Darker points indicate more memory accesses to the page. This visualization gives an easy way to understand the data sharing between threads, as well as the balance between pages and
+threads.
+These plots can be used to identify inefficient memory sharing and to determine the best \gls{NUMA} mapping policy.
+
+\section{Experimental validation}
+\label{sec:tab-expe}
 
 To evaluate \gls{Tabarnac}, we present two examples of benchmark optimization done with \gls{Tabarnac}.
 For each benchmark, we compare the speedup obtained with \gls{Tabarnac} to the one obtained by \gls{NUMA} mapping tools.
 We also evaluate the overhead of \gls{Tabarnac} on each of the \gls{NPB}.
 
-\subsubsection{Methodology}
+\subsection{Methodology}
 
 %This section briefly discusses our experimental setup for the evaluation of \gls{Tabarnac}.
 % and presents relevant information on the experimental environment.
@@ -58,7 +202,7 @@ Both analysis and performance evaluation are performed with $64$ threads, which 
 %The \emph{matrix multiplication} performance was evaluated with
 %matrices of size $4096 \times 4096$ doubles and $8192 \times 8192$, resulting on
 %a memory usage of $128$Mib and $512Mib$ per matrix.
-%\subsection{Mapping Policies}
+%\section{Mapping Policies}
 
 In the performance evaluation, we compare the following three traditional mapping policies to the version modified using the knowledge provided by \gls{Tabarnac}.
 The original \gls{Linux} kernel is our baseline for the experiments.
@@ -73,7 +217,7 @@ The error bars in those plots represent the standard error.
 
 All the files required to reproduce the experiments described here or the analysis are available online at: \url{https://github.com/dbeniamine/tabarnac\_expe}.
 
-% \subsubsection{Matrix Multiplication}
+% \subsection{Matrix Multiplication}
 %
 % The first benchmark presented is based on a naive matrix multiplication,
 % computing $C=A \times B$. Our aim here is not to provide a kernel competing with the
@@ -196,7 +340,7 @@ All the files required to reproduce the experiments described here or the analys
 % improve the access distribution (in this case going from the naive to the block version),
 % or at least \gls{Tabarnac} will help choosing the best NUMA page mapping policy.
 
-\subsubsection{Ondes3D}
+\subsection{Ondes3D}
 \label{sec:exp-ondes3d}
 
 \Ondes is the main numerical kernel of the Ondes3D application~\cite{Dupros08Exploiting}.
@@ -251,7 +395,7 @@ This is a case where static mapping can be substantially better than automated t
 The \emph{Interleave} policy provides a similar speedup as \emph{First Touch} since it distributes the pages over the \gls{NUMA} nodes at the beginning of the execution.
 In the end, for this example, using a classic static policy would have been enough to fix the performance issue, yet \gls{Tabarnac} helped understanding and fixing it in a definitive way.
 
-\subsubsection{The \IS benchmark}
+\subsection{The \IS benchmark}
 
 
 % We executed \gls{Tabarnac} on the benchmarks %written in \texttt{C}
@@ -346,8 +490,6 @@ This can be done by modifying the \gls{OpenMP} pragma (Line~\ref{lst:is-sched} i
 
 \end{figure}
 
-
-
 With this code modification, we obtain the access distribution shown in \fig{is-behaviour-modif}.
 We can see that now each thread accesses a different part of \texttt{key\_buff1}.
 Furthermore, if most of the accesses still occur in the middle of the structure, the average number of access across the structure is the same for all threads, which means that our distribution preserves the good load balancing.
@@ -377,7 +519,7 @@ Yet, both interleave and \gls{NUMA} Balancing are still reducing the performance
 Finally, the \emph{Cyclic-Split} version provides more than \SI{20}{\%} of speedup with a very small code modification.
 This example shows that while mapping policies (static or dynamic) can conflict with the parallel runtime and slow the execution time, analyzing an application's memory behavior can help fixing inefficient behavior resulting in significant performances gain.
 
-\subsubsection{Tracing overhead}
+\subsection{Tracing overhead}
 
 Finally,  we evaluate the instrumentation cost of \gls{Tabarnac}.
 To do so, we executed all of the \gls{NPB} in class \emph{B} with $64$ threads on both evaluation systems and compared the original execution time to the execution time with instrumentation enabled.
@@ -395,7 +537,8 @@ Although this overhead is not negligible, we have to consider the fact that ofte
 Finally, as our analysis is designed to be used during the development phase and at runtime in an automated tool, we consider that this overhead is acceptable.
 
 
-\subsection{Results and discussion}
+\section{Results and discussion}
+\label{sec:tab-cncl}
 
 Our experiments have highlighted the fact that both static mapping policies such as Interleave and dynamic tools such as \gls{NUMA} Balancing can either provide performance gain or loss.
 Furthermore sometimes one tool is significantly more efficient than the other.
