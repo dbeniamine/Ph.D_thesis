@@ -71,7 +71,7 @@ This associativity can be used to create (virtual) partitions in the cache and t
 Choosing the best line to evict is extremely complex.
 Indeed a simple and efficient (but not optimal) policy would be to evict the line with the highest \emph{Reuse Distance}, where the \emph{Reuse distance} for a line $l$ is the number of different lines accessed between two accessed to $l$.
 Yet, computing this reuse distance requires to know each memory access that will happen during the execution.
-Therefore, this policy is not applicable and usually caches uses to evict the \acrfull{LRU} line that could be replaced by the one fetched.
+Therefore, this policy is not applicable and usually caches uses to evict the \gls{LRU} line that could be replaced by the one fetched.
 
 \subsubsection{A naive example}
 
