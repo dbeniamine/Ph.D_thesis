@@ -12,7 +12,7 @@
 % Clear double page before chapter
 \let\oldchapter\chapter
 \renewcommand{\chapter}{%
-    \mycleartoleftpage\glsresetall% Clear double page
+    \mycleartoleftpage\glsresetpartial% Clear double page
     \addtocontents{lol}{\protect\addvspace{10pt}}% New line in list of listings
     \oldchapter
 }

@@ -110,8 +110,10 @@ Consequently, this mechanism amplify the impact of the accesses linearity.
     \label{fig:topo-single}
 \end{figure}
 
-As increasing by a factor two the frequency of a \gls{CPU} requires much more energy than using two cores at the same frequency, vendors started to build more and more parallel \glspl{CPU}.
-\DB{Ref}
+Several reasons have led vendors to make their \glspl{CPU} more and more parallel.
+For instance, increasing by \SI{20}{\%} the frequency of a \gls{CPU} requires much more energy than using two cores at the original frequency and results in less computational power.
+Furthermore, \glspl{CPU} produce a considerable amount of heat that easy not easy to evacuate, saving energy also means reducing the amount of producing heat.
+\DBm{Ref: cours Arnaud, mieux ?}
 As a result, modern \glspl{CPU} embed several cores and do not have one cache but a hierarchy of caches.
 \fig{topo-single} depicts a quad core machine with hyper threading enabled (two processing unit inside one physical core).
 This machine embed three levels of cache, the first one is private for each core, while the second one is shared by half the cores and the last one is shared by every cores.
@@ -232,26 +234,26 @@ Therefore visualizing the memory access patterns of an application is a great he
 
 Presenting memory access patterns to the user raises two challenges.
 The first one is to collect efficiently a detailed and precise trace without interfering with the normal execution.
-Collecting such traces is challenging as almost every instruction of a program triggers a memory access.
+Collecting such traces is challenging as each instruction of a program triggers one memory access at least.
 Once this trace is collected, presenting it in a meaningful way to the user is also a challenge.
-Indeed such traces are spread over at least four dimensions: memory address space, time, threads, and cores.
+Indeed such traces are spread over at least five dimensions: memory address space (physical and virtual), time, threads, cores and type of accesses.
 Furthermore they are potentially huge, and identifying relevant information is complex.
 
-\subsection{Memory traces collections}
+\subsection{Memory traces collection}
 
 To help the developer solve memory related issues, an ideal tool should provide enough data to build a map of the memory accesses locations over the time.
-Therefore it must have the following properties:
+Therefore the trace it collects must have the following properties:
 \label{def:traces}
 \begin{itemize}
     \item  \textbf{Detailed:}  a memory trace is \emph{detailed} if it includes information about time, space (at which address the event occurs), location (on which CPU it occurs) and nature of access (is this a read, a write, by which thread).
     \item \textbf{Precise:} to be \emph{precise} enough, a trace should include a sufficiently large number of events in order to enable a sound analysis.
-    \item \textbf{Complete:} We say that a trace is \emph{complete} at a given granularity if and only if the events it contains form a superset of the actual accesses.
+    \item \textbf{Complete:} We say that a trace is \emph{complete}, at a given granularity, if and only if the events it contains covers the whole address space at this granularity.
 \end{itemize}
 
 Several studies propose to analyze memory  by looking solely at the information collected through \gls{PAPI} and \gls{Likwid} libraries~\cite{Majo13(Mis)understanding, Jiang14Understanding,Bosch00Rivet,Weyers14Visualization,Tao01Visualizing,DeRose01Hardware}.
 Generic tools have been designed on top of hardware performance counters to analyze and improve parallel applications performances, such as Intel's \gls{VTune}~\cite{Reinders05VTune}, \gls{PCM}~\cite{Wilhalm12Intel}, the \gls{HPCToolkit}~\cite{Adhianto10HPCTOOLKIT}, and AMD's \gls{CodeAnalyst}~\cite{Drongowski08introduction}.
 Although performance counters provide information about the memory use (bandwith, volume of data transferred \ldots),  they consider the memory as one huge entity and do not differentiate distinct addresses or at least distinct pages.
-Thus, these methods are not able to locate issues in the memory.
+Thus, these methods are not able to locate issues in the memory and determine in which data structure they happen.
 
 Tracing all the memory accesses without information loss is nearly impossible as almost each instruction can trigger a memory access in addition to its fetch.
 Nevertheless, several methods can record a \emph{detailed} memory trace with a good \emph{precision}.
@@ -280,24 +282,29 @@ Indeed, to use these hardware extensions one has either to obtain (or build) a p
 Such configuration is not realistic for general purpose memory analysis.
 
 To conclude, existing memory trace collection tools are not able to collect traces \emph{precise} and \emph{detailed} enough to present memory patterns to the end user.
+Nevertheless, two tools: \gls{MemProf}~\cite{Lachaize12MemProf} and \gls{Mitos}~\cite{Gimenez14Dissecting} collects \emph{incomplete} and \emph{detailed} traces.
+While this is not enough for the kind of analysis we want to run, these tools provides an interesting comparison point.
+Both of them collects trace using event sampling (\gls{PEBS} or \gls{IBS}, respectively).
+Therefore their trace are \emph{precise} on the parts of the memory that are more accessed.
 
-\subsection{Memory traces visualization}
+\subsection{Memory traces analysis}
 
-Some memory oriented analysis tools such as \gls{MemProf}~\cite{Lachaize12MemProf}, \gls{Memphis}~\cite{McCurdy10Memphis} and \gls{MemSpy}~\cite{Martonosi92MemSpy} only provide a command line textual.
+Some memory oriented analysis tools such as \gls{Memphis}~\cite{McCurdy10Memphis} and \gls{MemSpy}~\cite{Martonosi92MemSpy} only provide a textual output.
+\gls{MemProf}~\cite{Lachaize12MemProf} also provide a command line interface to inspect the trace.
 Although these tools highlight relevant informations, it is hard to get an overview of the memory behavior from such output.
-The developer might be presented with a huge amount of information and thus able to differentiate normal behaviors from problematic ones nor identify memory patterns.
+The developer might be presented with a huge amount of information and, thus, unable to differentiate normal behaviors from problematic ones nor identify memory patterns.
 
-Several studies~\cite{DeRose01Hardware,DeRose02SIGMA,Bosch00Rivet} relies on generic performance traces and present them in a data centric way.
-These studies relies on performance counters and derived metrics such as cache misses or memory bandwidth.
-From their point of view, data centric representation means that they correlate the metric values with source code and data structures.
+Several studies~\cite{DeRose01Hardware,DeRose02SIGMA,Bosch00Rivet} rely on generic performance traces and present them in a \emph{data centric} way, in the sens that they correlate the metric values with source code and data structures.
+These studies are based on performance counters and present derived metrics such as cache misses or memory bandwidth.
 Weyers et al.~\cite{Weyers14Visualization} have a slightly different approach: they present the same kind of data but correlate them with the \gls{NUMA} architecture instead of the data structures.
 All these studies can help localizing the issue in the code and find the data structures involved in it.
-Yet, they are not able to present the memory patterns, thus the developer still have to figure them by itself to understand the nature of the issue.
+Furthermore, they provide comprehensive visualization that are easier to understand then plain text traces.
+However, they are not able to present the memory patterns, and the developer still has to figure them by itself to understand the nature of the issue.
 
-A part of this limit is due to the fact that the previously cited tools work on generic traces instead of memory traces, thus they do not have the information required to identify access patterns.
-Liu et al~\cite{Liu13Datacentric,Liu14Tool} proposed an \gls{HPCToolkit} extension that allow to visualize the number of accesses done by each thread on a data structure.
-This visualization gives already more information on data sharing.
-Still, the granularity is quite high thus we cannot identify patterns inside the data structure nor pattern change over time.
+A part of this limit is due to the fact that the previously cited tools work on generic traces instead of memory traces, hence they do not have the information required to identify access patterns.
+Liu et al~\cite{Liu13Datacentric,Liu14Tool} proposed an \gls{HPCToolkit} extension that let the user visualize the number of accesses done by each thread on a data structure.
+This visualization gives already more information about data sharing, but the granularity is quite high.
+Consequently, we cannot identify patterns inside the data structure nor pattern change over time.
 Tao et al~\cite{Tao01Visualizing} proposed a more fine grain  visualization, showing for each page the number remote and local accesses.
 Yet, compared to the previous study they loose the notion of sharing.
 
@@ -309,26 +316,29 @@ Yet, compared to the previous study they loose the notion of sharing.
     \label{fig:memaxes}
 \end{figure}
 
-Finally, \gls{MemAxes}~\cite{Gimenez14Dissecting} uses memory samples (collected via \gls{PEBS}) and provide a unified view, showed by \fig{memaxes}, that correlate them with the \gls{NUMA} architecture and both code and data structures.
-Moreover Husain et al.~\cite{Husain15Relating} have recently added a layer to \gls{MemAxes} that enable to trace simulations and visualize the performance data directly on the simulated objects.
-Still, this visualization does not show sharing pattern or access patterns, it only helps identifying the lines of code and data structures responsible for the bad performances.
+Finally, \gls{MemAxes}~\cite{Gimenez14Dissecting}, which is the visualization tool for \gls{Mitos}, provide a unified view of the trace.
+This view, presented in \fig{memaxes}, correlates the information collected in the samples (bottom pane) with the architecture (middle pane) and the source code and data structures (left pane).
+It enables to do some selection on any part of the visualization to focus on some code or a NUMA node etc.
+Furthermore, Husain et al.~\cite{Husain15Relating} have recently added a layer to \gls{MemAxes} that enable to trace simulations and link the simulation visualization to \gls{MemAxes}.
+Still, this visualization does not show sharing pattern or access patterns, it only helps identifying the lines of code and data structures responsible for the bad performances (hotspots)
+As a result, the user still has to correlate the samples information to understand the nature of the issue and how to fix it.
 
 \section{Conclusions}
 \label{sec:mem-cncl}
 
 The memory subsystems have became more and more complex over the last few decades.
-As a result, the way a program allocate and access its memory have a significant impact on the performances.
-In the end a developer looking for performances must consider the memory access pattern of its application.
-Therefore a tool able to collect memory trace and to display access and sharing pattern would be useful for performance optimization.
+As a result, the way a program allocates and access its memory has a significant impact on the performances.
+Eventually, a developer looking for performances must consider the memory access patterns of its application.
+Therefore a tool able to collect a memory trace and to display accesses and sharing patterns would be useful for performance optimization.
 
-Most existing memory trace collection tools consider the memory as a monolithic entity and only provides global information such as the bandwidth.
-Some tools provides more detailed memory traces.
-Still they rely either on  hardware based sampling in which case the resulting trace only shows a small subset of the memory, or on hardware modifications and are thus not usable by real life developers.
+Most existing memory trace collection tools consider the memory as a monolithic entity and only provide global information such as the bandwidth.
+Some tools provide more detailed memory traces.
+Nevertheless, they rely either on  hardware based sampling in which case the resulting trace only shows a small subset of the memory, or on hardware modifications and are thus not usable by real life developers.
 
 When it comes to visualizing these traces, many techniques were developed to identify precisely in the code and data structures where performances are suboptimal.
-Yet, most of the existing tools are not able to show memory pattern from any kind.
-A few advanced tool allow to see the number of accesses per data structures and per threads or the number of remote accesses per pages.
-Still this is not enough information to understand precisely sharing patterns or memory access patterns.
+Yet, most of the existing tools are not able to show memory patterns of any kind.
+A few advanced tools picture the number of accesses per data structure and per thread or the number of remote accesses per page.
+Still this is not sufficient to understand precisely sharing patterns or memory access patterns.
 
 To conclude we need both to collect precise memory traces and to present them to the user in a comprehensive way that enable identification of sharing and access patterns.
 % vim: et si sta lbr  sw=4 ts=4 spelllang=en_us

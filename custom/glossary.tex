@@ -6,6 +6,13 @@
 %\glossarystyle{altlisthypergroup}
 \renewcommand*{\glsclearpage}{}
 
+\newcommand{\glsresetpartial}{
+    \foreach \acc in {API,HPC,NPB,CPU,GPGPU,GPU,VCS,OS,NUMA,I/O,LRU,DOI,PGD,PTE}
+    {
+        \glsreset{\acc}
+    }
+}
+
 %
 % Accronyms: {{{1
 %
