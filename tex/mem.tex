@@ -187,8 +187,8 @@ A machine with several sockets we can either give them a uniform access to the m
 While the first option seems simpler to use, it means that the bandwidth is shared by all the threads, therefore contention can easily appear.
 At the opposite, the second option provides a maximal bandwidth for each socket.
 \fig{topo-NUMA} depicts a \gls{NUMA} machine, we can see that each socket has a privileged access to one memory bank.
-Furthermore, the sockets are linked via an all to all interconnect but all the connection are not equivalent.
-As a result the socket zero has a direct access to memory bank zero, a slower one to banks one and two and a slower access to bank three.
+Furthermore, the sockets are linked via a interconnect with a ring topology.
+As a result each socket  has a direct access to its memory bank, a slower one the banks of its neighbors and an even slower access to the last bank.
 Writing code that uses efficiently this specific architecture remains the burden of the developer who therefore needs to explicitly consider the physical location of its data.
 \tbl{mem-latency} provides approximate access latency depending on the memory hierarchy level for  the \gls{Intel} I7 Xeon 5500 Series.
 

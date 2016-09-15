@@ -12,6 +12,7 @@
 \pgfdeclarelayer{bbg}
 \pgfdeclarelayer{bbbg}
 \pgfsetlayers{bbbg,bbg,bg,main}
+\tikzstyle{link}=[line width=.5em]
 
 
 \tikzset{
@@ -104,7 +105,7 @@
             \draw[fill=ColM,text=white] ($(cpu-#2.#4 west)#3(0,.5)$) rectangle ($(cpu-#2.#4 east)#3(0,1.5)$)%
             node[pos=.5]{Memory bank \##2};
 
-            \draw[line width=.5em] (cpu-#2.#4) -- ($(cpu-#2.#4)#3(0,.5)$);
+            \draw[link] (cpu-#2.#4) -- ($(cpu-#2.#4)#3(0,.5)$);
 
         }
     },
@@ -117,12 +118,10 @@
     \pic at (6.5,-2) {socket={2}{3}{-}{south}};
 
     \begin{pgfonlayer}{bbbg}
-        \draw[line width=.5em] (cpu-0) -- (cpu-2);
-        \draw[line width=.5em] (cpu-0) -- (cpu-1);
-        \draw[line width=.2em]  (cpu-0) -- (cpu-3);
-        \draw[line width=.5em] (cpu-1) -- (cpu-3);
-        \draw[line width=.5em] (cpu-2) -- (cpu-3);
-        \draw[line width=.2em]  (cpu-1) -- (cpu-2);
+        \draw[link] (cpu-0) -- (cpu-2);
+        \draw[link] (cpu-0) -- (cpu-1);
+        \draw[link] (cpu-1) -- (cpu-3);
+        \draw[link] (cpu-2) -- (cpu-3);
     \end{pgfonlayer}
 
 \end{tikzpicture}
