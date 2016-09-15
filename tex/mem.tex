@@ -24,7 +24,7 @@ As these caches are small, every time a data is added in a cache it replaces (ev
 Several mechanisms where designed to guess which data should be in the cache and which one should be evicted.
 As a result, a developer seeking for performances must consider the architecture of these caches and the way the work to benefit from them.
 
-\subsection{Memory Caches}
+\subsection{Caches}
 
 % Locality
 There are two phenomena called \emph{spatial locality} and \emph{temporal locality} that can be observed in most programs and that are the main principles used for cache optimization.
@@ -146,7 +146,7 @@ Hence the name false sharing.
 Not only the accesses to this array are inefficient but it generates lots of useless data traffic in the memory bus which can create some contention slowing down the whole application.
 The easiest way to fix such issues, consists in padding the data structure, which mean introducing zeros between each element of the data structure so that each thread works on a different cache line.
 
-\subsection{Not Uniform Memory Accesses}
+\subsection{Memory hierarchy}
 
 \begin{figure}[htb]
     \centering
