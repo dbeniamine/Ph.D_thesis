@@ -149,7 +149,7 @@ The order of accesses inside a chunk is preserved.
 
 \begin{algorithm}[htb]
     \caption{Monitoring thread algorithm}
-    \label{algo:monTh}
+    \label{alg:monTh}
     \begin{algorithmic}[1]
         \While{\Callp{NotFinished}{}}
             \ForAll{t in \Callp{MonitoredTasks}{}}
@@ -166,7 +166,7 @@ The order of accesses inside a chunk is preserved.
     \end{algorithmic}
 \end{algorithm}
 
-The monitoring thread is a kernel thread, that uses the algorithm~\ref{algo:monTh}, is in charge of enabling false page faults destined for \gls{Moca}.
+The monitoring thread is a kernel thread, that uses the \alg{monTh}, is in charge of enabling false page faults destined for \gls{Moca}.
 It performs its task by removing the \texttt{PRESENT} flags from the \gls{PTE} that corresponds to each recently accessed addresses.
 Of course, the shorter is the period between two wakeups, the more precise the trace is.
 This period is called \emph{monitor thread wakeup interval} (or \emph{monitoring interval}).
@@ -285,14 +285,14 @@ As some state of the art tools can only run on \gls{AMD} machines, we also ran
     \centering
     \begin{tabular}{lllllllllll}
         \toprule
-        & \multicolumn{5}{c}{\textbf{Totals}}\\
+        & \multicolumn{5}{c}{\textbf{Hardware totals}}\\
         \cmidrule(lr){2-6}
         & Nodes & Threads & Vendor & Model & Memory \\
         \cmidrule(lr){2-6}
         \texttt{Edel}    & $2$ & $8$  & Intel & Xeon E5520      & \SI{24}{Gib} \\
         \texttt{StRemi} & $2$ & $24$ & AMD   & Opteron 6164 HE & \SI{48}{Gib} \\
         \midrule
-        & \multicolumn{5}{c}{\textbf{Per node}}\\
+        & \multicolumn{5}{c}{\textbf{Hardware per node}}\\
         \cmidrule(lr){2-6}
         & Cores & Threads & Frequency & L3 Cache & Memory \\
         \cmidrule(lr){2-6}

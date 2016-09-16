@@ -48,7 +48,7 @@ $(AUX): $(TEXALLSRC)
 	$(TEXCOMPILE)
 	$(TEXCOMPILE)
 
-tests: $(PDF) testbadspace testrefs testbib testbibtex testplaceholders testfonts testpdfversion testcountpages testcountbib
+tests: $(PDF) testbadspace testrefs testbib testbibtex testplaceholders testreffloats testfonts testpdfversion testcountpages testcountbib
 
 testbadspace:
 	@echo "Looking bad spaces '\ u8'"
@@ -96,6 +96,12 @@ testcountpages:
 	@echo "Total pages: $(PAGES)"
 	[ $(PAGES) -gt 120 ]
 	@echo "PASSED"
+
+testreffloats:
+	@echo "Checking if floats are correctly referenced"
+	[ `pdfgrep -o "(Table|Figure|Listing|Algorithm) [0-9]\.[0-9]*" thesis.pdf | sort | uniq -c | awk '{if($$1<2){print $$0}}' | wc -l` -eq 0 ]
+	@echo "PASSED"
+
 
 .PHONY: clean distclean
 
