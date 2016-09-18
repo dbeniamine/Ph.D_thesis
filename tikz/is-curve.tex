@@ -2,6 +2,11 @@
     \pgfmathparse{1/(1.4*sqrt(2*pi))*exp(-((#1-4)^2)/(2*1.4^2))}%
 }
 
+\definecolor{Col0}{HTML}{A6CEE3}
+\definecolor{Col1}{HTML}{1F78B4}
+\definecolor{Col2}{HTML}{B2DF8A}
+\definecolor{Col3}{HTML}{33A02C}
+
 \begin{tikzpicture}
 \begin{axis}[
         axis x line=bottom,
@@ -13,17 +18,19 @@
         ymin=-.01,
         xmin=-.1,
         xmax=8.1,
+        legend style={at={(1.1,1)}, anchor= north east}
      ]
-    \addplot[name path=f,domain={0:8}] {gauss(x)};
-    \addplot[name path=x,domain={0:8}] {0};
-        \pgfplotsinvokeforeach{0,...,3}{
-        \addplot[dashed] coordinates {(#1+4,0) (#1+4,{gauss(#1+4)})};
-        \addplot[dashed] coordinates {(#1,0) (#1,{gauss(#1)})};
+    \addplot[name path=f,domain={0:8},forget plot] {gauss(x)};
+    \addplot[name path=x,domain={0:8},forget plot] {0};
+    \pgfplotsinvokeforeach{0,...,3}{
+        \addplot[dashed,forget plot] coordinates {(#1+4,0) (#1+4,{gauss(#1+4)})};
+        \addplot[dashed,forget plot] coordinates {(#1,0) (#1,{gauss(#1)})};
 
-        \addplot[color = {rgb,4:red,#1;green,1;blue,2}] fill between[of=f and x,
+        \addplot[color= Col#1,forget plot] fill between[of=f and x,
             soft clip={(#1,0) rectangle (#1+1,1) },];
-        \addplot[color = {rgb,4:red,#1;green,1;blue,2}] fill between[of=f and x,
+            \addplot[color= Col#1] fill between[of=f and x,
             soft clip={(#1+4,0) rectangle (#1+5,1)},];
+        \addlegendentry{Thread #1}
     }
 
     \addplot[solid,very thick,white] coordinates {(4,0) (4,{gauss(4)})};

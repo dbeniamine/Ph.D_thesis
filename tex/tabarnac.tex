@@ -216,7 +216,7 @@ For the application we modified thanks to the knowledge obtained with \gls{Tabar
 The \emph{interleave} policy is performed with the help of the \texttt{numactl} tool~\cite{Kleen05NUMA}.
 The recently introduced \emph{NUMA Balancing} technique~\cite{Corbet12Toward}, which is executed with its default configuration.
 Our baseline for the experiment is an unmodified Linux kernel, version $3.13$, with the first-touch policy.
- The NUMA Balancing mechanism is disabled in this baseline.
+The NUMA Balancing mechanism is disabled in this baseline.
 To lessen the overhead of \gls{Tabarnac}, we analyzed the applications with smaller input than the one used for their performance analysis.
 
 For the plots presenting speedups, each configuration was executed at least $10$ times.
@@ -337,8 +337,8 @@ Still it is possible to use a cyclic scheduling instead of the default one (dyna
 \begin{figure}[htb]
     \centering
     \input{tikz/is-curve.tex}
-    \caption{Cyclic-split distribution of the pages of \texttt{key\_buff2} among the threads.}
-    \label{fig:is-cyclic-split}
+    \caption{Fair distribution of the pages of \texttt{key\_buff2} among the threads.}
+    \label{fig:is-fair}
 \end{figure}
 
 \begin{lstlisting}[caption={Modified IS code.}, label=lst:is-modif,float=htb]
@@ -346,8 +346,8 @@ Still it is possible to use a cyclic scheduling instead of the default one (dyna
     (2*omp_get_num_threads()))
 \end{lstlisting}
 
-As simple cyclic distribution of the loop would result in unbalanced work, we can design a slightly more complex distribution that keeps a good load balancing while enforcing locality of data.
-To do so, we split the loop into two equal parts and distribute each part among the threads in a cyclic way  as shown in \fig{is-cyclic-split} where each color represent a thread.
+As simple cyclic distribution of the loop would result in unbalanced work, we can design a slightly more complex distribution that provides a fair load balancing while enforcing locality of data.
+To do so, we split the loop into two equal parts and distribute each part among the threads in a cyclic way  as shown in \fig{is-fair} where each color represent a thread.
 This can be done by modifying the \gls{OpenMP} pragma (Line~\ref{lst:is-sched} in the original code), as shown in \lstr{is-modif}.
 Obviously this distribution does not provide an optimal load balancing, but only a relatively fair one.
 
@@ -376,7 +376,7 @@ Obviously this distribution does not provide an optimal load balancing, but only
 
 \fig{is-behaviour-modif} show the accesses distribution obtained with this code modification.
 We can see that now each thread accesses a different part of \texttt{key\_buff1}.
-Furthermore, if most of the accesses still occur in the middle of the structure, the average number of access across the structure is the same for all threads, which means that our distribution preserves the good load balancing.
+Furthermore, if most of the accesses still occur in the middle of the structure, the average number of accesses across the whole structure is the comparable same for all threads, which means that our distribution preserves the good load balancing.
 Our modification has also changed \texttt{key\_buff2}'s accesses distribution.
 Indeed, we can now clearly see a sharing pattern very similar to the one obtained for \texttt{key\_buff1}.
 
@@ -384,9 +384,9 @@ The main point of our code modification is to improve the affinity between threa
 To perform the thread mapping, we use the \texttt{GOMP\_CPU\_AFFINITY} environment variable.
 \gls{Tabarnac} also showed us that the first touch is always done by the thread actually using the data for IS, therefore we do not need to explicitly map the data to the \gls{NUMA} nodes.
 
-We compare the execution time of \IS (class \emph{D}) for the three scheduling methods, \emph{Dynamic}, \emph{Cyclic} and \emph{Cyclic-Split}: cyclic with the proposed distribution.
-For the two first methods, we compare the execution time on the base operating system, the interleave policy and with \gls{NUMA} balancing enabled.
-As we map threads manually, interleave and \gls{NUMA} Balancing are not relevant with our modifications and are therefore not evaluated.
+We compare the execution time of \IS (class \emph{D}) for the three scheduling methods, \emph{Dynamic}, \emph{Cyclic} and our custom \emph{Fair} distribution.
+We evaluated each scheduling method in each of the following setup: with our \emph{Base} unmodified \gls{OS}, with the \emph{Interleave} policy and with \emph{Numa Balancing} activated.
+As our modification rely on the firs-touch it does not make sense with Interleave and \gls{NUMA} Balancing, therefore these policies are not evaluated for our \emph{Fair} distribution.
 
 \begin{figure}[htb]
     \centering
@@ -395,7 +395,7 @@ As we map threads manually, interleave and \gls{NUMA} Balancing are not relevant
 \label{fig:is-res}
 \end{figure}
 
-\fig{is-res} shows the speedup of \IS compared to the default version (\emph{Dynamic}) for each scheduling method and for each optimization technique.
+\fig{is-res} shows the speedup of \IS compared to the default version (\emph{Dynamic}) for each scheduling method and for each mapping policy.
 The first thing to notice is that with the default \emph{Dynamic} scheduling, both Interleave and \gls{NUMA} Balancing slow the application down, by up to \SI{10}{\%}.
 This slowdown is due to the fact that two mechanisms (the mapping policy and the \gls{OpenMP} runtime) or modifying the application behavior with conflicting interests and without communicating.
 Then we can note that \emph{Cyclic} scheduling, proposed in the original code, already provides up to \SI{13}{\%} of speedup.
@@ -417,26 +417,28 @@ To do so, we executed all of the \gls{NPB} in class \emph{B}\footnote{
     \label{fig:ovh-tabarnac}
 \end{figure}
 
-As we can see in \fig{ovh-tabarnac}, on the Intel machine, the instrumentation slows the execution down by a factor from $10$ to $30$.
-On the \gls{AMD} machine, the instrumentation is $10$ to \SI{50}{\%} slower for most benchmarks, and two to three times slower than on the \gls{Intel} machine for pathological cases.
+As we can see in \fig{ovh-tabarnac}, on the Intel machine, the instrumentation slows the execution down by a factor ranging from $10$ to $30$.
+Nevertheless, on the \gls{AMD} machine, the instrumentation is $10$ to \SI{50}{\%} slower for most benchmarks, and two to three times slower than on the \gls{Intel} machine for pathological cases.
+This behavior was expected as \gls{Pin} is an instrumentation library developed by \gls{Intel}.
 Although this overhead is not negligible, we have to consider the fact that often we can instrument smaller versions of the applications, as we focus on the general behavior.
-Finally, as our analysis is designed to be used during the development phase and at runtime in an automated tool, we consider that this overhead is acceptable.
+Moreover, our method is more precise than sampling and thus one run is often enough.
+Finally, as our analysis is designed to be used during the development phase and not at runtime in an automated tool, we consider that this overhead is acceptable.
 
 
 \section{Results and discussion}
 \label{sec:tab-cncl}
 
-Our experiments have highlighted the fact that both static mapping policies such as Interleave and dynamic tools such as \gls{NUMA} Balancing can either provide performance gain or loss.
-Furthermore sometimes one tool is significantly more efficient than the other.
+Our experiments have highlighted the fact that using blindly static mapping policies such as Interleave or dynamic tools such as \gls{NUMA} Balancing can result in significant performance loss.
+Furthermore in the experiments where both dynamic and static policies increased the performances, the difference between the gain provided by the two policies was significant.
 The only way to predict which tool is the most suited to an application is to understand the sharing patterns of the memory of this application by the threads.
 
 \gls{Tabarnac} enables developers and users to achieve performance improvements in two ways.
-First, by providing a deep understanding of the memory sharing pattern, it enables the user to find the best mapping policy.
-Second, this knowledge can be used to identify and fix inefficient memory behavior.
+First, by providing a deep understanding of the memory sharing pattern, it enables the user to find the best existing mapping policy.
+Second, this knowledge can be used to identify and fix inefficient memory behavior, for instance by designing a specific thread scheduling taking the sharing patterns into account.
 Our experiments showed that both situations result in significant performance gains.
 
-While \gls{Tabarnac} helps to identify and fix some inefficient sharing patterns, it only provides a global overview of the memory usage.
+While \gls{Tabarnac} helps the developper identify and fix some inefficient sharing patterns, it only provides a global overview of the memory usage.
 Indeed it does not collect any temporal information.
-Therefore, it does not enable identification of inefficient memory access patterns over the time, such as the ones depicted in \sect{archi} with the naïve matrix multiplication.
+Therefore, it does not enable identification of the distribution of inefficient memory access patterns over the time, such as the ones depicted in \sect{archi} with the naïve matrix multiplication.
 
 % vim: et si sta lbr  sw=4 ts=4 spelllang=en_us
