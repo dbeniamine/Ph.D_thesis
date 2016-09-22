@@ -1,90 +1,97 @@
 %!TEX encoding=UTF-8 Unicode
 \chapter{Analyzing Fine Grained Memory Traces}
 
-\gls{Tabarnac} traces contains two parts: informations about the data structures and the actual trace.
-For small applications with a limited number of data structures, it is trivial to present the first kind of information.
-The actual trace is spread over three dimensions: threads, pages and type of accesses however this last one can only take two values (read or write).
-Therefore it is relatively easy to find a meaningful representation of this traces that can be easily understood by a human.
+\gls{Tabarnac} traces contain two parts: informations about the data structures and the actual trace.
+For small applications with a limited number of data structures, it is relatively easy to present the first kind of information.
+The actual trace is spread over three dimensions: threads, pages and type of accesses, however, this last one can only take two values (read or write).
+Finding a meaningful and comprehensive representation for such data is slightly more complex but it is still doable.
 \gls{Moca} traces are way more generic.
-Indeed, they contain the same meta data and the actual trace also provides informations about time and \gls{CPU} location.
-These traces are spread over five dimensions: time, addresses, type of access, and \gls{CPU} location.
-Furthermore some dimension can be seen from several point of view, for instance we can look either at the physical or virtual address space.
-As we are not used to visualize things in more than three dimension, to analyze these traces, we must provide the user a way to navigate through different representations and easily find and focus on the important parts.
+Indeed, they contain the same meta data and the actual trace also provides information about time and \gls{CPU} location.
+Therefore, these traces are spread over five dimensions: time, addresses, type of access, thread and \gls{CPU} location.
+Furthermore some of these dimensions can be seen from several point of view, for instance we can look either at the physical or virtual address space.
+As we are not used to visualize things in more than three dimensions, to analyze these traces, we must provide the user with a way to navigate through different representations.
+Additionally, we need to help the user identify and focus on the important parts.
 
 The contribution presented in this chapter consists in two different methods to analyze \gls{Moca} traces:
 \begin{itemize}
     \item The first method relies on \gls{Framesoc}~\cite{Pagano14frameSoC}, an existing generic trace management tool, and more specifically one plugin called \gls{Ocelotl}~\cite{Dosimont14Ocelotl} that provide aggregated views of a trace.\\
         We have implemented an importer to analyze \gls{Moca} traces in \gls{Framesoc} that is distributed on Github under GPL License:\\
         \url{https://github.com/dbeniamine/framesoc\_importer\_moca}.\\
-        \DB{Distribute properly moca importer}
-        The proposed visualizations are presented in an Inria Research Report~\cite{Beniamine15Memory}.
+        \DB{Distribute properly and fix moca importer}
+        The proposed visualizations are presented in a Research Report~\cite{Beniamine15Memory}.
     \item The second method relies on \gls{R}, it is an ongoing work, publicly available online at:
         \url{https://github.com/dbeniamine/Moca\_visualization}
 \end{itemize}
 
 This chapter is organized as follows: first we present our analysis of \gls{Moca} traces with \gls{Framesoc} and \gls{Ocelotl} with an example and discuss the limits of this method in \sect{visu-first}.
-Then we propose a second, more flexible approach base on \gls{R} in \sect{visu-second}.
-Finally we present some perspective of work to improves these analysis and our conclusions in \sect{visu-cncl}.
+Then we propose a second, more flexible approach based on \gls{R} in \sect{visu-second}.
+Finally we present some perspective of improvement of these analysis and our conclusions in \sect{visu-cncl}.
 
 
 \section{Interactive visualization of aggregated traces}
 \label{sec:visu-first}
 
 As \gls{Moca} traces are spread over five dimensions and as the address space of an application can be quite large, we need a way to navigate easily in the trace and highlight interesting parts.
-Consequently, we are looking for a tool that have a model of the trace and the ability to spot anomalies.
+Consequently, we are looking for a tool that is able to run high level analysis with for instance the ability to spot anomalies.
 While several generic trace manager tools such as \gls{HPCToolkit}~\cite{Adhianto10HPCTOOLKIT} are able to import generic traces, we decided to use \gls{Framesoc}~\cite{Pagano14frameSoC}.
 This decision was mainly motivated by one of \gls{Framesoc} visualization tool, \gls{Ocelotl}~\cite{Dosimont14Ocelotl} that is designed specifically to aggregate similar parts of a trace and identify anomalies.
 
 \subsection{FrameSoc and Ocelotl}
 
-\gls{Framesoc} is a generic trace management, it provides importers to read traces from many different format.
-From its point of view a trace consists on four sets:
+\gls{Framesoc} is a generic trace management infrastructure, it provides importers to read traces from many different format.
+From its point of view a trace consists on five sets:
 \begin{enumerate}
-    \item Some meta data on the trace, such as the name of the trace, the application traced, the number of \glspl{CPU} used, the \gls{OS} etc.
+    \item Some meta data about the trace, such as the name of the trace, the application traced, the number of \glspl{CPU} used, the \gls{OS} and so on\ldots
     \item A set of \emph{Event Producers}: which are entities able to produce some \emph{Events}.
-        For classic performance traces the Event producers are the \glspl{CPU}.
-    \item A set of \emph{Events}, \emph{Variables} and \emph{States}: for instance in a classic trace, a call to a \gls{MPI} function could be an event, and a \gls{CPU} could be in \emph{idle} state after a call to \texttt{MPI\_Receive}. Variables are used to represent events that have a specific values and last over time.
+        For classic performance traces the Event producers are the \glspl{CPU}, threads or processes.
+    \item A set of \emph{Events Types} used to classify the possible events.
+        \gls{MPI} function calls and system calls are two usual event types.
+    \item A set of \emph{Events}, \emph{Variables} and \emph{States} that form the actual trace.
+        For instance in a classic trace, a call to a call to \texttt{MPI\_Send} could be an event, and a \gls{CPU} could be in \emph{idle} state after a call to \texttt{MPI\_Receive}.
+        Variables are used to represent values that evolves as the time passes.
     \item A set of \emph{Links} that can be used to represent causality between events, variables and states.
 \end{enumerate}
 
 To analyze a trace from an unknown format in \gls{Framesoc}, we need to write an importer which is a relatively simple task.
 Indeed \gls{Framesoc} is implemented as an Eclipse plugin, consequently an importer is a small piece of java code that read a trace file, create the sets described above and store them in a database, using \gls{Framesoc} \gls{API}.
-The main difficulty of this task is to represent a trace with \gls{Framesoc} model.
+The main challenge in the writing of an importer is to figure out how to represent the trace in \gls{Framesoc} internal model.
 
-\gls{Framesoc} provides several functionalities to explore a trace such as filtering events by type, name, focusing on a time frame, etc.
+\gls{Framesoc} provides several functionalities to explore a trace such as filtering events by type, name, focusing on a time frame.
 Additionally it has a multi view representation which means that several views of the trace can be opened at the same time and synchronized.
-For instance a user can start inspecting a trace with a Gantt chart, focus on a small part and then look at a pie chart of the event distribution on this subset of the trace.
+For instance a user can start inspecting a trace with a Gantt chart, focus on a small part and then look at a pie chart of the event distribution in this subset of the trace.
 \gls{Framesoc} is optimized to make such analysis as smooth as possible.
 
 \gls{Ocelotl}~\cite{Dosimont14Ocelotl} is an analysis tool for \gls{Framesoc}.
-This tool is particularly interesting for us as it is provide an aggregated overview of a trace.
-The idea behind \gls{Ocelotl} is that a trace with too much entities (events or event producers) is not understandable, consequently, it should be analyzed with a \emph{systemic approach}.
-This means considering the whole trace as a system and finding a macroscopic representation of that system that contain an amount of information understandable by a human.
+This tool is particularly interesting for us as it provides an aggregated overview of a trace.
+The idea behind \gls{Ocelotl} is that a trace with too many entities (events or event producers) is not understandable, consequently, it should be analyzed with a \emph{systemic approach}.
+This means considering the whole trace as a system and finding a macroscopic representation of that system that contains an amount of information understandable by a human.
 To do so, it uses an aggregation methodology proposed by Lamarache-Perrin~\cite{Lamarche_Perrin14Agregation} and adapted for trace analysis.
-This methodology cuts the trace on small slices over the two dimensions time and space (event producers).
-Then it consider each meaningful partition possible, benefiting from the structure on time and space to reduce the number of possibility.
-For instance merging two slices that are not continuous over time is not allowed as it would not be meaningful.
+This methodology cuts the trace into small slices over the two dimensions: time and space (event producers).
+Then it considers each possible partition, benefiting from the structure enforced on time and space to reduce the number of possibilities.
+For instance, merging two slices that are not continuous over time is not allowed as it would not be meaningful.
 In addition, it uses a parameter $p<[0,1]$ that controls the trade-off between information loss and data reduction and find the optimal partition for this parameters.
 Once the first visualization is generated, \gls{Ocelotl} provide the ability to explore the trace (zoom, use \gls{Framesoc} filters \ldots) and change the $p$ parameter.
 The usual workflow with \gls{Ocelotl} is starting with a high $p$, where the trace is mostly aggregated, zoom on anomalies or interesting parts and decreasing $p$ to understand more precisely what phenomena we are observing.
 
 \begin{figure}[htb]
     \centering
-    \includegraphics[width=\linewidth]{ocelotl}
-    \caption[Screenshot of Ocelotl.]{
-        Screenshot of Ocelotl highlighting an irregularity in a trace.\\
-        Overview of the trace on the left, curves showing the impact of the $p$ parameters on the complexity of the trace on the bottom right.\\
-        Image from~\cite{Dosimont14Ocelotl}.}
+    \includegraphics[width=\linewidth]{ocelotl/overview.png}
+    \caption{Screenshot of Ocelotl.}
     \label{fig:ocelotl-overview}
 \end{figure}
+\DB{Reprendre ici}
 
-\fig{ocelotl-overview} is a screenshot of \gls{Ocelotl}, showing on the main pane an overview of an example trace, aggregated over the time.
+%To find a suitable value for the $p$ parameter, \gls{Ocelotl} provides a comprehensive visualization of the information versus complexity gain depending on the value of $p$ as shown in \fig{ocelotl-curves}.
+%The red curves show the information gain and the green one the complexity gain.
+%The current value of $p$ is showed by a blue vertical line, $0.3$ in the example.
+%It is possible to clic
+
+\fig{ocelotl-overview} is a screenshot of \gls{Ocelotl}, showing on the main pane an overview of an example trace, aggregated over time and space (memory addresses).
 On this overview we can see two huge aggregated blocks, in the middle, two smalls ones between them, and a few small blocks at the beginning and at the end of the execution.
 Without knowing anything about the trace displayed, we can understand that their is an initialization and a finalization phase as they are not aggregated with the rest of the execution.
 Moreover the main part of the execution is split in two, either their is a transition between two phases or a perturbation in the middle.
 At this point the user could zoom in a subpart of the trace by selecting it, or change the parameter $p$ to disaggregate the visualization.
 We can see a window on the bottom right corner showing curves about the  amount of information loss and data reduction for each possible value of $p$.
-Under the curves, the current value of $p$ ($3.7$) is displayed.
 It is possible to change it manually or directly click on the part of the curves that seems interesting.
 
 
@@ -158,7 +165,7 @@ Furthermore, we split the work between the threads in a round robin way, the fir
 
 \begin{figure}[htb]
     \centering
-    \includegraphics[width=\textwidth]{Moca-RR/multModuloThreadView.png}
+    \includegraphics[width=\textwidth]{ocelotl/TaskView.png}
     \caption{Memory-gantt view of the naïve parallel matrix multiplication.}
     \label{fig:ocelotl-th0}
 \end{figure}
@@ -181,7 +188,7 @@ From this picture, we can clearly identify two phases:
 
 \begin{figure}[htb]
     \centering
-    \includegraphics[width=\textwidth]{Moca-RR/multModuloThreadViewInit.png}
+    \includegraphics[width=\textwidth]{ocelotl/TaskView-zoom-init.png}
     \caption{Memory-gantt view of the naïve parallel matrix multiplication ,
     initialisation}
     \label{fig:ocelotl-th1}
@@ -198,7 +205,7 @@ Among these data, we can find a pid array used to wait the end of the slave thre
 
 \begin{figure}[htb]
     \centering
-    \includegraphics[width=\textwidth]{Moca-RR/multModuloCartoView.png}
+    \includegraphics[width=\textwidth]{ocelotl/Sharing.png}
     \caption{Cartography view of the naïve parallel matrix multiplication.}
     \label{fig:ocelotl-carto0}
 \end{figure}
@@ -211,7 +218,7 @@ For the first and the third, we can see a regular diagonal access pattern which 
 
 \begin{figure}[htb]
     \centering
-    \includegraphics[width=\textwidth]{Moca-RR/multModuloCartoViewMiddle2.png}
+    \includegraphics[width=\textwidth]{ocelotl/Sharing-zoom.png}
     \caption{Cartography view of the naïve parallel matrix multiplication, computing phase.}
     \label{fig:ocelotl-Carto2}
 \end{figure}
