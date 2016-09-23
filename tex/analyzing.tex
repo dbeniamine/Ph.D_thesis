@@ -79,89 +79,73 @@ The usual workflow with \gls{Ocelotl} is starting with a high $p$, where the tra
     \caption{Screenshot of Ocelotl.}
     \label{fig:ocelotl-overview}
 \end{figure}
-\DB{Reprendre ici}
-
-%To find a suitable value for the $p$ parameter, \gls{Ocelotl} provides a comprehensive visualization of the information versus complexity gain depending on the value of $p$ as shown in \fig{ocelotl-curves}.
-%The red curves show the information gain and the green one the complexity gain.
-%The current value of $p$ is showed by a blue vertical line, $0.3$ in the example.
-%It is possible to clic
 
 \fig{ocelotl-overview} is a screenshot of \gls{Ocelotl}, showing on the main pane an overview of an example trace, aggregated over time and space (memory addresses).
-On this overview we can see two huge aggregated blocks, in the middle, two smalls ones between them, and a few small blocks at the beginning and at the end of the execution.
-Without knowing anything about the trace displayed, we can understand that their is an initialization and a finalization phase as they are not aggregated with the rest of the execution.
-Moreover the main part of the execution is split in two, either their is a transition between two phases or a perturbation in the middle.
+The X-axis represents time and the Y-axis represent the memory space, we can see on the left that the Y-axis is organized hierarchically.
+This hierarchy is used to reduce the number of possible aggregations, indeed, for one level of the hierarchy, \gls{Ocelotl} can only merges two event producers if they have the same parent.
+Without any a priory knowledge of the trace application, we can distinguish three phases on this visualization: a short initialization (blue column at the beginning), the main execution with some pattern change around the two third of the execution.
+The top right pane shows a summary of the trace aggregate only over the time.
+On this summary, the initialization is a bit less visible.
+Finally the bottom right pane shows a comprehensive visualization of the information versus complexity gain depending on the value of $p$.
+The red curves show the information gain and the green one the complexity gain.
+The current value of $p$ is showed by a blue vertical line, and displayed in a text block under the curve.
+We can set the $p$ parameter either by clicking the curve or by entering the requested value inside the text block.
 At this point the user could zoom in a subpart of the trace by selecting it, or change the parameter $p$ to disaggregate the visualization.
-We can see a window on the bottom right corner showing curves about the  amount of information loss and data reduction for each possible value of $p$.
-It is possible to change it manually or directly click on the part of the curves that seems interesting.
-
 
 \subsection{Trace Description}
 
 As explained earlier, \gls{Moca} traces are spread on five dimensions while \gls{Framesoc} is designed for two dimensional traces (time and event producers).
-Nevertheless we can use the \emph{event type} of \gls{Framesoc} to differentiate reads from writes.
-Moreover, event producers are organized hierarchically, therefore we can represent two dimensions as one by using this hierarchy.
-For instance if we consider that each thread is a root level event producer and embed the whole memory hierarchy, we can represent at the same time memory and threads.
-Finally, as we cannot reorganize dynamically the hierarchy of event producers, another workaround consist in creating several traces with different event producer hierarchy.
-
-We designed a \gls{Framesoc} importer for \gls{Moca} traces which produces three different \gls{Framesoc} traces.
-The first one create an event hierarchy based on the virtual memory addresses.
-The second one does the same thing for physical addresses.
-Finally, in the third one, each thread is a root event producer and embed the whole memory hierarchy.
+Nevertheless we can use the \emph{event types} of \gls{Framesoc} to represent some of the missing dimensions.
+To provide different visualization of the same trace, our importer produces four different \gls{Framesoc} traces with different event types.
+For all the traces, the event producers represent the memory addresses, but the two first are based on virtual addresses while the two others physical addresses.
 
 The more event producer there are, the more partitions \gls{Ocelotl} must consider to compute the aggregation.
-Yet, \gls{Ocelotl} uses the structure of the event producer hierarchy to reduce the number of allowed partitions.
+Yet, \gls{Ocelotl} uses the structure of the event producer hierarchy to reduce the number of allowed partitions, indeed it can only merge event producers that have the same parent.
 Consequently we can counterbalance the huge number of event producers by creating an artificial hierarchy in the memory.
-We can build a meaningful hierarchy that also adds some semantic to the trace: to do so we create a virtual \emph{Memory Root} event producer that is the parent of every event producers.
-Then the second level of event producers is composed of the stacks and data structures.
+We can build a meaningful hierarchy that also adds some semantic to the trace: to do so we create a virtual \emph{Memory Root} event producer that is the parent of all the event producers.
+Then, the second level of event producers is composed of the stacks and data structures.
 All the addresses that are not in these set, are merged if they are contiguous, creating chunks of continuous addresses which are also second level event producers.
-Then each level is obtained by splitting the previous one on two or three parts, until we arrive at the page level.
-The pages are the leaves of this virtual memory hierarchy.
+Then, each subsequent level is obtained by splitting the previous one on two or three parts, until we reach at the page level.
+The pages are the leaves of this artificial memory hierarchy.
 We could divide the pages in cache lines and keep going until the address granularity, but this would generate way more event producer that what \gls{Ocelotl} is able to handle.
+
+For both physical and virtual addressing, our importer creates two different traces.
+In the first type of trace, the events and spread on four event types: \texttt{private\_read}, \texttt{private\_write}, \texttt{shared\_read}, \texttt{shared\_write}.
+For the second trace, we add to these types the number of the thread responsible of the access, for instance \texttt{private\_read\_T0} for the thread $0$.
+As a result we have for both physical and virtual addresses, we have two views one representing the usage of the memory by the threads and one global view presenting the sharing patterns.
+
+Each access is represented by a variable, whose value is the number of threads involved in the access.
+Finally, the \gls{CPU} on which the access occurred is stored as an event parameter.
+
+\subsection{Sharing detection}
 
 \begin{figure}[htb]
     \centering
     \input{tikz/sharing-detection}
-    \caption[Sharing detection on Moca traces.]{
-        Sharing detection on a Moca trace, where three threads accesses the same page over the time.\\
-        Each access is represented as an interval of time.\\
-        Original trace on the left, accesses are not annotated, timelines are not synchronized.\\
-        Modified trace on the right: timeline are synchronized and accesses are annotated with the number of thread involved in the sharing.
-    }
+    \caption{Sharing detection on Moca traces.}
     \label{fig:sharing-detection}
 \end{figure}
 
-To keep the thread information in the two first traces, we pre process \gls{Moca} traces to mark each access as shared or private.
-In \gls{Moca} traces, each access is timestamped by the beginning and end of the chunk to which it belongs.
-Furthermore, \gls{Moca} traces are \emph{complete} at the page granularity.
-Hence, we consider that an access is shared if and only if two threads accessed the same page during intersecting time lapse.
+\gls{Moca} does not compute sharing only but the traces contains enough information to detect shared accesses.
+Indeed in \gls{Moca} traces each access is timestamped with the begin and end of the chunk to which it belongs, which means that an access can be seen as a time interval during which a thread is using a memory page.
+We do the sharing detection at the page level as \gls{Moca} traces are complete at the page granularity.
+Consequently, we consider that a sharing occurs when two threads accesses the same page during and intersecting time interval.
 To compute this sharing, we retrieve the list of accesses for each page.
-We consider that an access is an interval of time during which the page is used.
-Hence we only need to compute overlapping intervals.
-\fig{sharing-detection} show how we transform \gls{Moca} traces to add sharing information.
-
-Each access is represented by a variable, whose value is the number of threads involved in the access.
-Our traces have four types of accesses: \texttt{PrivateRead}, \texttt{PrivateWrite}, \texttt{SharedRead} and \texttt{SharedWrite}.
-Finally, the \gls{CPU} on which the access occurred is stored as an event parameter.
+Then we transform the cut the time interval each time a thread start or stop using a page and mark each access with the number of threads involved in the sharing.
+\fig{sharing-detection} shows this transformation.
 
 \subsection{Example}
 
-\begin{algorithm}
-    \caption{Naïve parallel matrix multiplication.}
-    \label{alg:mat-par}
-    \begin{algorithmic}
-        \For{i=0; i<sz; i++}
-            \For{j=myid(); j<sz; j+=NbThreads()}
-                \For{k=0; k<sz; k++}
-                    \State Res[i][j]+=A[i][k]*B[k][j]
-                \EndFor
-            \EndFor
-        \EndFor
-    \end{algorithmic}
-\end{algorithm}
-
 To illustrate these visualizations we implemented an extremely naïve parallel matrix multiplication.
-In this example, a first thread does the whole initialization, then create two threads that will do the actual computations.
-Furthermore, we split the work between the threads in a round robin way, the first thread computes all even columns and the second does the odd ones as described in \alg{mat-par}.
+In this example, a first thread does the whole initialization, then create four threads that will do the actual computations.
+Furthermore, we split the work by cutting the result matrix in four parts, resulting in the distribution of the data structures presented in \fig{mat-mult-par}.
+
+\begin{figure}[htb]
+    \centering
+    \input{tikz/mat-mult-par.tex}
+    \caption{Naive parallel matrix multiplication}
+    \label{fig:mat-mult-par}
+\end{figure}
 
 \begin{figure}[htb]
     \centering
@@ -170,38 +154,39 @@ Furthermore, we split the work between the threads in a round robin way, the fir
     \label{fig:ocelotl-th0}
 \end{figure}
 
-\fig{ocelotl-th0} is a screenshot of \gls{Ocelotl} visualization of \gls{Moca} trace, where the hierarchy starts by the threads of the application.
-We can see the hierarchy on the Y-axis, starting with the three threads, each embedding the whole memory hierarchy.
+\fig{ocelotl-th0} is a screenshot of \gls{Ocelotl} by thread visualization of \gls{Moca}.
+We can see the hierarchy on the Y-axis, starting with the memory root, then three data structures.
 The X-axis represent temporal evolution.
-We call this view Memory-gantt.
+For more readability of the trace, we have set one color per thread independently from the type of access, thread zero is blue, one is green, two read, three orange and four violet.
 
-From this view, we see clearly the master slave behavior of the threads.
-While the two slave threads have a similar memory access pattern, the master thread on the top of \fig{ocelotl-th0}, does all its accesses at the beginning of the execution.
-Moreover it seems to access all the memory at once.
-We can also see that it does less access at a time as the blocks are lighter.
-From this picture, we can clearly identify two phases:
-\begin{enumerate}
-    \item The three threads seem to use the memory, it is the initialization phase.
-    \item Only two threads are awake, they follow the same access pattern: it
-        is the computational phase.
-\end{enumerate}
+From this view, we see clearly that blue accesses occurs only during the initialization phase except for a small data structure on the bottom of the figure.
+Therefore we can see that the thread~$0$ is the master thread doing the initialization.
+Moreover, the master thread also access to some private data (the small structures in the bottom).
+Among these data, we can find a pid array used to wait the end of the slave threads.
+We can confirm that by filtering the accesses to show only the accesses done by thread~$0$.
+Or by zooming on the initialization phase.
+
+During the rest of the execution, two data structures are accessed diagonally over the time, which means linearly.
+Furthermore, the colors confirms that two threads are sharing each series of accesses.
+The data structure in the middle is intensively accessed by every threads, as a result all the accesses are aggregated.
+
+It seems that, at the two third of the execution, we can see a change of colors in the middle data structure.
+Additionally, it seems that at the same time the violet thread has completed his work and does not access the memory anymore.
 
 \begin{figure}[htb]
     \centering
     \includegraphics[width=\textwidth]{ocelotl/TaskView-zoom-init.png}
     \caption{Memory-gantt view of the naïve parallel matrix multiplication ,
-    initialisation}
+    initialization}
     \label{fig:ocelotl-th1}
 \end{figure}
 
-Now let's zoom on the initialisation step.
+Now let's zoom on the initialization step.
 The result is shown in \fig{ocelotl-th1}.
-We can clearly see that, contrary to what we thought on the last picture, during the initialisation phase, only the master thread is working.
-We can identify a three diagonal patterns happening at the same time, it correspond to the matrix initialisation.
-Moreover we see a few green access, while all the other are reds.
-Here a red access mean that it is on a page used by several threads, while green is for private data.
-Therefore we can see that the master thread also access to some private data.
-Among these data, we can find a pid array used to wait the end of the slave threads.
+We can see that, during the initialization phase, only the master thread is working.
+We can identify a three diagonal patterns happening at the same time, it correspond to the matrix initialization.
+The private data structures in the bottom also appears during the initialization.
+Finally, we see that as soon as the thread~$0$ has finished to initialize the data structure, the other four threads start working.
 
 \begin{figure}[htb]
     \centering
@@ -210,29 +195,34 @@ Among these data, we can find a pid array used to wait the end of the slave thre
     \label{fig:ocelotl-carto0}
 \end{figure}
 
-The cartography view (trace without the threads in the hierarchy) of this initialisation phase, is almost identical except that we won't be able to know which thread is responsible for the accesses.
-However the global cartography view shown in \fig{ocelotl-carto0} gives more information.
-In addition to the two execution phases, we can clearly identify three memory structures with different access patterns.
-Those structures correspond to the matrices.
-For the first and the third, we can see a regular diagonal access pattern which means that the matrix are accessed linearly, which is an efficient memory pattern.
+In the previous view there were four access type per threads (private / shared, reads / writes) which means $20$ different access types.
+To make the trace more readable, we had to reduce the number of colors and stop distinguishing private access from shared and reads from writes.
+The global view that is designed to highlight sharing only provides for event types independently from the number of threads.
+Therefore, it is easier to identify sharing patterns with this view.
+\fig{ocelotl-carto0} shows this visualization of our example traces.
+We can see that the trace looks like the previous one except that the order of the data structures is different.
+Blue accesses are privates and reds are shared.
+Dark colors are for writes while light ones means reads.
+From this view, we can see that most accesses seems to be reads and except for the matrix B (on the bottom) they are all private.
+Still the visualization is aggregated, at this point it is interesting to zoom in the middle of the execution and desegregate the trace as much as possible.
 
 \begin{figure}[htb]
     \centering
     \includegraphics[width=\textwidth]{ocelotl/Sharing-zoom.png}
     \caption{Cartography view of the naïve parallel matrix multiplication, computing phase.}
-    \label{fig:ocelotl-Carto2}
+    \label{fig:ocelotl-Carto-zoom}
 \end{figure}
 
-By focusing on the middle of the execution and setting the aggregation to zero, we obtain the \fig{ocelotl-Carto2}.
-We can't identify a clear pattern on the middle matrix, however, we see that at each time slots we access a slightly different part of the matrix (the lighter a block is, the less access it contains).
-The access on this matrix seems  dense and not designed to fit in a cache.
-This density of accesses is coherent with the behavior described in \alg{mat-par}
-Indeed, each thread goes through all the matrix B while working on only one line of A.
-Moreover the two threads works on two different columns at the same time, while the work on the same lines of A and Res.
-Due to the representation of 2D matrix in \texttt{C}, each access on B is separated from $sz$ doubles.
+By focusing on the middle of the execution and setting $p$ to zero, we obtain the \fig{ocelotl-Carto-zoom}.
+It is important to note that the trace is still aggregate due to the microscopic model of the trace.
+This aggregation explains the fact that we still see small, regular, blocks of accesses.
+We cannot identify a clear pattern on the bottom matrix, however, we can see a few private (blue) accesses appearing from time to time in this data structure.
+The access on this matrix seem dense and not designed to fit in a cache.
+This density of accesses is coherent with the behavior expected.
+Indeed the matrix by is accessed column first by all the threads.
+Due to the representation of 2D matrices in \texttt{C}, each access of each thread on B is separated from $sz$ doubles.
 Hence \gls{Ocelotl} groups almost everything in a huge chunks of access on all the matrices.
-%To improve this application, we should try to work on small blocks of B.
-%This is indeed the strategy used to compute efficient matrix multiplication.
+We can also see in this figure that shared (orange) accesses appears regularly on the two other data structures which is also coherent with the expected behavior.
 
 \subsection{Discussion}
 

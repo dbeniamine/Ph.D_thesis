@@ -1,0 +1,121 @@
+% -
+ %              DO WHAT THE FUCK YOU WANT TO PUBLIC LICENSE
+ %                      Version 2, December 2004
+ %   
+ %   Copyright (C) 2016 Beniamine, David <David@Beniamine.net>
+ %   Author: Beniamine, David <David@Beniamine.net>
+ %   
+ %   Everyone is permitted to copy and distribute verbatim or modified
+ %   copies of this license document, and changing it is allowed as long
+ %   as the name is changed.
+ %   
+ %              DO WHAT THE FUCK YOU WANT TO PUBLIC LICENSE
+ %     TERMS AND CONDITIONS FOR COPYING, DISTRIBUTION AND MODIFICATION
+ %   
+ %    0. You just DO WHAT THE FUCK YOU WANT TO.
+ %%
+
+%!TEX encoding=UTF-8 Unicode
+%Palette YlOrRd, 3 col
+\definecolor{ColV}{HTML}{FFEDA0}
+\definecolor{ColH}{HTML}{F03B20}
+
+%Palette 4-class paired
+\definecolor{Col0}{HTML}{A6CEE3}
+\definecolor{Col1}{HTML}{1F78B4}
+\definecolor{Col2}{HTML}{B2DF8A}
+\definecolor{Col3}{HTML}{33A02C}
+
+
+\pgfdeclarelayer{background}
+\pgfdeclarelayer{foreground}
+\pgfsetlayers{background,foreground}
+
+
+\tikzstyle{PrimaryA}   = [-latex,very thick]
+\tikzstyle{SecondaryA} = [-latex,very thick,dashed]
+\tikzstyle{SwapA} = [latex-latex, thick,dotted]
+
+\newcommand{\coli}[1]{\textcolor{ColI}{#1}}
+\newcommand{\colj}[1]{\textcolor{ColJ}{#1}}
+\newcommand{\colk}[1]{\textcolor{ColK}{#1}}
+
+\newcommand{\Ta}{\textcolor{Col0}{Thread~1}\xspace}
+\newcommand{\Tb}{\textcolor{Col1}{Thread~2}\xspace}
+\newcommand{\Tc}{\textcolor{Col2}{Thread~3}\xspace}
+\newcommand{\Td}{\textcolor{Col3}{Thread~4}\xspace}
+
+\tikzset{
+    algorithm/.style={
+        shape=rectangle,
+        alias=this,
+        append after command = {
+            \pgfextra{
+              % Top and bottom lines
+                \draw [] ($(this.north west)+(0,.5)$) -- ($(this.north east)+(0,.5)$);
+                \node [anchor=west] at ($(this.north west)+(0,0.25)$) {\textbf{Algorithm} #1};
+                \draw [] (this.north west) -- (this.north east);
+                \draw [] (this.south west) -- (this.south east);
+            }
+        }
+    },
+    matgrid/.style args={#1#2}{
+        %#1: name #2: size
+        alias=this,
+        append after command ={
+            \pgfextra{
+                \draw[very thin,loosely dotted,step=.5] (this) grid ($(this)+(#2,#2)$);
+                \draw (this) rectangle ($(this)+(#2,#2)$);
+                % Four corners
+                \coordinate (m#1-00) at ($(this)+(0,0)$);
+                \coordinate (m#1-0N) at ($(this)+(0,#2)$);
+                \coordinate (m#1-N0) at ($(this)+(#2,0)$);
+                \coordinate (m#1-NN) at ($(this)+(#2,#2)$);
+
+                \coordinate(m#1-east) at ($(m#1-00)!.5!(m#1-0N)$);
+                \coordinate(m#1-west) at ($(m#1-N0)!.5!(m#1-NN)$);
+                \coordinate(m#1-north)  at ($(m#1-00)!.5!(m#1-N0)$);
+                \coordinate(m#1-south)  at ($(m#1-0N)!.5!(m#1-NN)$);
+
+                \node (#1) at ($(m#1-00)+(-.5,0)$){\textbf{#1}};
+
+            }
+        }
+    }
+}
+
+
+
+\begin{tikzpicture}[font=\small]
+
+    \begin{pgfonlayer}{background}
+
+        \node[matgrid={A}{4}] at (0,0){};
+        \node[matgrid={B}{4}] at (5,5){};
+        \node[matgrid={C}{4}] at (5,0){};
+
+    \end{pgfonlayer}
+
+    % Indexes
+
+    \begin{pgfonlayer}{foreground}
+        %% A
+        \draw[very thick,ColV] (mA-west) -- (mA-east);
+        \draw[very thick,ColV] (mC-west) -- (mC-east);
+        \draw[very thick,ColH] (mB-north) -- (mB-south);
+        \draw[very thick,ColH] (mC-north) -- (mC-south);
+
+        \node at ($(mA-east)!0.5!(mA-west)+(0,1)$) {\Ta and \Tb};
+        \node at ($(mA-east)!0.5!(mA-west)+(0,-1)$) {\Tc and \Td};
+ 
+        \node[text centered,text width=5em] at ($(mB-north)!0.5!(mB-south)+(-1,0)$) {\Ta and \Tc};
+        \node[text centered,text width=5em] at ($(mB-north)!0.5!(mB-south)+(1,0)$) {\Tb and \Td};
+
+        \node[text centered] at ($(mC-east)!0.5!(mC-west)+(-1,1)$)  {\Ta};
+        \node[text centered] at ($(mC-east)!0.5!(mC-west)+(1,1)$)   {\Tb};
+        \node[text centered] at ($(mC-east)!0.5!(mC-west)+(-1,-1)$) {\Tc};
+        \node[text centered] at ($(mC-east)!0.5!(mC-west)+(1,-1)$)  {\Td};
+    \end{pgfonlayer}
+
+\end{tikzpicture}
+% vim: et si sta lbr  sw=4 ts=4 spelllang=en_us
