@@ -226,6 +226,21 @@ We can also see in this figure that shared (orange) accesses appears regularly o
 
 \subsection{Discussion}
 
+
+\begin{itemize}
+    \item Able to identify different patterns here
+    \item Visu per thread
+        \begin{itemize}
+            \item Not scalable (need to adjust colors for each thread one by one)
+        \end{itemize}
+    \item Data structures not scalable
+    \item No contexctual info on data structures
+    \item Switch loose filters and zooms
+    \item Computations slow: here small matrix needs 5 to 10 minutes to generate visu
+    \item Selection based on addresses extremly slow (too much EPs) and not scalable
+    \item Need something more scalable and flaxible hence programmatic approach\ldots
+\end{itemize}
+
 Although we were able to visualize all the inefficient patterns in the example described previously, we were not completely convinced of the visualization based on \gls{Ocelotl}.
 Indeed, the first limitation comes from the fact that \gls{Framesoc} trace description is quite static and does not permit to change the event producers.
 As a result we had to generate three traces (virtual addresses, physical addresses and by threads) to provide different visualizations.
