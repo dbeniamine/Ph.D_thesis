@@ -111,8 +111,8 @@ We could divide the pages in cache lines and keep going until the address granul
 
 For both physical and virtual addressing, our importer creates two different traces.
 In the first type of trace, the events and spread on four event types: \texttt{private\_read}, \texttt{private\_write}, \texttt{shared\_read}, \texttt{shared\_write}.
-For the second trace, we add to these types the number of the thread responsible of the access, for instance \texttt{private\_read\_T0} for the thread $0$.
-As a result we have for both physical and virtual addresses, we have two views one representing the usage of the memory by the threads and one global view presenting the sharing patterns.
+For the second trace, the event type represent the  thread responsible of the access.
+As a result we have for both physical and virtual addresses, we have two views one representing the usage of the memory by the threads and one global view presenting the sharing patterns and memory access type.
 
 Each access is represented by a variable, whose value is the number of threads involved in the access.
 Finally, the \gls{CPU} on which the access occurred is stored as an event parameter.
@@ -157,7 +157,7 @@ Furthermore, we split the work by cutting the result matrix in four parts, resul
 \fig{ocelotl-th0} is a screenshot of \gls{Ocelotl} by thread visualization of \gls{Moca}.
 We can see the hierarchy on the Y-axis, starting with the memory root, then three data structures.
 The X-axis represent temporal evolution.
-For more readability of the trace, we have set one color per thread independently from the type of access, thread zero is blue, one is green, two read, three orange and four violet.
+%For more readability of the trace, we have set one color per thread independently from the type of access, thread zero is blue, one is green, two read, three orange and four violet.
 
 From this view, we see clearly that blue accesses occurs only during the initialization phase except for a small data structure on the bottom of the figure.
 Therefore we can see that the thread~$0$ is the master thread doing the initialization.
@@ -226,35 +226,25 @@ We can also see in this figure that shared (orange) accesses appears regularly o
 
 \subsection{Discussion}
 
+In summary, \gls{Ocelotl} enabled visualizing \gls{Moca} traces and helped identifying inefficient patterns on a test application.
+However even for this extremely simple benchmark we started to see some scalability issues.
+The first limit comes from the fact that \gls{Framesoc} is designed for a small number of event producers.
+Indeed \gls{Framesoc} event producers usually represents threads, \glspl{CPU} or nodes of a distributed system with at best a few thousands of them.
+At the opposite, our small example we already had $20000$ event producers for only \SI{78}{Mb} of memory usage, a trace using \SI{1}{Gb} would require more than $250000$ event producers.
+We can mitigate the impact of the number of event producers on \gls{Ocelotl} by organizing them in an artificial hierarchy but this only reduces the computation time of \gls{Ocelotl}.
+Filtrating the trace based on the event producers is extremely slow with such traces in \gls{Framesoc}.
+The second issue comes comes the fact that we had to create several \gls{Framesoc} traces to represent all the information contained in \gls{Moca} traces.
+As a result, changing analysis point of view means changing the trace, hence loosing all filtration already done and all caches that speeds \gls{Ocelotl} up.
+Therefore it is a process extremely slow that breaks the analysis workflow.
+While it would have been technically possible to merge the by thread view and the sharing view by creating complex event types holding information about access type, sharing and the thread responsible for it, this would result on a huge amount of event types.
+Such a trace would results in two issues: first the microscopic description of the trace would be more complex which might \gls{Ocelotl} down,\DB{je suis pas sûr là \ldots}
+and second it would make filtering by type extremely painful.
+Indeed there is no way to do filtering using regular expression or any programmatic way in \gls{Framesoc}, thus, on a huge trace the user would have to do tens or hundreds or clics and might do some errors to switch from point of view.
+Finally, with these traces it is not possible to have information about the data structure (their size and number of acesses), to do so we would have to create yet another trace during the importation.
 
-\begin{itemize}
-    \item Able to identify different patterns here
-    \item Visu per thread
-        \begin{itemize}
-            \item Not scalable (need to adjust colors for each thread one by one)
-        \end{itemize}
-    \item Data structures not scalable
-    \item No contexctual info on data structures
-    \item Switch loose filters and zooms
-    \item Computations slow: here small matrix needs 5 to 10 minutes to generate visu
-    \item Selection based on addresses extremly slow (too much EPs) and not scalable
-    \item Need something more scalable and flaxible hence programmatic approach\ldots
-\end{itemize}
-
-Although we were able to visualize all the inefficient patterns in the example described previously, we were not completely convinced of the visualization based on \gls{Ocelotl}.
-Indeed, the first limitation comes from the fact that \gls{Framesoc} trace description is quite static and does not permit to change the event producers.
-As a result we had to generate three traces (virtual addresses, physical addresses and by threads) to provide different visualizations.
-This means that if we spot an interesting pattern in a visualization and want to look at it from another point of view, we need to reload the whole trace and  which breaks the flow of trace analysis.
-Indeed \gls{Ocelotl} initial computations are slow as it requires to compare all possible partitions.
-Additionally, by doing so we loose all filtering and zoom done on the previous trace.
-
-Another limit of this approach is that it is hard to identify (name) the data structure.
-Furthermore selecting only a set of data structure is slow as \gls{Framesoc} is not designed for handling as much event producers as we have with memory traces.
-Finally meta data about there size or number of accesses are impossible to visualize.
-
-To conclude, these visualization are interesting and enables identification classic mistakes.
-Yet it seems that in the end \gls{Ocelotl} tool is no well suited for memory traces.
-Therefore we should try a more dynamic approach that permit to change the point of view easily.
+To conclude, visualizing our traces with \gls{Ocelotl} proved that memory traces are helpful to identify performance issues.
+Nevertheless, we identify several scalability issues in our analysis workflow due to the fact that generic trace analysis tools are not designed for the specificities of memory traces.
+Consequently, a more flexible approach that ease switching from point of view and filtering would be more efficient to analyze our traces.
 
 \section{Programmatic exploration}
 \label{sec:visu-second}
@@ -328,7 +318,7 @@ Additionally, we can look at the amount of sharing instead of the number of axis
 
 \begin{figure}[htb]
     \centering
-    \includegraphics[width=\textwidth]{labbook/intensity_Share_dgetrf_zoom}
+    \includegraphics[width=\textwidth]{labbook/intensity_RW_dgetrf_zoom}
     \caption{Visualization of the memory access of the dgetrf kernel from ffplas-ffpack, zoom on the three interesting data structures.}
     \label{fig:dgetrf-share-zoom}
 \end{figure}
@@ -344,6 +334,21 @@ This pattern means that threads are probably organized in a master / slave way, 
 This might be problematic on \gls{NUMA} machines as the stack is statically allocated and thus cannot be allocated explicitly on some node.
 It would be interesting to zoom on the beginning of the execution to check if the initialization of this part of the stack is correctly spread around the thread or not.
 If not, Linux will allocate each page on the memory bank of the master thread independently of the re partition of the data between the threads.
+
+\begin{figure}[htb]
+    \centering
+    \includegraphics[width=\textwidth]{labbook/intensity_Share_dgetrf_zoom-init}
+    \caption{Visualization of the sharing patterns of the dgetrf kernel from ffplas-ffpack, zoom on the initialization of stack:1256.}
+    \label{fig:dgetrf-share-zoom-init}
+\end{figure}
+
+\begin{figure}[htb]
+    \centering
+    \includegraphics[width=\textwidth]{labbook/intensity_Share_dgetrf_zoom-init1}
+    \caption{Visualization of the sharing patterns of the dgetrf kernel from ffplas-ffpack, zoom on the initialization of stack:1256.}
+    \label{fig:dgetrf-share-zoom-init1}
+\end{figure}
+\DB{Zoom init + Nb of threads}
 
 After discussing these results with some of the developers of the fflas-ffpack, it appears that the observed patterns can be due to the OpenBlas library and might be complex to improve.
 Yet an interesting thing to do would be to compare these traces, with the trace of the same kernel but compiled against the \gls{MKL}.
