@@ -136,7 +136,7 @@ Then we transform the cut the time interval each time a thread start or stop usi
 
 \subsection{Example}
 
-To illustrate these visualizations we implemented an extremely naïve parallel matrix multiplication.
+To illustrate these visualizations we implemented an extremely naive parallel matrix multiplication.
 In this example, a first thread does the whole initialization, then create four threads that will do the actual computations.
 Furthermore, we split the work by cutting the result matrix in four parts, resulting in the distribution of the data structures presented in \fig{mat-mult-par}.
 
@@ -150,7 +150,7 @@ Furthermore, we split the work by cutting the result matrix in four parts, resul
 \begin{figure}[htb]
     \centering
     \includegraphics[width=\textwidth]{ocelotl/TaskView.png}
-    \caption{Memory-gantt view of the naïve parallel matrix multiplication.}
+    \caption{By thread view of the memory usage of a naive parallel matrix multiplication.}
     \label{fig:ocelotl-th0}
 \end{figure}
 
@@ -176,8 +176,8 @@ Additionally, it seems that at the same time the violet thread has completed his
 \begin{figure}[htb]
     \centering
     \includegraphics[width=\textwidth]{ocelotl/TaskView-zoom-init.png}
-    \caption{Memory-gantt view of the naïve parallel matrix multiplication ,
-    initialization}
+    \caption{By thread view of the memory usage of a naive parallel matrix multiplication,
+    initialization.}
     \label{fig:ocelotl-th1}
 \end{figure}
 
@@ -191,7 +191,7 @@ Finally, we see that as soon as the thread~$0$ has finished to initialize the da
 \begin{figure}[htb]
     \centering
     \includegraphics[width=\textwidth]{ocelotl/Sharing.png}
-    \caption{Cartography view of the naïve parallel matrix multiplication.}
+    \caption{Sharing view of the memory usage of a naive parallel matrix multiplication.}
     \label{fig:ocelotl-carto0}
 \end{figure}
 
@@ -209,7 +209,7 @@ Still the visualization is aggregated, at this point it is interesting to zoom i
 \begin{figure}[htb]
     \centering
     \includegraphics[width=\textwidth]{ocelotl/Sharing-zoom.png}
-    \caption{Cartography view of the naïve parallel matrix multiplication, computing phase.}
+    \caption{Sharing view of the memory usage of a naive parallel matrix multiplication, computing phase.}
     \label{fig:ocelotl-Carto-zoom}
 \end{figure}
 
@@ -250,10 +250,16 @@ Consequently, a more flexible approach that ease switching from point of view an
 \label{sec:visu-second}
 
 The main drawback of using a generic visualization tool for analyzing \gls{Moca} traces come from the difficulty to switch the perspective from which we visualize the data.
-This limitation comes from the static representation of the trace as a two dimensional entity.
-Hence, a more programmatic approach may enable to work closer to the data and ease this point of view switch.
-In \gls{R}, data are usually stored in huge dataframes, each row of a dataframe represent one observation and each column give the value of a parameter or a measure for this observation.
-While this representation has a significant memory footprint, it ease switching point of view, as the same dataframe can represent several measures.
+More precisely, this limitation comes from the static representation of traces as a two dimensional entities used in most tools.
+This is problematic for \gls{Moca} traces because not only they are spread over five dimensions, but these dimensions are related to each other.
+Indeed, the placement of threads on the \glspl{CPU} is not necessarily fixed but it matters and can impact the performances.
+Furthermore, this placement must be analyzed in relation to the placement of memory pages on the physical memory and on the underlying hierarchy.
+As a result, projecting such traces on two dimension is complex and different projections should be analyzed and correlated to understand the memory behavior of an application.
+Hence, a more programmatic approach may enable the analyst to work closer to the data and ease this point of view switch.
+
+In \gls{R}, data are usually stored in huge dataframes, each row of a dataframe represent one observation and each column represent one dimension of this observation.
+Consequently, in \gls{R}, changing the analysis point of view for a set of data only means looking at another column of the dataframe which is trivial.
+While this representation has a significant memory footprint, \gls{R} is designed and optimized to do such analysis and to correlated different dimensions of a set of observation.
 For these reason, we analyzed several traces with \gls{R}.
 For more reproducibility, we store the evolution of our work in an \gls{Org-mode} labbook, as described in~\cite[Chapter~4, p~54]{Stanisic15Reproducible}, and available online at:\\
 \url{https://github.com/dbeniamine/Moca\_visualization}.
@@ -265,28 +271,30 @@ For instance we might want to ignore some parts of the trace very soon to focus 
 
 \subsection{Design}
 
-Our analysis converged very quickly to a classical yet adaptable analysis pipeline:
+Our analysis always starts with a classical pipeline that we can easily adapt to the specificities of the analyzed trace:
 \begin{enumerate}
     \item Parsing: reading \gls{Moca} traces (to which we have applied the sharing detection written for \gls{Framesoc} and depicted in \fig{sharing-detection})
-        and representing the data in a \gls{R} friendly way.
+        and storing them in \gls{R} dataframes.
         At the end of this step, we have two dataframes, the main one contains all the accesses, and the other one the list of data structures.
     \item Creating simplified data frames: At this point, the main dataframe contains a set of accesses where shared access appears one time for each thread involved in the sharing as described in \fig{sharing-detection}.
         We can aggregate all theses accesses, reducing the size of the main dataframe.
     \item Retrieving the mapping between structures and pages: this step is the most costly one, but can be speed it up by several means:
         \begin{itemize}
-            \item During the parsing step, we can easily compute the minimum and maximum address that are in a structure and ignore all accesses out of theses bounds.
+            \item At the end of the parsing step, we can reduce the interesting address space, usually we take the minimum and maximum addresses that are inside a data structure and filter out all the asses that are not in this interval.
             \item As there are significantly less data structures than memory addresses, we can do the mapping by applying on the data frame representing the structures, a function that returns a vector with one entry per line of the main data frame.
                 When this function is applied, each data structures adds it names to the addresses that belongs to it.
                 In the end we just have to add this vector as a column of the main data frame.
         \end{itemize}
-    \item Predefined plots: Finally we can present some predefined  plots, the three first are inspired from \gls{Tabarnac} ones and show the size of data structures, the number of accesses, and amount of sharing.
-        At this point it is trivial to focus on the data structures that have enough accesses with one line of \gls{R} code.
-        Then we present a cartography view of the density of accesses or of sharing by data structures and by type of accesses.
-    \item Zoom and modify plots: at this point it is possible to zoom or focus on some data structures by selecting subsets of the main dataframe.
-        Furthermore, we can easily change the axes of the plots, show other metrics, do some conditional zoom on specific part of the trace \ldots
+    \item First set of predefined plots: Finally we can present some predefined  plots, the three first are inspired from \gls{Tabarnac} ones and show the size of data structures, the number of accesses, and amount of sharing.
+    \item  Filtering: at this step we can easily identify data structures that or rarely used and might not have a significant impact on the application performances, we filter these data structures out to focus on the most important ones.
+    \item Second set of predefined plots: for all the data structures that are left we visualize the memory accesses over the time depending on their type.
+        For these plot, the color represent either the number of accesses or the number of threads involved in the access.
 \end{enumerate}
+At any step of the pipeline, it is possible to do more filtering using our knowledge of the analyzed application to speed the process up.
+Once the predefined plots or obtained, we can easily navigate in them using \gls{R} selection operators to do complex filtering or zoom on a part of the trace.
+Moreover it is possible to design any other visualization that might be interesting.
 
-\subsection{Results and discussion}
+\subsection{Example of visualization}
 
 \begin{figure}[htb]
     \centering
@@ -298,8 +306,8 @@ Our analysis converged very quickly to a classical yet adaptable analysis pipeli
 We illustrate our visualization with the \emph{dgetrf} kernel from the fflas-ffpack~\cite{group16FFLASFFPACK} compiled against the OpenBlas~\cite{Chothia16OpenBlas}.
 This trace was collected on a machine from the Edel cluster which hardware was presented in \tbl{hw-moca}.
 
-\fig{dgetrf-intensity} shows for each data structures\footnote{
-    A few almost unused data structures have been filtered out to make the image more readable.}
+\fig{dgetrf-intensity} shows for each data structure\footnote{
+    A few, almost unused, data structures have been filtered out to make the image more readable.}
     the number of accesses per page over the time.
 Furthermore we differentiate four types of access: \texttt{PrivateRead}, \texttt{PrivateWrites}, \texttt{SharedRead} and \texttt{SharedWrites}.
 
@@ -314,7 +322,6 @@ These three structures seems also to be accessed mostly linearly, hence they sho
 \lstinputlisting[caption={R code to focus on interesting data structures.}, label=lst:R-zoom,float=htb]{code/zoom.R}
 
 At this point, it is interesting to focus on these three data structures and ignore the others, we can do this with the simple line of code displayed in \lstr{R-zoom}.
-Additionally, we can look at the amount of sharing instead of the number of axis just by changing the \emph{y} parameter of the plot.
 
 \begin{figure}[htb]
     \centering
@@ -330,7 +337,7 @@ We can presume that this data structure contains information about the threads s
 Second the stack 1256 is only used during the first third of the execution and written only at the beginning and in parallel.
 For a generic data structure, this parallel initialization could probably have been designed to distribute first touch on the \gls{NUMA} nodes of the machine, still on a stack it seems quite unusual.
 Last but not least, a small part of the main stack is accessed in read and write mode and in a shared way during all the execution.
-This pattern means that threads are probably organized in a master / slave way, where the master thread allocates data in its stack (not dynamic allocation).
+This pattern means that threads are probably organized in a master / slave way, where the master thread allocates data in its stack (not a dynamic allocation).
 This might be problematic on \gls{NUMA} machines as the stack is statically allocated and thus cannot be allocated explicitly on some node.
 It would be interesting to zoom on the beginning of the execution to check if the initialization of this part of the stack is correctly spread around the thread or not.
 If not, Linux will allocate each page on the memory bank of the master thread independently of the re partition of the data between the threads.
@@ -338,88 +345,63 @@ If not, Linux will allocate each page on the memory bank of the master thread in
 \begin{figure}[htb]
     \centering
     \includegraphics[width=\textwidth]{labbook/intensity_Share_dgetrf_zoom-init}
-    \caption{Visualization of the sharing patterns of the dgetrf kernel from ffplas-ffpack, zoom on the initialization of stack:1256.}
+    \caption{Visualization of the sharing patterns of the dgetrf kernel from ffplas-ffpack, zoom on the initialization of \texttt{stack:1256}.}
     \label{fig:dgetrf-share-zoom-init}
 \end{figure}
+
+\fig{dgetrf-share-zoom-init} shows the memory accesses occurring inside \texttt{stack:1256} during the first par of the execution.
+The color indicates the number of threads involved in the memory access.
+The first thing we can notice in this figure is that the data structure seems to be read before being written.
+When a page that is not mapped to the memory is read before writing it, \gls{Linux} does not map it but read a page full of zeroes, consequently this behavior should not impact the first touch.
+Then it seems that the first writes are both private and shared.
+As a memory access cannot be both shared an private, that means these accesses occurs in parallel and some parts or accessed by two or three threads at a time while some others stays private.
+We can confirm this behavior by zooming even more in the initialization.
 
 \begin{figure}[htb]
     \centering
     \includegraphics[width=\textwidth]{labbook/intensity_Share_dgetrf_zoom-init1}
-    \caption{Visualization of the sharing patterns of the dgetrf kernel from ffplas-ffpack, zoom on the initialization of stack:1256.}
+    \caption{Visualization of the sharing patterns of the dgetrf kernel from ffplas-ffpack, zoom on a part of the initialization of \texttt{stack:1256}.}
     \label{fig:dgetrf-share-zoom-init1}
 \end{figure}
-\DB{Zoom init + Nb of threads}
+
+By zooming even more, we obtain \fig{dgetrf-share-zoom-init1} which shows that access are indeed not shared and private at the same time.
+Furthermore it confirms that the data in this stack are read before being written.
 
 After discussing these results with some of the developers of the fflas-ffpack, it appears that the observed patterns can be due to the OpenBlas library and might be complex to improve.
 Yet an interesting thing to do would be to compare these traces, with the trace of the same kernel but compiled against the \gls{MKL}.
-Indeed there are some performance differences between the two library that are hard to explain with traditional profiling tools as the \gls{MKL} code is proprietary.
+Indeed, there are some performance differences between the two library that are hard to explain with traditional profiling tools as the \gls{MKL} code is proprietary.
 Therefore, memory traces might help understanding the underlying algorithms.
 
-In the end, this approach ease the exploration of \gls{Moca} traces, provided that we know a minimum of \gls{R} code.
-Moreover, while \gls{Framesoc} and \gls{Ocelotl} can be easily used by an end user without the our intervention, at the time of the writing, this programmatic approach requires to read at least a part of the labbook to understand how to do the analysis.
+In the end, this approach ease the exploration of \gls{Moca} traces, provided that we know a minimum of \gls{R} code and that we read our labbook.
+This is more complicated than using \gls{Framesoc} and \gls{Ocelotl}.
 Additionally, we had some troubles to analyze some traces from Lulesh \gls{OpenMP} and \gls{SOFA}.
 Indeed these applications generates thousands of call to the malloc functions (hundreds of thousands for Lulesh).
 Hence, retrieving the mapping page to data structure was extremely slow or nearly impossible without merging some data structures.
-In the end it appears that we need both a more user friendly tool, and a way to add a priori knowledge of the developers in the parsing step to filter out uninteresting data.
-
-\subsection{Generic trace visualization tool}
-
-Programmatic exploration of traces is extremely powerful but not user friendly.
-We describe here an hypothetical, generic trace viewer based on \gls{R} that should make trace exploration more user friendly.
-We only provide some principles of design and interaction that results from our experiment while trying to analyze traces with \gls{R}.
-
-\begin{figure}[htb]
-    \centering
-    \input{tikz/generic-viewer}
-    \caption{Description of a R based hypothetical generic trace viewer.}
-    \label{fig:generic-viewer}
-\end{figure}
-
-The main components and interactions of our hypothetical tool are presented in \fig{generic-viewer}.
-To be generic this tool is split in two parts: the viewer itself is quite minimalist, it contains a few predefined commands for interacting with data (zoom, filters \ldots), with the dataframe stack that will be described later and do predefined actions (parse, show some plot).
-The second part is the configuration and should be provided by the developer of the tracing tool.
-This configuration defines six things:
-\begin{itemize}
-    \item The code required to implement the trace interaction commands (zoom, filter etc.).
-    \item Optionally some code to define some specific commands.
-    \item The files that constitute the trace.
-    \item The code used to do the parsing steps.
-    \item Some breakpoints that can be used to insert code during parsing.
-    \item The code used to provide the main predefined plots.
-\end{itemize}
-
-Another important idea is that the tool should conserve a \emph{dataframe stack} which means that the users will work on a small set of dataframes, and every modification to a dataframe (except if specified otherwise) should generate a copy.
-While this means a considerable memory footprint, it enables rolling back if a step of aggregation (for instance) loose too much information.
-Moreover, the first step of the analysis often consists in filtering data to focus on the most meaningful part of the trace.
-Hence, only the first copies will have an important impact on the memory footprint.
-
-The users would have two ways to interact with this tool: use builtin commands (or commands defined by the tool), or \gls{R} code.
-These two usage are not incompatible.
-At any step the users can see the code of the next step that they want to run and modify it or execute it.
-A natural workflow would be to start analyzing the trace with the commands provided with the trace, and if necessary, start running \gls{R} code to generate new visualizations or filter data.
-In the end, the user would be able to export the code of the new visualization to improve the original configuration.
+In the end it appears that we need to add a priori knowledge of the developers in the parsing step to filter out uninteresting data.
 
 \section{Discussions}
 \label{sec:visu-cncl}
 
 Visualizing \gls{Moca} traces is a complex task.
 Indeed these traces are spread over five dimensions: time, addresses (virtual or physical), threads, \gls{CPU} location and access type.
-Furthermore, the address space is quite large and we are mostly interest on some specific patterns.
-Therefore, we first used \gls{Ocelotl} to analyze these traces.
+Furthermore, the address space is quite large and we are mostly interested in some specific patterns.
+Therefore, we first used \gls{Ocelotl}, a part of \gls{Framesoc} infrastructure, to analyze these traces.
 This tool is designed to aggregate traces in a meaningful way, trying to provide a good trade-off between information lost and data reduction.
-Moreover it is implemented as a \gls{Framesoc} tool.
-\gls{Framesoc} is a generic trace manager, that provide a simple \gls{API} to import traces from virtually any tools.
-Importing \gls{Moca} traces inside \gls{Framesoc} is also interesting as it provides easy filtering and zoom on the traces.
+Importing \gls{Moca} traces inside \gls{Framesoc} is interesting as it provides easy filtering and zoom on the traces.
 Still, \gls{Framesoc} considers that a trace has two dimensions: time and event producers, it is hard to represent the complexity of \gls{Moca} traces in it.
-As a result, we had to generate several different \gls{Framesoc} traces while importing one \gls{Moca} trace.
+\gls{Framesoc} event types could be used to represent this complexity.
+In \gls{Ocelotl} event types are represented as a color, if the event types represent several dimensions, it is impossible to interpret the colors of a visualization.
+Consequently, if a \gls{Framesoc} trace contains all the information, we must do some filtering by event types to be able to interpret it.
+In \gls{Framesoc}, the only way to filter a trace by event type is to select individually some types by clicking on them.
+As a result such a trace would not be usable and it is simpler to generate several distinct \gls{Framesoc} traces while importing one \gls{Moca} trace.
 The main drawback of this workaround is that switching traces inside \gls{Framesoc} means loosing all zooms and filters along with the caches and the results of the aggregated views computed by \gls{Ocelotl}.
 In the end this approach enable the visualization of small traces, yet the cost of changing the perspective is too high and makes the interaction too slow to be usable.
 
-Our second approach to analyze these trace was more programmatic, we use \gls{R} and saved all our attempts in a labbook.
-While this is not user friendly at all, \gls{R} is a powerful tool and it enables more complex visualization.
-We are able to do efficient and complex zoom with \gls{R} selection operators.
-To make this analysis reproducible by users not familiar with \gls{R}, it would be interesting to develop a generic viewer build upon predefined \gls{R} visualization.
-Such viewer should (at least) provide the two following feature: simple (non \gls{R}) zoom and filtering and a dataframe stack so the users can rollback if they discard some useful informations.
+Our second approach to analyze these trace was more programmatic, we used \gls{R} and saved all our attempts in a labbook.
+While this is less user friendly, \gls{R} is a powerful tool and it enables more complex visualization.
+Moreover, it is optimized to analyze large data sets spreed over several dimensions and provides powerful selection operators that can be used to do conditional zoom and filtering.
+Using \gls{R}, we have provided several meaningful plots that can be used to start a memory trace analysis
+These visualization could be used to compare the memory access patterns of applications in order to understand the underlying algorithm of proprietary programs such as the \gls{MKL}.
 
 Another approach that have not been studied during this thesis would be to analyze traces automatically.
 Such analysis would have to detect memory patterns and possibly and highlight parts of code that should be improved.
@@ -427,9 +409,8 @@ A memory pattern is an interaction between threads inside a memory area over a s
 Yet, defining such a pattern in a more specific way is a hard task.
 
 For any approach, it appears that the developers knowledge is useful to focus the analysis on the interesting parts.
-Therefore we need a way to use this knowledge during the analysis and as soon as possible to reduce the amount of data we need to analyze.
-Nerveless, we have seen in \chap{perf} that they might not know all the source of performance issues.
+Therefore we need a way to use this knowledge during the analysis and as soon as possible to reduce the amount of data to analyze.
+Nerveless, we have seen in \chap{perf} that they might not know all the sources of performance issues.
 In the end, this knowledge can be used to focus the analysis but it is important to also have a global visualization of the trace, to spot issue that would have been missed by the developers.
 Hence the two approaches described in this chapter can be used in a complementary way.
-
 % vim: et si sta lbr  sw=4 ts=4 spelllang=en_us
