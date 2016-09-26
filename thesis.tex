@@ -76,7 +76,7 @@
 
 \shorttoc{smalltoc}{Outline}{1}
 
-%\listoftodos
+\listoftodos
 
 \mainmatter
 
@@ -89,22 +89,23 @@
 \Input{cncl}
 
 \backmatter
+\DB{Verify all lists}
 
 \setcounter{tocdepth}{3}
 \tableofcontents
 
-
 \listoffigures
 \listoftables
 \lstlistoflistings
-\printglossary[title=List of Acronyms]
+\printglossary[type=\acronymtype,title=List of Acronyms]
+\printglossary[type=index]
 \bibliographystyle{alpha}
 %\bibliographystyle{plain}
 \bibliography{biblio}
 
-\chapter{Acknowledgments}
-\DB{C'est là quj'ai le droit de dire plein de conneries !}
-
+%\chapter{Acknowledgments}
+%\DB{C'est là quj'ai le droit de dire plein de conneries !}
+%
 \stopcontents[smalltoc]
 %==============================================================================
 
