@@ -1,7 +1,7 @@
 *.aux
 *.bbl
 *.blg
-*.log
+*.alg
 *.out
 thesis.pdf
 sty/*.pdf
@@ -12,14 +12,9 @@ sty/*/*.pdf
 *.swp
 */*.swp
 *.ps
-*.lof
-*.lot
+*.lo?
+*.gl?
 *.ptc
 *.toc
-tikz/*.pdf
-thesis.acn
-thesis.acr
-thesis.alg
-thesis.ist
-*.loa
-thesis.lol
+*.ac?
+*.ist

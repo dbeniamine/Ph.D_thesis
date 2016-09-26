@@ -15,7 +15,7 @@ GLS = $(TEXSRC:.tex=.acr)
 
 
 # Temporary files
-TEMP=*.bbl *.blg *.synctex.gz *.aux *.toc *.ptc *.out *.lot *.lof *.log *.ist *.acn *.acr *.alg *.tdo *.loa *.lol
+TEMP=*.bbl *.blg *.synctex.gz *.aux *.toc *.ptc *.out *.ist *.ac? *.alg *.tdo *.lo? *.gl?
 # Avoid removing temp files
 .INTERMEDIATE: $(TEMP)
 
