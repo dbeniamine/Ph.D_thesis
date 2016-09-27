@@ -1,15 +1,52 @@
 %!TEX encoding=UTF-8 Unicode
 \chapter{Conclusions}
+\label{chap:cncl}
 
-\section{Context}
+This thesis => Mem perf analysis collection / visualization and analysis
 
-\section{Memory access traces}
+\section{Memory trace collection}
+
+Challenging
 
 \subsection{Contributions}
-\subsection{Discussions and possible improvements}
+
+\begin{itemize}
+    \item Tabarnac => Global overview, paper + code GPL
+    \item  Moca => Fine grain, research report, paper submitted CCGRID + code GPL
+\end{itemize}
+
+\subsection{Future work}
+
+\begin{itemize}
+    \item Improve contextual informaton => detect data struct, yet complexity depends of struct complexity, guess temporary allocation variables ?
+    \item  Collect more efficiently => adapt size of data structs online, use binary trace.
+\end{itemize}
 
 \section{Traces analysis}
 
 \subsection{Contributions}
-\subsection{Discussions and possible improvements}
+
+\begin{itemize}
+    \item  Tabarnac => closed relatively not so hard
+    \item Moca => Still open, two approaches:
+        \begin{itemize}
+            \item Ocelotl => aggregating, not design for Moca traces => don't scale
+            \item R requires more knowledge from user but extremely power full filtering
+        \end{itemize}
+\end{itemize}
+
+
+\subsection{Future work}
+
+\begin{itemize}
+    \item Use dev knowledge:
+        \begin{itemize}
+            \item Naming struct
+            \item Filtering stuff
+        \end{itemize}
+    \item Compare memory traces for reverse engineering
+\end{itemize}
+
+Methodo from complete overview (need agregation) to fine grain analysis
+
 % vim: et si sta lbr  sw=4 ts=4 spelllang=en_us
