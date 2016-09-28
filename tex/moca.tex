@@ -11,7 +11,7 @@ Therefore it is required to find a lighter mean to collect memory traces.
 This chapter presents \gls{Moca}, a memory trace collection system that  relies on an \gls{OS} level mechanism called page fault interception and injection.
 \gls{Moca} addresses the challenge of collecting \emph{detailed}, \emph{precise} and \emph{complete} traces, that is with temporal information.
 
-This work is the subject of two Inria research reports~\cite{Beniamine15Memory,Beniamine16Moca} and has been submitted at \gls{PMBS} 2016, a \gls{SC} workshop.
+This work is the subject of two Inria research reports~\cite{Beniamine15Memory,Beniamine16Moca} and has been submitted at \gls{CCGRID} 2017.
 As the previous tool, \gls{Moca} is distributed under the \gls{GPL} license: \url{https://github.com/dbeniamine/Moca}.
 
 This chapter presents first the main components of \gls{Moca} in \sect{moca-components}.
@@ -87,7 +87,7 @@ This method has several advantages over hardware sampling or instrumentation.
 First, it provides a superset of all the memory accesses, because it guarantees that each page accessed by the monitored application will fault once and will be traced.
 Second, at the end of each monitoring interval, we know the exact set of accessed pages from which we deduce a superset of actual memory accesses.
 This comes in addition to the fact that each false page fault generated provides \gls{Moca} with exact information about one memory access.
-This means that \gls{Moca} also performs a sampling of all the memory accesses at the granularity of the byte.
+This means that \gls{Moca} also performs a sampling of all the memory accesses at the granularity of the Byte.
 Because it is designed to manage large chunks of trace data within the kernel space, it also stores all the details about these samples in the collected trace.
 
 \gls{Moca} differs from instruction sampling because it is not necessary to increase the monitoring frequency of \gls{Moca} to collect a \emph{complete} trace.
@@ -609,7 +609,7 @@ It  collects \emph{precise}, \emph{complete} and \emph{detailed} memory traces.
 While existing tools rely on \emph{incomplete} hardware sampling to provide such traces at a lower cost, \gls{Moca} provides a \emph{complete} trace, that contains all the accessed areas, at the granularity of the page.
 Moreover, \gls{Moca} traces not only contain all the pages that are accessed during the execution, but also, for each trapped access, temporal, spatial and sharing information: accesses are timestamped and recorded along with their thread number, CPU number, and kind.
 While \gls{Moca} works at the page granularity, it stores the exact address of each intercepted accesses.
-Therefore, it also provides an \emph{incomplete} trace at the granularity of the byte, similar to traces collected by instructions sampling.
+Therefore, it also provides an \emph{incomplete} trace at the granularity of the Byte, similar to traces collected by instructions sampling.
 Furthermore, \gls{Moca} is also able to relate accesses to data structures of the application by combining this efficient trace collection system with an examination of the application binary.
 
 Most state of the art tools are relying on hardware technologies such as \gls{Intel} \gls{PEBS} or \gls{AMD} \gls{IBS}, and embed vendor (or processor) dependent code making them hard to maintain and not portable.
@@ -626,7 +626,7 @@ Both of these tools were evaluated with their default parameters and with some f
 For this comparison, we evaluated two criteria: the \emph{precision} of the trace and the runtime overhead.
 We ran our evaluation on the \gls{NPB} which are representative of multiple kinds of applications from simple kernels to realistic ones.
 Our evaluation has exposed the fact that the tools relying on hardware sampling miss a large part of the address space.
-It has also shown that \gls{Moca} is able to provide both a \emph{complete} trace at the page granularity and a sampling at the byte granularity significantly more \emph{precise} than the other sampling based tools.
+It has also shown that \gls{Moca} is able to provide both a \emph{complete} trace at the page granularity and a sampling at the Byte granularity significantly more \emph{precise} than the other sampling based tools.
 Generating comparable traces using \gls{MemProf} or \gls{Mitos} would require to sample more memory instructions than the hardware can.
 Finally, \gls{Moca} overhead is more important than the overhead of sampling based tools but usually lower than the one induced by \gls{Tabarnac}.
 

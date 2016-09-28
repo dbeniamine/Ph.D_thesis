@@ -35,8 +35,8 @@ Consequently the main role of caches is to keep data that have already been acce
 
 \subsubsection{Cache lines and alignment}
 
-To benefit even more from temporal locality, the memory is divided on lines (usually \SI{64}{bytes}), and every time an address must be fetched from the main memory, the whole line is copied to the cache.
-Therefore accessing $8$ successive doubles (usually one double equals \SI{8}{bytes}) requires only one memory access if they all are in the same line of cache.
+To benefit even more from temporal locality, the memory is divided on lines (usually \SI{64}{Bytes}), and every time an address must be fetched from the main memory, the whole line is copied to the cache.
+Therefore accessing $8$ successive doubles (usually one double equals \SI{8}{Bytes}) requires only one memory access if they all are in the same line of cache.
 As a result, aligning data structure to cache line can improve the memory access time.
 
 \begin{figure}[htb]
@@ -134,7 +134,7 @@ Therefore conflicts are extremely costly, and must be avoided when possible, or 
 \end{figure}
 
 For instance, we  consider a simple example where two threads are working on a small array of $8$ doubles.
-As a double is usually coded on $8$ bytes, this array is exactly the size of one cache line.
+As a double is usually coded on $8$ Bytes, this array is exactly the size of one cache line.
 Each thread is doing independent computations on a half of the array as illustrated in \fig{false-sharing}.
 The first access will copy the whole array from the memory to all the caches of the thread that triggers it.
 When the second thread reads the array, it will copy it from the lowest shared cache to its private cache.
