@@ -83,7 +83,7 @@ All the files required to reproduce all these experiments are publicly available
 
 \subsection{Global overview of the sharing patterns}
 
-We designed \gls{Tabarnac} to analyze the memory sharing patterns of applications running on \gls{NUMA} machines.
+We designed \gls{Tabarnac} to analyze the memory sharing patterns of applications running on \gls{NUMA} machines.
 This tool relies on an existing, lightweight binary instrumentation, based on the \gls{Intel} \gls{Pin} library, which counts how much each thread of an application accesses each page.
 We added to this library the capacity to retrieve contextual information to associate memory addresses to data structure (static and allocated).
 Moreover we designed several comprehensive visualizations of the collected traces.
@@ -101,7 +101,7 @@ This kernel module intercepts page faults, which are triggered by the hardware a
 As these page faults does not occurs frequently, it also injects periodically false page faults.
 It handles memory traces in the kernel space and flush them to userspace periodically.
 Moreover we incorporated our data structures tracking library in \gls{Moca} without the dependency to \gls{Pin}.
-Additionally we ran an extensive experimental comparison of \gls{Moca} comparing it to \gls{Tabarnac} and two state of the art memory analysis tools.
+Additionally we ran an extensive experimental comparison of \gls{Moca} comparing it to \gls{Tabarnac} and two state of the art memory analysis tools.
 
 This work is the subject of two Inria research reports~\cite{Beniamine15Memory,Beniamine16Moca} and has been submitted at \gls{CCGRID} 2017.
 As the previous tool, \gls{Moca} is distributed under the \gls{GPL} license:\\
@@ -109,7 +109,7 @@ As the previous tool, \gls{Moca} is distributed under the \gls{GPL} license:\\
 
 We proposed two different approaches to visualize \gls{Moca} traces.
 The first one is based on an existing general trace management and analysis framework called \gls{Framesoc}.
-More precisely, it relies on \gls{Ocelotl} a \gls{Framesoc} tool that aggregates similar parts of the trace and present a simplified overview highlighting anomalies.
+More precisely, it relies on \gls{Ocelotl} a \gls{Framesoc} tool that aggregates similar parts of the trace and present a simplified overview highlighting anomalies.
 
 To make the visualization more scalable and use advanced filtering and zooms, we explored several \gls{Moca} traces with a programmatic approach using \gls{R}.
 These analysis are saved and versioned in a labbook publicly available at github: \url{https://github.com/dbeniamine/Moca_visualization}.
