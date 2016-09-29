@@ -29,7 +29,7 @@
             %PUs
             \foreach \pu in {\pmin,...,\pmax}{
                 \pgfmathtruncatemacro{\pstep}{\pu-\pmin}
-                \node[box,fill=ColPU] (PU-\pu)at (0,#3.7*\pstep) {PU\#\pu};
+                \node[box,fill=ColPU] (PU-\pu)at (0,#3.7*\pstep) {Th\#\pu};
             }
             %Core ID
             \node (inv) at ($(PU-\pmin)#3(0,-.3)$) {};
