@@ -1,0 +1,23 @@
+%!TEX encoding=UTF-8 Unicode
+
+Since a few decades, to reduce energy consumption, processor vendors builds more and more parallel computers.
+At the same time, the gap between processors and memory frequency increased significantly.
+To mitigate this gap, processors embed a complex hierarchical caches architecture
+Writing efficient code for such computers is a complex task.
+Therefore, performance analysis has became an important step of the development of applications seeking for performances.
+
+Most existing performance analysis tools focuses on the point of view of the processor.
+Theses tools see the main memory as a monolithic entity and thus are not able to understand how it is accessed.
+However, memory is a common bottleneck in High Performances Computing, and the pattern of memory accesses can impact significantly the performances.
+There are a few tools to analyze memory performances, however theses tools are based on a coarse grain sampling.
+Consequently, they focus on a small part of the execution missing the global memory behavior.
+Furthermore, these coarse grain sampling are not able to collect memory accesses patterns.
+
+In this thesis we propose two different tools to analyze the memory behavior of an application.
+The first tool is designed specifically for Not Uniform Memory Accesses machines and provides some visualizations of the global sharing pattern inside each data structure between the threads.
+The second one collects fine grain memory traces with temporal information.
+We can visualize theses traces either with a generic trace management framework or with a programmatic exploration using R.
+Furthermore we evaluate both of these tools, comparing them with state of the art memory analysis tools in terms of performances, precision and completeness.
+
+
+% vim: et si sta lbr  sw=4 ts=4 spelllang=en_us

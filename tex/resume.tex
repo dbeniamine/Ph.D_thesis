@@ -1,0 +1,23 @@
+%!TEX encoding=UTF-8 Unicode
+
+Depuis plusieurs décennies, afin de réduire la consommation énergétique des processeurs, les constructeurs fabriquent des ordinateurs de plus en plus parallèles.
+Dans le même temps, l'écart de fréquence entre les processeurs et la mémoire a significativement augmenté.
+Pour compenser cet écart, les processeurs modernes embarquent une hiérarchie de caches complexe.
+Développer un programme efficace sur de telles machines est une t\^ache complexe.
+Par conséquent, l'analyse de performance est devenue une étape majeure lors du développement d'applications requérant des performances.
+
+La plupart des outils d'analyse de performances se concentrent sur le point de vue du processeur.
+Ces outils voient la mémoire comme une entité monolithique et sont donc incapable de comprendre comment elle est accédée.
+Cependant, la mémoire est une ressource critique et les schémas d'accès à cette dernière peuvent impacter les performances de manière significative.
+Quelques outils permettant l'analyse de performances mémoire existent, cependant ils sont basé sur un échantillon age à large grain.
+Par conséquent, ces outils se concentrent sur une petite partie de l’Exécution et manquent le comportement global de l'application.
+De plus, le sampling a large granularité ne permet pas de collecter des schémas d'accès.
+
+Dans cette thèse, nous proposons deux outils différences pour analyser le comportement mémoire d'une application.
+Le premier outil est conçu spécifiquement pour pour les machines NUMA (Not Uniform Memory Accesses) et fournit plusieurs visualisations  du schéma global de partage de chaque structure de données entre les flux d’Exécution
+Le deuxième outil collecte des traces mémoires a grain fin avec information temporelles.
+Nous proposons de visualiser ces traces soit à l'aide d'un outil générique de gestion de traces soit en utilisant une approche programmatique basé sur R.
+De plus nous évaluons ces deux outils en les comparant a des outils existant de trace mémoire en terme de performances, précision et de complétude.
+
+% vim: et si sta lbr  sw=4 ts=4 spelllang=fr
+
