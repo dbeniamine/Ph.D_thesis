@@ -20,11 +20,11 @@
 \definecolor{ColV}{HTML}{FC8D59}
 \definecolor{ColH}{HTML}{D7301F}
 
-%Palette 4-class paired
-\definecolor{Col0}{HTML}{A6CEE3}
-\definecolor{Col1}{HTML}{1F78B4}
-\definecolor{Col2}{HTML}{B2DF8A}
-\definecolor{Col3}{HTML}{33A02C}
+%Palette 4-class RdYlBu
+\definecolor{Col0}{HTML}{E66101}
+\definecolor{Col1}{HTML}{FDB863}
+\definecolor{Col2}{HTML}{B2ABD2}
+\definecolor{Col3}{HTML}{5E3C99}
 
 
 \pgfdeclarelayer{background}
@@ -40,10 +40,10 @@
 \newcommand{\colj}[1]{\textcolor{ColJ}{#1}}
 \newcommand{\colk}[1]{\textcolor{ColK}{#1}}
 
-\newcommand{\Ta}{\textcolor{Col0}{Thread~1}\xspace}
-\newcommand{\Tb}{\textcolor{Col1}{Thread~2}\xspace}
-\newcommand{\Tc}{\textcolor{Col2}{Thread~3}\xspace}
-\newcommand{\Td}{\textcolor{Col3}{Thread~4}\xspace}
+\newcommand{\Ta}{\textbf{\textcolor{Col0}{Thread~1}\xspace}}
+\newcommand{\Tb}{\textbf{\textcolor{Col1}{Thread~2}\xspace}}
+\newcommand{\Tc}{\textbf{\textcolor{Col2}{Thread~3}\xspace}}
+\newcommand{\Td}{\textbf{\textcolor{Col3}{Thread~4}\xspace}}
 
 \tikzset{
     algorithm/.style={
@@ -108,8 +108,8 @@
         \node at ($(mA-east)!0.5!(mA-west)+(0,1)$) {\Ta and \Tb};
         \node at ($(mA-east)!0.5!(mA-west)+(0,-1)$) {\Tc and \Td};
  
-        \node[text centered,text width=5em] at ($(mB-north)!0.5!(mB-south)+(-1,0)$) {\Ta and \Tc};
-        \node[text centered,text width=5em] at ($(mB-north)!0.5!(mB-south)+(1,0)$) {\Tb and \Td};
+        \node[text centered] at ($(mB-north)!0.5!(mB-south)+(-1,0)$) {\Ta\newline and \Tc};
+        \node[text centered] at ($(mB-north)!0.5!(mB-south)+(1,0)$) {\Tb\newline and \Td};
 
         \node[text centered] at ($(mC-east)!0.5!(mC-west)+(-1,1)$)  {\Ta};
         \node[text centered] at ($(mC-east)!0.5!(mC-west)+(1,1)$)   {\Tb};

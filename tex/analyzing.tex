@@ -4,12 +4,12 @@
 
 \gls{Tabarnac} traces contain two parts: informations about the data structures and the actual trace.
 For small applications with a limited number of data structures, it is relatively easy to present the first kind of information.
-The actual trace is spread over three dimensions: threads, pages and type of accesses, however, this last one can only take two values (read or write).
+The actual trace is spread over four dimensions: data structures, threads, pages and type of accesses, however, this last one can only take two values (read or write).
 Finding a meaningful and comprehensive representation for such data is slightly more complex but it is still doable.
-\gls{Moca} traces are way more generic.
+\gls{Moca} traces are way more detailed.
 Indeed, they contain the same meta data and the actual trace also provides information about time and \gls{CPU} location.
 Therefore, these traces are spread over five dimensions: time, addresses, type of access, thread and \gls{CPU} location.
-Furthermore some of these dimensions can be seen from several point of view, for instance we can look either at the physical or virtual address space.
+Furthermore some of these dimensions can be seen from several point of view, for instance we can look either at the virtual address space or physical.
 As we are not used to visualize things in more than three dimensions, to analyze these traces, we must provide the user with a way to navigate through different representations.
 Additionally, we need to help the user identify and focus on the important parts.
 
@@ -32,14 +32,14 @@ Finally we present some perspective of improvement of these analysis and our con
 \label{sec:visu-first}
 
 As \gls{Moca} traces are spread over five dimensions and as the address space of an application can be quite large, we need a way to navigate easily in the trace and highlight interesting parts.
-Consequently, we are looking for a tool that is able to run high level analysis with for instance the ability to spot anomalies.
-While several generic trace manager tools such as \gls{HPCToolkit}~\cite{Adhianto10HPCTOOLKIT} are able to import generic traces, we decided to use \gls{Framesoc}~\cite{Pagano14frameSoC}.
+Consequently, we are looking for a high level tool that is able to highlight potentially interesting parts of the trace.
+While several trace manager tools such as \gls{HPCToolkit}~\cite{Adhianto10HPCTOOLKIT} are able to import generic traces, we decided to use \gls{Framesoc}~\cite{Pagano14frameSoC}.
 This decision was mainly motivated by one of \gls{Framesoc} visualization tool, \gls{Ocelotl}~\cite{Dosimont14Ocelotl} that is designed specifically to aggregate similar parts of a trace and identify anomalies.
 
 \subsection{FrameSoc and Ocelotl}
 
-\gls{Framesoc} is a generic trace management infrastructure, it provides importers to read traces from many different format.
-From its point of view a trace consists on five sets:
+\gls{Framesoc} is a generic trace management infrastructure, it provides importers to read traces from many different formats.
+From its point of view a trace consists in five sets:
 \begin{enumerate}
     \item Some meta data about the trace, such as the name of the trace, the application traced, the number of \glspl{CPU} used, the \gls{OS} and so on\ldots
     \item A set of \emph{Event Producers}: which are entities able to produce some \emph{Events}.
@@ -82,37 +82,39 @@ The usual workflow with \gls{Ocelotl} is starting with a high $p$, where the tra
 
 \fig{ocelotl-overview} is a screenshot of \gls{Ocelotl}, showing on the main pane an overview of an example trace, aggregated over time and space (memory addresses).
 The X-axis represents time and the Y-axis represent the memory space, we can see on the left that the Y-axis is organized hierarchically.
-This hierarchy is used to reduce the number of possible aggregations, indeed, for one level of the hierarchy, \gls{Ocelotl} can only merges two event producers if they have the same parent.
-Without any a priory knowledge of the trace application, we can distinguish three phases on this visualization: a short initialization (blue column at the beginning), the main execution with some pattern change around the two third of the execution.
-The top right pane shows a summary of the trace aggregate only over the time.
+Indeed, the blocks on the left of the main page represents a tree where the root represent the whole memory and which is then divided in data structures and continuous allocations.
+Each of these entities are divided recursively until we reach the page level.
+This hierarchy is used to reduce the number of possible aggregations, indeed, \gls{Ocelotl} can only merges complete nodes of the tree.
+Without any a priori knowledge about the trace application, we can distinguish three phases on this visualization: a short initialization (blue column at the beginning), the main execution with some pattern change around the middle of the execution (dark block in the middle) followed by a pattern change at the two third of the execution.
+The top right pane shows a summary of the trace, aggregated only over the time.
 On this summary, the initialization is a bit less visible.
-Finally the bottom right pane shows a comprehensive visualization of the information versus complexity gain depending on the value of $p$.
-The red curves show the information gain and the green one the complexity gain.
+Finally, the bottom right pane shows a comprehensive visualization of the tradeoff between information and complexity depending on the value of $p$.
+The red (dark) curve shows the information gain and the green (light) one the complexity gain.
 The current value of $p$ is showed by a blue vertical line, and displayed in a text block under the curve.
 We can set the $p$ parameter either by clicking the curve or by entering the requested value inside the text block.
-At this point the user could zoom in a subpart of the trace by selecting it, or change the parameter $p$ to disaggregate the visualization.
+At this point, the user could zoom in a subpart of the trace by selecting it, or change the parameter $p$ to disaggregate the visualization.
 
 \subsection{Trace Description}
 
-As explained earlier, \gls{Moca} traces are spread on five dimensions while \gls{Framesoc} is designed for two dimensional traces (time and event producers).
-Nevertheless we can use the \emph{event types} of \gls{Framesoc} to represent some of the missing dimensions.
-To provide different visualization of the same trace, our importer produces four different \gls{Framesoc} traces with different event types.
+As explained earlier, \gls{Moca} traces are spread over five dimensions while \gls{Framesoc} is designed for two dimensional traces (time and event producers).
+Nevertheless, we can use the \emph{event types} of \gls{Framesoc} to represent some of the missing dimensions.
+To provide different visualizations of the same trace, our importer produces four different \gls{Framesoc} traces with different event types.
 For all the traces, the event producers represent the memory addresses, but the two first are based on virtual addresses while the two others physical addresses.
 
 The more event producer there are, the more partitions \gls{Ocelotl} must consider to compute the aggregation.
-Yet, \gls{Ocelotl} uses the structure of the event producer hierarchy to reduce the number of allowed partitions, indeed it can only merge event producers that have the same parent.
+Yet, \gls{Ocelotl} uses the structure of the event producers hierarchy to reduce the number of allowed partitions, indeed it can only merge event producers that have the same parent (and all of them or none).
 Consequently we can counterbalance the huge number of event producers by creating an artificial hierarchy in the memory.
-We can build a meaningful hierarchy that also adds some semantic to the trace: to do so we create a virtual \emph{Memory Root} event producer that is the parent of all the event producers.
+Still, we can build a meaningful hierarchy that also adds some semantic to the trace: to do so we create a virtual \emph{Memory Root} event producer that is the parent of all the event producers.
 Then, the second level of event producers is composed of the stacks and data structures.
 All the addresses that are not in these set, are merged if they are contiguous, creating chunks of continuous addresses which are also second level event producers.
-Then, each subsequent level is obtained by splitting the previous one on two or three parts, until we reach at the page level.
+Then, each subsequent level is obtained by splitting the previous one in two or three parts, until we reach the page level.
 The pages are the leaves of this artificial memory hierarchy.
 We could divide the pages in cache lines and keep going until the address granularity, but this would generate way more event producer that what \gls{Ocelotl} is able to handle.
 
 For both physical and virtual addressing, our importer creates two different traces.
-In the first type of trace, the events and spread on four event types: \texttt{private\_read}, \texttt{private\_write}, \texttt{shared\_read}, \texttt{shared\_write}.
+In the first type of trace, the events are spread on four event types: \texttt{private\_read}, \texttt{private\_write}, \texttt{shared\_read}, \texttt{shared\_write}.
 For the second trace, the event type represent the  thread responsible of the access.
-As a result we have for both physical and virtual addresses, we have two views one representing the usage of the memory by the threads and one global view presenting the sharing patterns and memory access type.
+As a result, for both physical and virtual addresses, we have two views, one representing the detailed usage of the memory by the threads and one global view presenting the sharing patterns and memory access types.
 
 Each access is represented by a variable, whose value is the number of threads involved in the access.
 Finally, the \gls{CPU} on which the access occurred is stored as an event parameter.
@@ -122,16 +124,16 @@ Finally, the \gls{CPU} on which the access occurred is stored as an event parame
 \begin{figure}[htb]
     \centering
     \input{tikz/sharing-detection}
-    \caption{Sharing detection on Moca traces.}
+    \caption{Sharing detection in Moca traces.}
     \label{fig:sharing-detection}
 \end{figure}
 
-\gls{Moca} does not compute sharing only but the traces contains enough information to detect shared accesses.
-Indeed in \gls{Moca} traces each access is timestamped with the begin and end of the chunk to which it belongs, which means that an access can be seen as a time interval during which a thread is using a memory page.
+\gls{Moca} does not compute sharing directly but the traces contains enough information to detect shared accesses.
+Indeed, in \gls{Moca} traces, each access is timestamped with the begin and end of the chunk to which it belongs, which means that an access can be seen as a time interval during which a thread is using a memory page.
 We do the sharing detection at the page level as \gls{Moca} traces are complete at the page granularity.
-Consequently, we consider that a sharing occurs when two threads accesses the same page during and intersecting time interval.
+Consequently, we consider that a sharing occurs when two threads access the same page during and intersecting time interval.
 To compute this sharing, we retrieve the list of accesses for each page.
-Then we transform the cut the time interval each time a thread start or stop using a page and mark each access with the number of threads involved in the sharing.
+Then we cut the global time interval each time a thread start or stop using a page and mark each access with the number of threads involved in the sharing.
 \fig{sharing-detection} shows this transformation.
 
 \subsection{Example}
@@ -154,13 +156,12 @@ Furthermore, we split the work by cutting the result matrix in four parts, resul
     \label{fig:ocelotl-th0}
 \end{figure}
 
-\fig{ocelotl-th0} is a screenshot of \gls{Ocelotl} by thread visualization of \gls{Moca}.
+\fig{ocelotl-th0} is a screenshot of \gls{Ocelotl} visualization by thread of a \gls{Moca} trace.
 We can see the hierarchy on the Y-axis, starting with the memory root, then three data structures.
 The X-axis represent temporal evolution.
-%For more readability of the trace, we have set one color per thread independently from the type of access, thread zero is blue, one is green, two read, three orange and four violet.
 
-From this view, we see clearly that blue accesses occurs only during the initialization phase except for a small data structure on the bottom of the figure.
-Therefore we can see that the thread~$0$ is the master thread doing the initialization.
+From this view, we see clearly that  blue accesses occurs only during the initialization phase (vertical light line at the beginning) except for a small data structure on the bottom of the figure (thin dark line).
+Blue is the color of threads~$0$, therefore we can see that this is the master thread doing the initialization.
 Moreover, the master thread also access to some private data (the small structures in the bottom).
 Among these data, we can find a pid array used to wait the end of the slave threads.
 We can confirm that by filtering the accesses to show only the accesses done by thread~$0$.
@@ -168,10 +169,13 @@ Or by zooming on the initialization phase.
 
 During the rest of the execution, two data structures are accessed diagonally over the time, which means linearly.
 Furthermore, the colors confirms that two threads are sharing each series of accesses.
-The data structure in the middle is intensively accessed by every threads, as a result all the accesses are aggregated.
+The data structure in the middle is intensively accessed by all the threads.
+As these accesses are regular, all the accesses are aggregated.
 
-It seems that, at the two third of the execution, we can see a change of colors in the middle data structure.
-Additionally, it seems that at the same time the violet thread has completed his work and does not access the memory anymore.
+At the two third of the execution, we can see a change of colors in the middle data structure.
+Additionally, it seems that at the same time the violet (dark) thread has completed his work and does not access the memory anymore.
+Moreover, just before this threads finished its accesses, the middle structures tuns violet (dark) for a small time lapse which means that this thread is responsible for most of theses access at that time.
+This could be an effect of Linux scheduler that privileged temporarily this thread.
 
 \begin{figure}[htb]
     \centering
@@ -195,16 +199,16 @@ Finally, we see that as soon as the thread~$0$ has finished to initialize the da
     \label{fig:ocelotl-carto0}
 \end{figure}
 
-In the previous view there were four access type per threads (private / shared, reads / writes) which means $20$ different access types.
-To make the trace more readable, we had to reduce the number of colors and stop distinguishing private access from shared and reads from writes.
-The global view that is designed to highlight sharing only provides for event types independently from the number of threads.
+In the previous view there was one access type per thread.
+The global view, designed to highlight sharing only, provides four event types independently from the number of threads.
 Therefore, it is easier to identify sharing patterns with this view.
 \fig{ocelotl-carto0} shows this visualization of our example traces.
-We can see that the trace looks like the previous one except that the order of the data structures is different.
+We can see that the trace looks like the previous one except that the order of the data structures is different, which is due to an artifact of the importer.
 Blue accesses are privates and reds are shared.
 Dark colors are for writes while light ones means reads.
 From this view, we can see that most accesses seems to be reads and except for the matrix B (on the bottom) they are all private.
-Still the visualization is aggregated, at this point it is interesting to zoom in the middle of the execution and desegregate the trace as much as possible.
+Afterwards, the visualization is aggregated.
+At this point it is interesting to zoom in the middle of the execution and disagregate the trace as much as possible.
 
 \begin{figure}[htb]
     \centering
@@ -214,32 +218,35 @@ Still the visualization is aggregated, at this point it is interesting to zoom i
 \end{figure}
 
 By focusing on the middle of the execution and setting $p$ to zero, we obtain the \fig{ocelotl-Carto-zoom}.
-It is important to note that the trace is still aggregate due to the microscopic model of the trace.
+It is important to note that the trace is still aggregated due to the microscopic model of the trace.
 This aggregation explains the fact that we still see small, regular, blocks of accesses.
 We cannot identify a clear pattern on the bottom matrix, however, we can see a few private (blue) accesses appearing from time to time in this data structure.
 The access on this matrix seem dense and not designed to fit in a cache.
 This density of accesses is coherent with the behavior expected.
-Indeed the matrix by is accessed column first by all the threads.
-Due to the representation of 2D matrices in \texttt{C}, each access of each thread on B is separated from $sz$ doubles.
-Hence \gls{Ocelotl} groups almost everything in a huge chunks of access on all the matrices.
-We can also see in this figure that shared (orange) accesses appears regularly on the two other data structures which is also coherent with the expected behavior.
+Indeed the matrix B is accessed column first by all the threads.
+Due to the representation of 2D matrices in \texttt{C}, each access made by each thread is separated by $sz$ doubles from the next one.
+Hence \gls{Ocelotl} groups almost everything in huge chunks of accesses on all the matrix.
+We can also see in this figure that shared (orange) accesses appears regularly on the two other data structures (matrix A and C) which is also coherent with the expected behavior.
 
 \subsection{Discussion}
 
-In summary, \gls{Ocelotl} enabled visualizing \gls{Moca} traces and helped identifying inefficient patterns on a test application.
+\gls{Ocelotl} enabled visualizing \gls{Moca} traces and helped identifying inefficient patterns on a test application.
+We used visualized \gls{Moca} traces from two different point of view, the first one show the memory accesses by threads and helps understanding the division of the work.
+The second shows the access types independently from the threads it helps understanding how the memory is globally used.
+
 However even for this extremely simple benchmark we started to see some scalability issues.
 The first limit comes from the fact that \gls{Framesoc} is designed for a small number of event producers.
-Indeed \gls{Framesoc} event producers usually represents threads, \glspl{CPU} or nodes of a distributed system with at best a few thousands of them.
+Indeed \gls{Framesoc} event producers usually represents threads, \glspl{CPU} or nodes of a distributed system with at worst a few thousands of them.
 At the opposite, our small example we already had $20000$ event producers for only \SI{78}{Mb} of memory usage, a trace using \SI{1}{Gb} would require more than $250000$ event producers.
-We can mitigate the impact of the number of event producers on \gls{Ocelotl} by organizing them in an artificial hierarchy but this only reduces the computation time of \gls{Ocelotl}.
-Filtrating the trace based on the event producers is extremely slow with such traces in \gls{Framesoc}.
-The second issue comes comes the fact that we had to create several \gls{Framesoc} traces to represent all the information contained in \gls{Moca} traces.
-As a result, changing analysis point of view means changing the trace, hence loosing all filtration already done and all caches that speeds \gls{Ocelotl} up.
+We can mitigate the impact of the number of event producers on \gls{Ocelotl} by organizing them in an artificial hierarchy but this only reduces the computation time of \gls{Ocelotl} and makes the visualization even more aggregated.
+Filtering the trace based on the event producers is extremely slow with such traces in \gls{Framesoc}.
+This issue also impact other \gls{Framesoc} tools, and makes it almost impossible to analyze \gls{Moca} traces on tools which rely on filtering.
+The second issue comes from the fact that we had to create several \gls{Framesoc} traces to represent all the information contained in \gls{Moca} traces.
+As a result, changing analysis point of view means changing the trace, hence loosing all filtering already computed and all caches that speeds \gls{Ocelotl} up.
 Therefore it is a process extremely slow that breaks the analysis workflow.
-While it would have been technically possible to merge the by thread view and the sharing view by creating complex event types holding information about access type, sharing and the thread responsible for it, this would result on a huge amount of event types.
-Such a trace would results in two issues: first the microscopic description of the trace would be more complex which might \gls{Ocelotl} down,\DB{je suis pas sûr là \ldots}
-and second it would make filtering by type extremely painful.
-Indeed there is no way to do filtering using regular expression or any programmatic way in \gls{Framesoc}, thus, on a huge trace the user would have to do tens or hundreds or clics and might do some errors to switch from point of view.
+While it would have been technically possible to merge the threads view and the sharing view by creating complex event types holding information about access type, sharing and the thread responsible for it, this would result on a huge amount of event types.
+Such a trace would results in two issues: first the microscopic description of the trace would be more complex which might slow \gls{Ocelotl} down, and second it would make filtering by type extremely complicated.
+Indeed there is no way to do filtering using regular expression or any programmatic way in \gls{Framesoc}, thus, on a huge trace the user would have to do tens or hundreds of clicks and might do some errors to switch from point of view.
 Finally, with these traces it is not possible to have information about the data structure (their size and number of acesses), to do so we would have to create yet another trace during the importation.
 
 To conclude, visualizing our traces with \gls{Ocelotl} proved that memory traces are helpful to identify performance issues.
@@ -258,35 +265,33 @@ As a result, projecting such traces on two dimension is complex and different pr
 Hence, a more programmatic approach may enable the analyst to work closer to the data and ease this point of view switch.
 
 In \gls{R}, data are usually stored in huge dataframes, each row of a dataframe represent one observation and each column represent one dimension of this observation.
-Consequently, in \gls{R}, changing the analysis point of view for a set of data only means looking at another column of the dataframe which is trivial.
-While this representation has a significant memory footprint, \gls{R} is designed and optimized to do such analysis and to correlated different dimensions of a set of observation.
+Consequently, in \gls{R}, changing the analysis point of view for a set of data only means looking at another column of the dataframe which is made simple by its formalism.
+While this representation has a significant memory footprint, \gls{R} is designed and optimized to do such analysis and to correlate different dimensions of a set of observations.
 For these reason, we analyzed several traces with \gls{R}.
-For more reproducibility, we store the evolution of our work in an \gls{Org-mode} labbook, as described in~\cite[Chapter~4, p~54]{Stanisic15Reproducible}, and available online at:\\
+For more reproducibility, we have stored the evolution of our work in an \gls{Org-mode} labbook, as described in~\cite[Chapter~4, p~54]{Stanisic15Reproducible}, available online at:\\
 \url{https://github.com/dbeniamine/Moca\_visualization}.
 
 While this approach is extremely flexible, it is not user friendly.
 Indeed it requires to know how to write efficient \gls{R} code, how to use \gls{Org-mode} and Emacs and to read the labbook before doing an analysis.
-Anyway, after a few analysis we obtained a basic procedure to analyze traces (parsing, transforming data, showing some generic visualization) from which we can adapt each step to the trace.
-For instance we might want to ignore some parts of the trace very soon to focus on some data structures, or after analyzing one plot we might think of another representation of data that might be meaningful in this case.
+Anyway, after a few analysis we obtained a basic procedure to analyze traces (parsing, transforming data, showing some generic visualization) which we can adapt at each step to actual the trace.
+For instance, we might want to ignore some parts of the trace very soon to focus on some data structures, or after analyzing one plot we might think of another representation of data that might be meaningful in this case.
 
 \subsection{Design}
 
-Our analysis always starts with a classical pipeline that we can easily adapt to the specificities of the analyzed trace:
+Our analysis always starts with a typical pipeline that we can easily adapt to the specificities of the analyzed trace:
 \begin{enumerate}
     \item Parsing: reading \gls{Moca} traces (to which we have applied the sharing detection written for \gls{Framesoc} and depicted in \fig{sharing-detection})
         and storing them in \gls{R} dataframes.
         At the end of this step, we have two dataframes, the main one contains all the accesses, and the other one the list of data structures.
     \item Creating simplified data frames: At this point, the main dataframe contains a set of accesses where shared access appears one time for each thread involved in the sharing as described in \fig{sharing-detection}.
         We can aggregate all theses accesses, reducing the size of the main dataframe.
-    \item Retrieving the mapping between structures and pages: this step is the most costly one, but can be speed it up by several means:
+    \item Retrieving the mapping between structures and pages: this step is the most costly one, but can be speeded up by several means:
         \begin{itemize}
-            \item At the end of the parsing step, we can reduce the interesting address space, usually we take the minimum and maximum addresses that are inside a data structure and filter out all the asses that are not in this interval.
-            \item As there are significantly less data structures than memory addresses, we can do the mapping by applying on the data frame representing the structures, a function that returns a vector with one entry per line of the main data frame.
-                When this function is applied, each data structures adds it names to the addresses that belongs to it.
-                In the end we just have to add this vector as a column of the main data frame.
+            \item At the end of the parsing step, we can reduce the interesting address space, usually we take the minimum and maximum addresses that are inside a data structure and filter out all the accesses that are not in this interval.
+            \item By sorting both dataframes (accesses and data structures) by address, we can retrieve this mapping while going through each data frame only one time.
         \end{itemize}
-    \item First set of predefined plots: Finally we can present some predefined  plots, the three first are inspired from \gls{Tabarnac} ones and show the size of data structures, the number of accesses, and amount of sharing.
-    \item  Filtering: at this step we can easily identify data structures that or rarely used and might not have a significant impact on the application performances, we filter these data structures out to focus on the most important ones.
+    \item First set of predefined plots: we can present, using processed dataframes, some predefined  plots. This first set is inspired from \gls{Tabarnac} plots and show the size of data structures, the number of accesses, and amount of sharing.
+    \item  Filtering: at this step we can easily identify data structures that are rarely used and might not have a significant impact on the application performances, we filter these data structures out to focus on the most important ones.
     \item Second set of predefined plots: for all the data structures that are left we visualize the memory accesses over the time depending on their type.
         For these plot, the color represent either the number of accesses or the number of threads involved in the access.
 \end{enumerate}
@@ -317,11 +322,12 @@ This means that several threads are working on data very close and often do actu
 
 From this visualization we can see that two of the stacks (1252 and 1250) are always used privately.
 Furthermore the data structure malloc\#5 seems to be used mostly privately and only very rarely read in a shared way.
+The name mallo\#N means that it is the $N$th call to malloc intercepted by the library.
 These three structures seems also to be accessed mostly linearly, hence they should not be subject to memory optimization.
 
 \lstinputlisting[caption={R code to focus on interesting data structures.}, label=lst:R-zoom,float=htb]{code/zoom.R}
 
-At this point, it is interesting to focus on these three data structures and ignore the others, we can do this with the simple line of code displayed in \lstr{R-zoom}.
+At this point, it is interesting to ignore these three data structures and focus on the others, we can do this with the simple line of code displayed in \lstr{R-zoom}.
 
 \begin{figure}[htb]
     \centering
@@ -330,17 +336,16 @@ At this point, it is interesting to focus on these three data structures and ign
     \label{fig:dgetrf-share-zoom}
 \end{figure}
 
-We can see in \fig{dgetrf-share-zoom} that the sharing patterns are very similar to the access patterns.
-The three other data structures present different and interesting memory access patterns.
+These three structures present different and interesting memory access patterns that are presented in \fig{dgetrf-share-zoom}.
 First the malloc\#1 structure is very small and accessed intensively in a shared way, during all the execution and always on the same page.
 We can presume that this data structure contains information about the threads status that must be updated quite often, maybe it is used for thread scheduling.
 Second the stack 1256 is only used during the first third of the execution and written only at the beginning and in parallel.
 For a generic data structure, this parallel initialization could probably have been designed to distribute first touch on the \gls{NUMA} nodes of the machine, still on a stack it seems quite unusual.
 Last but not least, a small part of the main stack is accessed in read and write mode and in a shared way during all the execution.
 This pattern means that threads are probably organized in a master / slave way, where the master thread allocates data in its stack (not a dynamic allocation).
-This might be problematic on \gls{NUMA} machines as the stack is statically allocated and thus cannot be allocated explicitly on some node.
-It would be interesting to zoom on the beginning of the execution to check if the initialization of this part of the stack is correctly spread around the thread or not.
-If not, Linux will allocate each page on the memory bank of the master thread independently of the re partition of the data between the threads.
+This might be problematic on \gls{NUMA} machines as the stack is usually used to store private data, thus not trivial to explicitly allocate a part of it on a chosen remote node.
+It seems interesting to zoom on the beginning of the execution to check if the initialization of this part of the stack is correctly spread among the thread or not.
+If not, Linux will allocate each page on the memory bank of the master thread independently of the repartition of the data between the threads.
 
 \begin{figure}[htb]
     \centering
@@ -352,9 +357,10 @@ If not, Linux will allocate each page on the memory bank of the master thread in
 \fig{dgetrf-share-zoom-init} shows the memory accesses occurring inside \texttt{stack:1256} during the first par of the execution.
 The color indicates the number of threads involved in the memory access.
 The first thing we can notice in this figure is that the data structure seems to be read before being written.
-When a page that is not mapped to the memory is read before writing it, \gls{Linux} does not map it but read a page full of zeroes, consequently this behavior should not impact the first touch.
-Then it seems that the first writes are both private and shared.
-As a memory access cannot be both shared an private, that means these accesses occurs in parallel and some parts or accessed by two or three threads at a time while some others stays private.
+When a page that is not mapped to the memory is read before writing it, \gls{Linux} does not map it but reads a page full of zeroes.
+Consequently, this behavior should not impact the first touch.
+Then, it seems that the first writes are both private and shared.
+As a memory access cannot be both shared an private, that means these accesses occurs in parallel and some parts are accessed by two or three threads at a time while some others stays private.
 We can confirm this behavior by zooming even more in the initialization.
 
 \begin{figure}[htb]
@@ -372,14 +378,14 @@ Yet an interesting thing to do would be to compare these traces, with the trace 
 Indeed, there are some performance differences between the two library that are hard to explain with traditional profiling tools as the \gls{MKL} code is proprietary.
 Therefore, memory traces might help understanding the underlying algorithms.
 
-In the end, this approach ease the exploration of \gls{Moca} traces, provided that we know a minimum of \gls{R} code and that we read our labbook.
+In the end, this approach ease the exploration of \gls{Moca} traces, provided that the user know a minimum of \gls{R} code and that read our labbook.
 This is more complicated than using \gls{Framesoc} and \gls{Ocelotl}.
-Additionally, we had some troubles to analyze some traces from Lulesh \gls{OpenMP} and \gls{SOFA}.
-Indeed these applications generates thousands of call to the malloc functions (hundreds of thousands for Lulesh).
+Additionally, we had some troubles to analyze some traces from Lulesh and \gls{SOFA}.
+Indeed these applications generates thousands of call to the malloc functions (hundreds of thousands for Lulesh), probably to create trees.
 Hence, retrieving the mapping page to data structure was extremely slow or nearly impossible without merging some data structures.
-In the end it appears that we need to add a priori knowledge of the developers in the parsing step to filter out uninteresting data.
+In the end it appears that we need to add a priori knowledge of the developers in the parsing step to merge data structures.
 
-\section{Discussions}
+\section{Conclusions}
 \label{sec:visu-cncl}
 
 Visualizing \gls{Moca} traces is a complex task.
@@ -398,6 +404,8 @@ The main drawback of this workaround is that switching traces inside \gls{Frames
 In the end this approach enable the visualization of small traces, yet the cost of changing the perspective is too high and makes the interaction too slow to be usable.
 
 Our second approach to analyze these trace was more programmatic, we used \gls{R} and saved all our attempts in a labbook.
+Using a labbook is particularly appropriate for such workflows as it is designed to reuse easily chunks of code and adapt them.
+Moreover it is also easy with a labbook to link a plot generate with a previous trace and, thus, compare two traces.
 While this is less user friendly, \gls{R} is a powerful tool and it enables more complex visualization.
 Moreover, it is optimized to analyze large data sets spreed over several dimensions and provides powerful selection operators that can be used to do conditional zoom and filtering.
 Using \gls{R}, we have provided several meaningful plots that can be used to start a memory trace analysis
