@@ -18,7 +18,8 @@ Indeed, if we want to build a sequential machine able to process \SI{1}{TByte} o
 % Multi socket
 While these parallel processors are theoretically more powerful than sequential ones, it is way more complex to use them efficiently and it is the responsibility of the developer to do so.
 Moreover since a few years we are reaching yet another physical limitation.
-We are capable of reducing the size of transistors, hence increasing the number of transistors in a chip, but more transistors means more heat, and there is a maximum of heat that an area can produce before physical effects starts to change the expected behavior of the transistor (electrical leakage).
+We are capable of reducing the size of transistors, hence increasing the number of transistors in a chip.
+Still, more transistors means more heat, and there is a maximum of heat that an area can produce before unexpected effects such as leakage occurs.
 As a result, vendors are now building machines with several sockets, each one embedding several cores.
 
 % Gap CPU / memory => caches
@@ -46,7 +47,7 @@ There are many tools designed to analyze the performances of an application~\cit
 These are \gls{CPU} register dedicated to performance analysis which enable efficient collection of performance data.
 
 In this thesis we ran a case study on the performance analysis of a physical simulation framework: \gls{SOFA}.
-To analyze the performances of this application, we used \gls{Likwid}~\cite{Treibig10LIKWID}, a classical performance analysis tool an trace several metrics concerning the memory usage.
+To analyze the performances of this application, we used \gls{Likwid}~\cite{Treibig10LIKWID}, a classical performance analysis tool and traced several metrics concerning the memory usage.
 With this tool we are able to detect memory related performance issues and guess the nature of some of them, but it was impossible to spot their location on the memory and the patterns responsible for the bad performances.
 Indeed, if these counters can be very useful, they consider the memory as a monolithic entity which is not the case on recent architecture.
 Thus, specific tools should be used for analyzing performances in view of memory.
@@ -59,7 +60,7 @@ Additionally, due to the lack of tracing hardware, a memory collection tool migh
 The second challenge is the presentation of the trace.
 Indeed, memory traces are extremely complex as they are spread over five dimensions: time, address space, \gls{CPU} location, threads and access type.
 Furthermore, some of these dimensions are not trivial to represent, for instance the address space can be virtual or physical and the \gls{CPU} location is organized hierarchically.
-In the end, memory analysis tools have to extract pertinent data and present them in an understanble way.
+In the end, memory analysis tools have to extract pertinent data and present them in an understandable way.
 
 % Perfect memory tool
 An ideal memory analysis tool should be able to present the memory access patterns of a program to its developer, including information about data sharing between threads and the location of the access on the machine architecture.
