@@ -24,24 +24,24 @@ As a result, vendors are now building machines with several sockets, each one em
 
 % Gap CPU / memory => caches
 At the same time, processors became significantly faster than memory, thus, \glspl{CPU} embed small caches memory to limit the impact of this gap on performances.
-Theses caches are designed to benefit from two patterns that occurs in most programs: spacial locality: using data close in memory, and temporal locality: using several times the same data in a short time lapse.
-One of the things that makes the caches faster than the main memory is their size, the smaller they are, the faster it is to retrieve a data.
-Therefore \glspl{CPU} embed several level of caches (usually three), the first level is very fast and small few Kilo Bytes and designed for very close accesses (loop on an array), while the  last level is bigger and slower, about \SI{10}{MBytes} and designed for more distant accesses.
-As the \glspl{CPU} embed several cores, theses caches are organized hierarchically, the last level is shared by all cores while the each core has a private access to a first level cache.
+Theses caches are designed to benefit from two patterns that occurs in most programs: spacial and temporal locality, which respectively means using data close in memory and using several times the same data in a short time lapse.
+One of the things that makes the caches faster than the main memory is their size, the smaller they are, the faster it is to access them.
+Therefore \glspl{CPU} embed several level of caches (usually three), the first level is very fast and small few kilo bytes and designed for very close accesses (loop on an array), while the  last level is bigger and slower, about \SI{10}{MBytes} and designed for more distant accesses.
+As the \glspl{CPU} embed several cores, theses caches are organized hierarchically, the last level is shared by all cores while each core has a private access to a level one cache.
 This hierarchy helps isolating private data and benefit from well structured sharing, moreover it reduces the required bandwidth in the caches.
-Furthermore, for similar reasons, computers with several sockets have a \gls{NUMA} which means that each socket has a privileged access to a subpart of the memory.
+For similar reasons, computers with several sockets have a \gls{NUMA} which means that each socket has a privileged access to a subpart of the memory.
 Consequently, the memory access patterns of an application can significantly impact its performances~\cite{Drepper07What}.
-Indeed, four threads working on small and separate piece of data will benefit from their private caches while patterns such as all to all sharing will result in a lot of conflicts.
+Indeed, four threads working on small and separate piece of data will benefit from their private caches while patterns such as all to all sharing will result in a lot of conflicts in the caches.
 Moreover, if some sharing occurs between threads that are close in this hierarchy, the shared caches will contain shared data and one thread will benefit from the accesses of the other.
 At the opposite, if theses threads are far in the hierarchy, the sharing will generate some noise and maybe some contention on the memory bus.
 
 % Need for perf analysis
 In the end, writing an efficient program requires to consider the architecture of the computer that will run it, and the patterns, and their matching, even if the program is sequential.
-Although there are some general rules: privileging sequential accesses, working on small set of data, this task is extremely complex even for \gls{HPC} specialists as every accesses matters.
+Although there are some general rules: privileging sequential accesses, working on small set of data, this task is extremely complex, even for \gls{HPC} specialists, as every accesses matters.
 Thus, performance analysis tools are extremely helpful to understand and optimize the performances of any application.
 
 % Classic tool not good for memory related issue
-The first step to optimize the performance of an application is to find the hotspots, which means the parts of code that are inefficient and understand their nature.
+The first step to optimize the performances of an application is to find the hotspots, which means the parts of code that are inefficient and understand their nature.
 Only at this point it is possible to decide what part of code should be improved and how.
 There are many tools designed to analyze the performances of an application~\cite{Pillet95PARAVER,Browne00Portable,Shende06Tau,Treibig10LIKWID,Adhianto10HPCTOOLKIT} most of them rely on performance counters to collect a trace of the application.
 These are \gls{CPU} register dedicated to performance analysis which enable efficient collection of performance data.
@@ -90,16 +90,15 @@ To do so, we clearly describe our experimental methodology and distribute the fi
 
 We designed \gls{Tabarnac} to analyze the memory sharing patterns of applications running on \gls{NUMA} machines.
 This tool relies on an existing, lightweight binary instrumentation, based on the \gls{Intel} \gls{Pin} library, which counts how much each thread of an application accesses each page.
-We added to this library the capacity to retrieve contextual information to associate memory addresses to data structure (static and allocated).
+We added to this library the capacity to retrieve contextual information to associate memory addresses to data structures (static and allocated).
 Moreover we designed several comprehensive visualizations of the collected traces.
 Using these visualizations we where able to identify some performance issues and improve the performances of a well known benchmark by \SI{20}{\%}.
 
 These results were published in an article at \gls{VPA} 2015 a Super Computing workshop~\cite{Beniamine15TABARNAC}.
-Furthermore \gls{Tabarnac} is distributed as a free software under the \gls{GPL}:\\
-\url{https://github.com/dbeniamine/Tabarnac}.
+Furthermore \gls{Tabarnac} is distributed as a free software under the \gls{GPL}: \url{https://github.com/dbeniamine/Tabarnac}.
 This work is the result of a collaboration with M. Diener and P.O.A Navaux from the informatica team of the \gls{UFRGS}, Porto Alegre, Brazil, financed by CAMPUS France.
 
-\subsection{Fine grain memory trace collection}
+\subsection{Fine grain memory traces collection}
 
 \gls{Moca} is our main contribution.
 This tool relies on a \gls{Linux} kernel module to collect efficiently fine grain memory traces.
@@ -107,33 +106,32 @@ This kernel module intercepts page faults, which are triggered by the hardware a
 As these page faults does not occurs frequently, it also injects periodically false page faults.
 It handles memory traces in the kernel space and flush them to userspace periodically.
 Moreover we incorporated our data structures tracking library in \gls{Moca} without the dependency to \gls{Pin}.
-Additionally we ran an extensive experimental comparison of \gls{Moca} comparing it to \gls{Tabarnac} and two state of the art memory analysis tools.
+Additionally we ran an extensive experimental comparison of \gls{Moca} comparing it to \gls{Tabarnac} and two state of the art memory analysis tools in terms of overhead, trace precision and completeness.
 
 This work is the subject of two Inria research reports~\cite{Beniamine15Memory,Beniamine16Moca} and has been submitted at \gls{CCGRID} 2017.
-As the previous tool, \gls{Moca} is distributed under the \gls{GPL} license:\\
-\url{https://github.com/dbeniamine/Moca}.
+As the previous tool, \gls{Moca} is distributed under the \gls{GPL} license: \url{https://github.com/dbeniamine/Moca}.
 
-\subsection{Fine grain memory trace analysis}
+\subsection{Fine grain memory traces analysis}
 
 We proposed two different approaches to visualize \gls{Moca} traces.
-The first one is based on an existing general trace management and analysis framework called \gls{Framesoc}.
-More precisely, it relies on \gls{Ocelotl} a \gls{Framesoc} tool that aggregates similar parts of the trace and present a simplified overview highlighting anomalies.
+The first one is based on an existing general trace management and analysis framework called \gls{Framesoc}~\cite{Pagano14frameSoC}.
+More precisely, it relies on \gls{Ocelotl}~\cite{Dosimont14Ocelotl} a \gls{Framesoc} tool that aggregates similar parts of the trace and present a simplified overview highlighting anomalies.
 With this tool we were able to identify classical inefficient memory patterns on a test application.
 Nevertheless we encountered several scalability issues due to the generic representation of the trace inside the tool.
 
 To overpass theses scalability issues, we also explored several \gls{Moca} traces with a programmatic approach using \gls{R}.
 This approach enables using advanced filtering and zooms, and to design specific visualization for each traces.
 With this method we were able to explore more complex traces and detect some interesting and unknown memory patterns.
-These analysis are saved and versioned in a labbook publicly available at github:\\
+For reproducibility, these analysis are saved and versioned in a labbook publicly available at github:\\
 \url{https://github.com/dbeniamine/Moca_visualization}.
 
 \section{Thesis organization}
 
 The remaining of this thesis is organized as follow:
 in \chap{perf} we present a case study on the performance analysis of \gls{SOFA}, a physical simulation tool.
-This chapter first introduces \gls{SOFA}, its specificities and previous attempts to optimize it and highlight the need for performances analysis on \gls{SOFA}.
+This chapter first introduces \gls{SOFA}, its specificities and previous attempts to optimize it, and highlight the need for performances analysis on \gls{SOFA}.
 We then discuss the existing generic performance analysis tools and our experimental methodology.
-This case study highlights the need for specific memory performance analysis tools.
+This case study emphasize the need for specific memory performance analysis tools.
 In \chap{mem}, we introduce some specificities of recent memory architectures, usual memory performance issues and workarounds.
 Then we discuss the existing memory performance analysis tools, their limitations and what we would expect from an ideal tool.
 After that we present \gls{Tabarnac}, our first contribution, in \chap{tabarnac}.

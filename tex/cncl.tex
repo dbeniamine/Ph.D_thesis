@@ -3,7 +3,7 @@
 \label{chap:cncl}
 
 In this thesis, we have addressed the issue of memory performance analysis.
-It has been motivated by the fact that, \glspl{CPU} are more and more parallel and their memory and caches are organized hierarchically.
+It has been motivated by the fact that \glspl{CPU} are more and more parallel and their memory and caches are organized hierarchically.
 Therefore, writing efficient code requires to consider this architecture, and is complex even for \gls{HPC} specialists.
 
 In \chap{perf}, we presented a case study on the performance analysis of \gls{SOFA}, a physical simulation tool.
@@ -17,7 +17,7 @@ All the files required to reproduce each step of each experiment presented in th
 Analyzing the memory behavior of an application raises two challenges: the first one is to collect a trace complete and precise enough to contain memory patterns.
 This is challenging as there is no hardware designed specifically for memory analysis comparable to the performance counters for \glspl{CPU} traces.
 The second challenge is to provide a comprehensive visualization of the memory traces which are spread over five dimensions: time, address space, threads, \gls{CPU} location and access types.
-A few tools were designed to analyze performances from the memory point of view, yet they rely on instruction sampling, which is a hardware assisted mechanisms that enable interception of some instruction at a defined frequency.
+A few tools were designed to analyze performances from the memory point of view, yet they rely on instruction sampling, which is a hardware assisted mechanism that enable interception of some instruction at a defined frequency.
 The limit of instruction sampling based tools is that they miss a significant part of the execution and therefore are not able to display memory patterns or to give a global overview of the memory sharing.
 As explained in \chap{mem}, these patterns can have a significant impact on the performances.
 Therefore we consider that the existing memory analysis tools are not sufficient.
@@ -30,20 +30,18 @@ We improved this instrumentation to add contextual information allowing to deter
 Furthermore we designed several comprehensive visualizations to interpret \gls{Tabarnac} traces.
 Finally we evaluated the overhead of \gls{Tabarnac} and used the knowledge acquired thanks to this tools to improve the performances of two benchmarks, resulting on \SI{20}{\%} performance gain on a well studied benchmark.
 This work was published at \gls{VPA} 2015 a Super Computing workshop~\cite{Beniamine15TABARNAC}, and is the result of a collaboration with M. Diener and P.O.A Navaux from the informatica team of the \gls{UFRGS}, Porto Alegre, Brazil.
-Moreover \gls{Tabarnac} is distributed as a free software under the \gls{GPL} license:\\
-\url{https://github.com/dbeniamine/Tabarnac}.
+Moreover \gls{Tabarnac} is distributed as a free software under the \gls{GPL} license: \url{https://github.com/dbeniamine/Tabarnac}.
 This provides sufficient traces to understand and improve the global sharing pattern of an application.
 Nevertheless, more precise traces are required to understand temporal and complex patterns.
 
-Our second tool, \gls{Moca} which is presented in \chap{moca}, is an efficient fine grain memory trace collection system.
+Our second tool, \gls{Moca}, which is presented in \chap{moca}, is an efficient fine grain memory trace collection system.
 This tool relies on a \gls{Linux} kernel module that we implemented.
 It collects memory accesses by intercepting page faults at the operating system level.
 As page fault does not occurs frequently it also injects false page faults frequently to increase the number of intercepted accesses.
 We ran an extensive experimental evaluation of \gls{Moca}, comparing it to two state of the art memory performance analysis tools and \gls{Tabarnac}.
 We compared these tools in terms of overhead, trace precision, and completeness.
 This work is the subject of two Inria research reports~\cite{Beniamine15Memory,Beniamine16Moca} and has been submitted at \gls{CCGRID} 2017.
-As the previous tool, \gls{Moca} is distributed under the \gls{GPL} license:\\
-\url{https://github.com/dbeniamine/Moca}.
+As the previous tool, \gls{Moca} is distributed under the \gls{GPL} license: \url{https://github.com/dbeniamine/Moca}.
 
 As \gls{Moca} traces are more complex than the one from \gls{Tabarnac}, we do not provide visualizations with the collection system.
 Nevertheless, we proposed two different techniques to analyze \gls{Moca} traces, which are presented in \chap{analyzing}.
@@ -61,15 +59,16 @@ Our analysis are stored on a labbook publicly available online for reproducibili
 
 After these analysis, it appears that \gls{Moca} traces are precise enough to identify temporal memory patterns.
 Moreover they are sufficiently small to be analyzed.
-Nevertheless, it seems that the sampling rate of and the granularity \gls{Moca} might be to high to detect clearly very fine grain patterns such as false sharing on a few lines of caches.
+Nevertheless, it seems that the sampling rate and the granularity of \gls{Moca} might be too high to detect clearly very fine grain patterns such as false sharing on a few lines of caches.
+
 
 \section{Perspectives}
 
-Our contextual library used in both \gls{Moca} and \gls{Tabarnac} is extremely useful to understand in which data structure inefficient memory patterns occurred.
+Our contextual library used in both \gls{Moca} and \gls{Tabarnac} is extremely useful to understand which data structure inefficient memory patterns occurred in.
 However, this library could be improved by two means.
 
 The first one would be to take into account the lifetime of data structures.
-Indeed, our library does not handle data structure suppression and reallocations.
+Indeed, our library does not handle data structures suppression and reallocation.
 This could lead to erroneous interpretation in the analysis of complex applications that uses many temporary data structures.
 Adding temporal information in this library is not trivial:
 Indeed, we do not run \gls{Moca} and the library at the same time, to avoid tracing memory accesses done inside the library.
@@ -84,16 +83,17 @@ Another approach could rely on the developer knowledge and provide some callback
 
 While \gls{Moca} traces enables visualization of memory patterns, it sometimes is hard to associate these patterns with some code a posteriori.
 At this point we could use the developers knowledge to annotate their code before tracing it to highlight the data structures and parts of code that seems inefficient to them and guide the analysis.
-However, as we saw \chap{perf}, the developers knowledge can help the analysis but they might miss some hotspots.
+However, as we saw in \chap{perf}, the developers knowledge can help the analysis but they might miss some hotspots.
 Therefore, this knowledge should not be used to filtrate traces during the collection step, but to guide the exploration and interpretation during the analysis step.
 
-\gls{Moca} is not able to detect extremely fine grain pattern such as false sharing on a few lines of caches, but it is capable to identify the pages where such patterns as hotspots.
-Thus, it would be interesting to build and extremely fine grain collection traces that focuses on small part of the execution, identified by a first analysis, to visualize these patterns.
+\gls{Moca} is not able to detect extremely fine grain patterns such as false sharing on a few lines of caches.
+However, the pages where such pattern occurs while appears as hotspots in \gls{Moca} traces.
+Thus, it would be interesting to build an extremely fine grain collection traces that focuses on small parts of the execution, identified by a first analysis, to visualize these patterns.
 
 Finally it would be interesting to use memory traces to understand proprietary code.
-More specifically, it is sometimes hard to understand the performances of some kernels of the \gls{MKL} as it code is kept secret.
-Comparing the memory patterns of the kernels from this library to equivalent free kernels might help understanding the differences of performances and improving those free kernels.
+More specifically, it is sometimes hard to understand the performances of some kernels of the \gls{MKL} as its code is kept secret.
+Comparing the memory patterns of the kernels from this library to equivalent free kernels might help to understand the differences of performances and to improve those free kernels.
 
-A longer term perspective would be to build a tool similar to \gls{Moca} for recent memory oriented co-processors architectures, such as the \gls{Intel} Xeon Phi or for \glspl{GPU}.
+A longer term perspective would be to build a tool similar to \gls{Moca} for recent memory oriented co-processors architectures, such as the \gls{Intel} Xeon Phi, or for \glspl{GPU}.
 This would require to identify a mechanism that can be used to collect memory traces which is far from being trivial as we have far less control on these architectures than on general purpose \glspl{CPU}.
 % vim: et si sta lbr  sw=4 ts=4 spelllang=en_us

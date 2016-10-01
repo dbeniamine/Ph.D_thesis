@@ -3,99 +3,99 @@
 \chapter{Résumé étendu}
 
 % De tout temps les Hommes
-Les scientifiques de toute les disciplines utilisent des ordinateurs pour faciliter leurs calculs et exécuter des simulations afin de tester les hypothèses.
+Les scientifiques de toute les disciplines utilisent des ordinateurs pour faciliter leurs calculs et exécuter des simulations afin de tester leurs hypothèses.
 Plus la science avance, plus ces simulations deviennent complexes, les scientifiques ont donc toujours besoin de plus de capacité de calcul.
 Pour augmenter la capacité de calcul de leurs processeurs, les constructeurs ont dans un premier temps augmenté la fréquence de ces derniers.
 Cependant cette approche a vite été stoppée par plusieurs limites physiques.
-Afin de contourner ces limites, les constructeurs se sont mis à construire des processeurs parallèles.
+Afin de contourner ces limites, les constructeurs se sont mis à concevoir des processeurs parallèles.
 
 % Hard limits
 La première limite provient de l'énergie nécessaire pour augmenter la fréquence d'un processeur.
 En effet, d'après \gls{Intel}, augmenter la fréquence d'un processeur de \SI{20}{\%} n'augmente les performances que d'un facteur $1.13$ mais requière $1.73$ fois plus d'énergie.
 A l'opposé, utiliser un processeur identique mais avec deux cœurs de calculs au lieu d'un en diminuant la fréquence de ce dernier de \SI{20}{\%}, permet d'obtenir $1.73$ fois plus de performances pour uniquement $1.02$ fois plus d'énergie.
 La deuxième limite est la vitesse de la lumière : en effet les données doivent transiter de la mémoire jusqu'au processeur et ne peuvent pas se déplacer plus vite que la lumière.
-Si cette limite peut paraître élevée, nous l'avons déjà atteinte.
+Si cette limite peut paraître élevée, elle a déjà été atteinte.
 En effet si nous voulons construire une machine séquentielle capable de traiter \SI{1}{To} de données par seconde, du fait de cette limite, il faudrait faire tenir \SI{1}{To} dans une aire de \SI{0.3}{mm^2}, ce qui signifie que $1$ bit occupe uniquement \SI{0.1}{nm}, la taille d'un petit atome.
 
 % Multi socket
-Si ces processeurs parallèles sont en théorie plus puissant que les séquentiels, les utiliser efficacement est bien plus complexe et c'est la responsabilisée des développeur.euse.s de le faire.
-De plus, depuis plusieurs années nous sommes face à une autre limite physique.
-Nous somme capable de réduire la taille des transistor, donc d'augmenter le nombre de transistors sur une puce.
-Cependant, plus de transistors signifie plus de chaleur et la quantité de chaleur qu'une puce peut produire avant que des effet indésirés tel que des courants de fuites se produisent.
+Si ces processeurs parallèles sont en théorie plus puissants que les séquentiels, les utiliser efficacement est bien plus complexe et relève de la responsabilité des développeur.euse.s.
+De plus, depuis plusieurs années nous sommes face à une troisième limite physique.
+Nous somme capable de réduire la taille des transistors, donc d'augmenter le nombre de transistors sur une puce.
+Cependant, plus de transistors signifie plus de chaleur et la quantité de chaleur qu'une puce peut produire avant que des effets indésirables tel que des courants de fuites se produisent.
 De ce fait, les constructeurs font désormais des machines avec plusieurs puces (processeurs), chacune étant composée de plusieurs cœurs.
 
 % Gap CPU / memory => caches
-Dans le même temps, les processeurs sont devenus significativement plus rapide que la mémoire, pour palier à cet écart, ils embarquent des petites mémoire cache.
-Ces caches sont conçus pour tirer profit de deux schémas d'accès commun à la plupart des programmes : la localité spatiale et temporelle qui correspond respectivement au fait d'accéder des données proches et d'accéder plusieurs fois aux mêmes données dans un temps restreint.
-Une des choses qui rend ces caches plus rapides que la mémoire est leur taille, plus ils sont petit, plus il est rapide d'y trouver une donnée.
+Dans le même temps, les processeurs sont devenus significativement plus rapides que la mémoire; pour palier à cet écart, ils embarquent des petites mémoires cache.
+Ces caches sont conçus pour tirer profit de deux schémas d'accès communs à la plupart des programmes : la localité spatiale et temporelle qui correspond respectivement au fait d'accéder à des données proches et d'accéder plusieurs fois aux mêmes données dans un temps restreint.
+Une des choses qui rend ces caches plus rapides que la mémoire est leur taille, plus ils sont petits, plus il est rapide d'y trouver une donnée.
 C'est pourquoi les processeurs embarquent plusieurs niveaux de cache (en général trois).
-Le premier est très petit et rapide, quelques kilo octets et conçus pour des accès très proches (boucles sur un tableau), le dernier plus grand et lent, environ \SI{10}{Mo}, et conçus pour des accès plus écartés.
-Comme les processeurs sont multi-cœurs , ce caches sont organisé hiérarchiquement, le dernier niveau est partagé par tous les cœurs, et chaque cœur a accès à un cache de niveau un privé.
-Cette hiérarchie permet d'isoler les données privées et de tirer profit des partages correctement structurés, de plus cela réduit la bande passant nécessaire entre les caches.
-Pour des raisons similaires, les ordinateurs comportant plusieurs processeurs ont une organisation mémoire non uniforme (NUMA) ce qui signifie que chaque puce a un accès privilégié à une sous partie de la mémoire.
-Par conséquent, le schémas des accès mémoire d'une application peut avoir un impact significatif sur ses performances.
+Le premier est très petit et rapide, quelques kilo octets, et conçu pour des accès très proches (boucles sur un tableau), le dernier plus grand et lent, environ \SI{10}{Mo}, et conçu pour des accès plus espacés.
+Comme les processeurs sont multi-cœurs, ces caches sont organisés hiérarchiquement, le dernier niveau est partagé par tous les cœurs, et chaque cœur a accès à un cache de niveau $1$ privé.
+Cette hiérarchie permet d'isoler les données privées et de tirer profit des partages correctement structurés; de plus cela réduit la bande passante nécessaire entre les caches.
+Pour des raisons similaires, les ordinateurs comportant plusieurs processeurs ont une organisation mémoire non uniforme (NUMA) ce qui signifie que chaque puce a un accès privilégié à une sous-partie de la mémoire.
+Par conséquent, les schémas d'accès à la mémoire d'une application peuvent avoir un impact significatif sur ses performances.
 
 % Need for perf analysis
-Au final, écrire un programme efficience nécessite de prendre l'architecture de la machine qui va l'exécuter, les schémas d'accès et leur  adéquation, même si le programme est séquentiel.
-Bien qu'il y ait des règles générales : privilégier les accès séquentiels, travailler sur des petits ensemble de données, cette t\^ache est extrêmement complexe même pour des spécialistes de calcul haute performance (HPC).
+En fin de compte, écrire un programme efficace nécessite de prendre en compte l'architecture de la machine qui va l'exécuter, les schémas d'accès et leur  adéquation, même si le programme est séquentiel.
+Bien qu'il y ait des règles générales : privilégier les accès séquentiels, travailler sur des petits ensembles de données, cette t\^ache est extrêmement complexe même pour des spécialistes de calcul haute performance (HPC).
 Les outils d'analyse de performances sont donc extrêmement utiles pour comprendre et optimiser les performances d'une application.
 
 % Classic tool not good for memory related issue
-La première étape lors de l'optimisation de performances d'une application consiste à identifier les points chauds, c'est à dire les parties du code qui sont inefficaces et comprendre la nature des erreurs qui entrainent cette inefficacité.
+La première étape lors de l'optimisation des performances d'une application consiste à identifier les points chauds, c'est à dire les parties du code qui sont inefficaces et comprendre la nature des erreurs qui entrainent cette inefficacité.
 C'est uniquement après cette étape qu'il est possible de décider quelle partie du code peut être améliorée et comment.
 Il existe de nombreux outils conçus pour analyser les performances d'une application~\cite{Pillet95PARAVER,Browne00Portable,Shende06Tau,Treibig10LIKWID,Adhianto10HPCTOOLKIT}, la plupart d'entre eux utilisent les compteurs de performances pour collecter la trace d'une application.
 Ces compteurs sont des registres processeurs dédiées à l'analyse de performances qui permettent la collecte efficace de données concernant les performances.
 
 Dans cette thèse nous avons mené une étude de cas sur l'analyse de performance d'un outil de simulation physique: \gls{SOFA}.
 Afin d'analyser les performances de cette application, nous avons utilisé \gls{Likwid}~\cite{Treibig10LIKWID}, un outil classique d'analyse de performances, et nous avons tracé plusieurs métriques concernant l'utilisation de la mémoire.
-Avec cet outil nous avons été capable de détecter  des problèmes de performances liés à la mémoire, mais il était impossible de trouver leur position dans la mémoire et le schémas responsable des mauvaises performances.
-En effet, si ces compteurs peuvent s'avérer très utiles, ils voient la mémoire comme une entité monolithique ce qui n'est pas le case pour les architecture récentes.
-Par conséquent, des outils spécifiques doivent être utiliser pour analyser les performances du point de vue de la mémoire.
+Avec cet outil nous avons été capable de détecter  des problèmes de performances liés à la mémoire, mais il était impossible de trouver leur position dans la mémoire et les schémas responsable des mauvaises performances.
+En effet, si ces compteurs peuvent s'avérer très utiles, ils voient la mémoire comme une entité monolithique ce qui n'est pas le cas pour les architecture récentes.
+Par conséquent, des outils spécifiques doivent être utilisés pour analyser les performances du point de vue de la mémoire.
 
 % Memory analysis is complex
-Analyser les performances d'une application au regard de la mémoire soulève deux défis techniques: le premier est la collecte de la trace elle même.
-C'est une t\^ache compliqué car il n'existe pas de matériel comparable aux compteurs de performances pour tracer les accès mémoire.
-De plus, chaque instruction d'un programme déclenche au moins un accès mémoire, collecter chaque accès mémoire d'une application n'est donc pas possible.
-Par ailleurs, l'absence de matériel pour tracer les accès mémoire implique d'un outil de collection peut facilement devenir envahissant et modifier  significativement le comportement de l'application analysée.
+Analyser les performances d'une application au regard de la mémoire soulève deux défis techniques: le premier est la collecte de la trace elle-même.
+C'est une t\^ache compliquée car il n'existe pas de matériel comparable aux compteurs de performances pour tracer les accès mémoire.
+De plus, chaque instruction d'un programme déclenche au moins un accès mémoire: collecter chaque accès mémoire d'une application n'est donc pas possible.
+Par ailleurs, l'absence de matériel pour tracer les accès mémoire implique qu'un outil de collection peut facilement devenir envahissant et modifier  significativement le comportement de l'application analysée.
 Le deuxième défi technique consiste à présenter la trace de manière simple et compréhensible.
-En effet, les traces mémoire sont extrêmement complexe puisqu'elles sont étalées sur cinq dimensions : le temps, l'espace d'adressage, la localité processeur, les flux d'exécution et le type d'accès.
-De plus, certaines de ces dimensions ne sont pas triviales à représenter, par exemple l'espace d'adressage peut être physique ou virtuel, et la localité processeur est organisé de manière hiérarchique.
-Au final, les outils d'analyse mémoire doivent extraire les données pertinentes et les présenter de manière compréhensible.
+En effet, les traces mémoire sont extrêmement complexes puisqu'elles sont étalées sur cinq dimensions : le temps, l'espace d'adressage, la localité processeur, les flux d'exécution et le type d'accès.
+De plus, certaines de ces dimensions ne sont pas triviales à représenter, par exemple l'espace d'adressage peut être physique ou virtuel, et la localité processeur est organisée de manière hiérarchique.
+Finalement, les outils d'analyse mémoire doivent extraire les données pertinentes et les présenter de manière compréhensible.
 
 % Perfect memory tool
-Un outil idéal d'analyse mémoire devrait être capable de présenter les schémas d'accès mémoire d'un programme à ses développeur.euse.s, incluant des informations concernant le partage de données entre flux d'exécution et la localisation des accès  sur l'architecture de la machine.
-De plus, un tel outil devrait mettre en valeur les schémas inefficaces.
+Un outil idéal d'analyse mémoire devrait être capable de présenter les schémas d'accès mémoire d'un programme à ses développeur.euse.s, en incluant des informations concernant le partage de données entre flux d'exécution et la localisation des accès  sur l'architecture de la machine.
+De plus, un tel outil devrait mettre en avant les schémas inefficaces.
 
 % Existing tools
-Plusieurs outils ont été conçus pour analyser les performances mémoire~\cite{Lachaize12MemProf,Liu14Tool,Gimenez14Dissecting}, cependant la plupart d'entre eux collectent la trace à l'aide de la technique d'échantillonnage d'instructions.
-L'échantillonnage d'instructions est une technique assisté par le matériel, qui permet de tracer certaines instructions à une fréquence\cite{Drongowski07Instructionbased,Levinthal09Performance} définie.
+Plusieurs outils ont été conçus dans le but d'analyser les performances mémoire~\cite{Lachaize12MemProf,Liu14Tool,Gimenez14Dissecting}, cependant la plupart d'entre eux collectent la trace à l'aide de la technique d'échantillonnage d'instructions.
+L'échantillonnage d'instructions est une technique assistée par le matériel, qui permet de tracer certaines instructions à une fréquence\cite{Drongowski07Instructionbased,Levinthal09Performance} définie.
 Si cette méthode permet de collecter rapidement une trace, elle manque la plupart de l'espace d'adressage.
-De ce fait, il est impossible de visualiser les schémas d'accès mémoire a partir de la trace collectée.
+De ce fait, il est impossible de visualiser les schémas d'accès mémoire à partir de la trace collectée.
 
 \section*{Contributions}
 
 % Proposition
 Dans cette thèse, nous proposons deux outils pour analyser le comportement mémoire d'une application.
-Notre premier outil, nommé \acrfull{Tabarnac}, collecte des traces globale de l'utilisation de la mémoire sans informations temporelles et présente une vue d'ensemble des schémas de partages à l'intérieur des structures de données entre les flux d'exécution.
-Le deuxième, nommé \acrfull{Moca}, collecte des traces mémoire générique à grain fin, avec informations temporelles.
-Nous proposons deux approches différentes pour visualiser les traces collectées par \gls{Moca}, la première est basée sur \gls{Framesoc} un outil existant d'analyse de de gestion de traces, la deuxième approche est basée sur une exploration programmatique utilisant le langage R.
+Notre premier outil, nommé \gls{Tabarnac}, collecte des traces globales de l'utilisation de la mémoire sans informations temporelles et présente une vue d'ensemble des schémas de partage à l'intérieur des structures de données entre les flux d'exécution.
+Le deuxième, nommé \gls{Moca}, collecte des traces mémoire génériques à grain fin, avec informations temporelles.
+Nous proposons deux approches différentes pour visualiser les traces collectées par \gls{Moca}, la première est basée sur \gls{Framesoc}, un outil existant d'analyse de gestion de traces, la deuxième approche est basée sur une exploration programmatique utilisant le langage R.
 
 % Experiments
-Conduire une campagne d'expérience en informatique peut être extrêmement simple, mais le faire de manière reproductible requière plus de planification et de méthodologie.
-L'analyse de performances, qu'elle soit dans le but d'optimiser une application ou pour évaluer un outil requière une campagne d'expérience complète.
-Dans cette thèse, nous avons porté une attention particulière pour rendre nos expériences aussi reproductibles que possible.
-Dans ce but, nous décrivons clairement notre méthodologie expérimental et distribuons tous les fichiers requis afin de reproduire chaque étapes des expériences présentées.
+Conduire une campagne d'expérience en informatique peut être extrêmement simple, mais le faire de manière reproductible requiert davantage de planification et de méthodologie.
+L'analyse de performances, qu'elle soit conduite dans le but d'optimiser une application ou pour évaluer un outil requiert une campagne d'expériences complète.
+Dans cette thèse, nous avons porté une attention particulière à rendre nos expériences aussi reproductibles que possible.
+Dans ce but, nous décrivons clairement notre méthodologie expérimentale et distribuons tous les fichiers requis afin de reproduire chaque étape des expériences présentées.
 
 \subsection*{Vue d'ensemble des schémas de partage}
 
-Nous avons conçus \gls{Tabarnac} afin d'analyser les schémas de partages d'applications s'exécutant sur des machines NUMA.
-Cet outil est basé sur une instrumentation binaire légère pré-existante, elle même basé sur la bibliothèque \gls{Pin} d'\gls{Intel}.
+Nous avons conçu \gls{Tabarnac} afin d'analyser les schémas de partage d'applications s'exécutant sur des machines NUMA.
+Cet outil est basé sur une instrumentation binaire légère pré-existante, elle-même basée sur la bibliothèque \gls{Pin} d'\gls{Intel}.
 Cette instrumentation compte le nombre d'accès de chaque flux d'exécution à chaque page mémoire d'une application.
-Nous avons ajoutés à cette bibliothèque la capacité de retrouver des informations contextuelle afin d'associer les adresses mémoires à des structures de données (statiques ou allouées).
-De plus, nous avons conçus plusieurs visualisations simples et compréhensible pour les traces collectées.
-En utilisant ces visualisation, nous avons pu identifier des problèmes de performances et augmenter de \SI{20}{\%} les performances d'une application de test largement étudiée.
+Nous avons ajouté à cette bibliothèque la capacité de retrouver des informations contextuelle afin d'associer les adresses mémoire à des structures de données (statiques ou allouées).
+De plus, nous avons conçu plusieurs visualisations simples et compréhensibles pour les traces collectées.
+En utilisant ces visualisation, nous avons pu identifier des problèmes d'utilisation mémoire et augmenter de \SI{20}{\%} les performances d'une application de test largement étudiée.
 
-Ces résultats on été publiés dans un article à \gls{VPA} 2015, un séminaire de Super Computing~\cite{Beniamine15TABARNAC}.
+Ces résultats ont été publiés dans un article à \gls{VPA} 2015, un séminaire de Super Computing~\cite{Beniamine15TABARNAC}.
 De plus, \gls{Tabarnac} est distribué en tant que logiciel libre sous la licence \gls{GPL} : \url{https://github.com/dbeniamine/Tabarnac}.
 Ce travail est le fruit d'une collaboration avec M. Diener et P.O.A Navaux de l'équipe informatica de l'\gls{UFRGS}, Porto Alegre, Bresil, financé par CAMPUS France.
 
@@ -104,45 +104,44 @@ Ce travail est le fruit d'une collaboration avec M. Diener et P.O.A Navaux de l'
 \gls{Moca} est notre contribution principale.
 Cette outil est basé sur un module noyau \gls{Linux} pour collecter efficacement des traces mémoires à grain fin.
 Ce module noyau intercepte les défauts de pages, qui sont déclenchés par le processeur et gérés par le système d'exploitation, afin de tracer les accès mémoire.
-Comme ces défauts de pages n'ont pas lieu fréquemment, il injecte aussi périodiquement des faux défauts de pages.
-De plus nous avons porté notre bibliothèque qui trace les structures de données dans \gls{Moca} sans sa dépendance à \gls{Pin}.
-Nous avons aussi exécuté une campagne expérimentale approfondie, comparant \gls{Moca} à \gls{Tabarnac} ainsi que deux outils existants de collecte de traces mémoires, en termes de surcouts, précision et complétude.
+Comme ces défauts de pages n'ont pas lieu fréquemment, il injecte aussi périodiquement de faux défauts de pages.
+De plus nous avons porté notre bibliothèque qui trace les structures de données dans \gls{Moca} en s'affranchissant de sa dépendance à \gls{Pin}.
+Nous avons aussi exécuté une campagne expérimentale approfondie, comparant \gls{Moca} à \gls{Tabarnac} ainsi que deux outils existants de collecte de traces mémoire, en termes de surcout, précision et complétude.
 
 Ce travail est le sujet de deux rapport de rechercher Inria~\cite{Beniamine15Memory,Beniamine16Moca} et a été soumis à \gls{CCGRID} 2017.
-Comme l'outil précédent, \gls{Moca} est distribué sous licence \gls{GPL}:\\
-\url{https://github.com/dbeniamine/Moca}.
+Comme l'outil précédent, \gls{Moca} est distribué sous licence \gls{GPL}: \url{https://github.com/dbeniamine/Moca}.
 
 \subsection*{Analyse de traces mémoires à grain fin}
 
-Nous proposons deux approches différents pour visualiser les traces de \gls{Moca}.
-La première est basée sur un outil générique que gestion et d'analyses de traces: \gls{Framesoc}~\cite{Pagano14frameSoC}.
-Plus particulièrement, elle repose sur \gls{Ocelotl}~\cite{Dosimont14Ocelotl}, un outil \gls{Framesoc} qui agrèges les parties similaires de la trace et présente une vue globale simplifiée qui met en avant les anomalies.
+Nous proposons deux approches différentes pour visualiser les traces de \gls{Moca}.
+La première est basée sur un outil générique de gestion et d'analyse de traces: \gls{Framesoc}~\cite{Pagano14frameSoC}.
+Plus particulièrement, elle repose sur \gls{Ocelotl}~\cite{Dosimont14Ocelotl}, un outil \gls{Framesoc} qui agrège les parties similaires de la trace et présente une vue globale simplifiée qui met en avant les anomalies.
 Avec cet outil nous avons pu identifier des schémas inefficaces en mémoire connus sur une application de test.
-Cependant nous avons rencontré plusieurs problème de passage à l'échelle due a la représentation générique de la trace dans \gls{Framesoc}.
+Cependant nous avons rencontré plusieurs problèmes de passage à l'échelle dus à la représentation générique de la trace dans \gls{Framesoc}.
 
 Afin de dépasser ces limites, nous avons aussi exploré plusieurs traces \gls{Moca} avec une approche programmatique utilisant le langage \gls{R}.
-Cette approche permet d'utiliser des filtres et zooms avancés, et de concevoir des visualization spécifique pour chaque trace.
-Avec cette méthode, nous avons pu analyser des traces plus complexes et détecter des comportement mémoires inconnus et intéressants.
-Afin d'être reproductibles, ces analyses sont sauvées et versionées dans un cahier de laboratoire publiquement accessible sur github:
+Cette approche permet d'utiliser des filtres et zooms avancés, et de concevoir des visualisations spécifiques pour chaque trace.
+Avec cette méthode, nous avons pu analyser des traces plus complexes et détecter des comportements mémoires inconnus et intéressants.
+Afin d'être reproductibles, ces analyses sont sauvées et versionnées dans un cahier de laboratoire publiquement accessible sur github:\\
 \url{https://github.com/dbeniamine/Moca_visualization}.
 
 \section*{Thesis organization}
 
 Cette thèse est organisée de la manière suivante : dans le chapitre~\ref{chap:perf}, nous présentons une étude de cas sur l'analyse de performances de \gls{SOFA}, un outil de simulation physique.
-Ce chapitre commence par présenter \gls{SOFA}, ces spécificités et les tentatives précédentes de l'optimiser et souligne le besoin d'analyser les performances de \gls{SOFA}.
-Ensuite, nous discutons les outils génériques d'analyse de performances existants et notre méthodologie expérimentale.
-Cette étude de cas mets en avant le besoin d'outils spécifiques pour l'analyse de performance du point de vue de la mémoire.
-Dans le chapitre~\ref{chap:mem}, nous présentons certaines spécificités des architectures mémoires récentes, des problèmes de performances classique liés à l'utilisation de la mémoire et de façons de les contourner.
-Puis nous discutons les outils d'analyse de performances mémoire existants, leur limites et ce que l'on attendrais d'un outil idéal.
+Ce chapitre commence par présenter \gls{SOFA}, ses spécificités ainsi que les tentatives précédentes de l'optimiser et souligne le besoin d'analyser les performances de \gls{SOFA}.
+Ensuite, nous discutons des outils génériques d'analyse de performances existants et notre méthodologie expérimentale.
+Cette étude de cas met en avant le besoin d'outils spécifiques pour l'analyse de performance du point de vue de la mémoire.
+Dans le chapitre~\ref{chap:mem}, nous présentons certaines spécificités des architectures mémoires récentes, des problèmes de performances classique liés à l'utilisation de la mémoire et des façons de les contourner.
+Puis nous traitons des outils d'analyse de performances mémoire existants, de leurs limites et ce que l'on attendrais d'un outil idéal.
 Après cela nous présentons \gls{Tabarnac}, notre première contribution, dans le chapitre~\ref{chap:tabarnac}.
 Nous présentons sa conception et son utilisation, évaluons son surcout et finalement présentons des optimisations de performances réalisées grâce à la connaissance acquise en analysant des traces produite par \gls{Tabarnac}.
 Dans le chapitre~\ref{chap:moca}, nous décrivons notre contribution principale : \gls{Moca}.
-Nous expliquons d'abord en détail les mécanismes utilisés par \gls{Moca}, sa conception internet et comment il réponds au défis levés par la collecte de traces mémoire à grain fin.
-Puis nous proposons une analyse expérimentale approfondies comparant \gls{Moca} à deux outils existants de collecte de traces mémoires ainsi qu'à \gls{Tabarnac} en termes de performances, précision et complétude.
+Nous expliquons d'abord en détail les mécanismes utilisés par \gls{Moca}, sa conception interne et comment il répond aux défis soulevés par la collecte de traces mémoire à grain fin.
+Puis, nous proposons une analyse expérimentale approfondie comparant \gls{Moca} à deux outils existants de collecte de traces mémoires ainsi qu'à \gls{Tabarnac} en termes de performances, précision et complétude.
 Le chapitre~\ref{chap:analyzing} traite de la visualisation des traces de \gls{Moca}.
-Nous présentons d'abord \gls{Framesoc} et \gls{Ocelotl} puis nous présentons les résultat obtenus avec des outils.
+Nous présentons d'abord \gls{Framesoc} et \gls{Ocelotl} puis les résultats obtenus avec ces outils.
 Après cela nous proposons une approche programatique et présentons les visualisations obtenues avec cette approche.
-Enfin nous tirons nous conclusions et proposons des perspectives de travail future dans le chapitre~\ref{chap:cncl}.
+Enfin nous tirons nos conclusions et proposons des perspectives de travail futures dans le chapitre~\ref{chap:cncl}.
 
 \glsresetall
 % vim: et si sta lbr  sw=4 ts=4 spelllang=fr
