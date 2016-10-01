@@ -9,7 +9,7 @@ To overpass them, they started to build parallel processors.
 
 % Hard limits
 The first limit comes from the energy required to increase the frequency of a \gls{CPU}.
-Indeed, according to \gls{Intel}, over-clocking a processors by \SI{20}{\%} only increase the performances by a factor $1.13$ but requires $1.73$ times more energy.
+Indeed, according to \gls{Intel}~\cite{Ganesan16Introduction}, over-clocking a processors by \SI{20}{\%} only increase the performances by a factor $1.13$ but requires $1.73$ times more energy.
 At the opposite, using an identical processor with two cores instead of one with a frequency \SI{20}{\%} lower provides $1.73$ times more performances for only $1.02$ times more energy.
 The second limit is the speed of light: data have to travel from memory to the \gls{CPU} and cannot go faster than the speed of light.
 While this limit can seem high, we have already reached it.
@@ -18,70 +18,74 @@ Indeed, if we want to build a sequential machine able to process \SI{1}{TByte} o
 % Multi socket
 While these parallel processors are theoretically more powerful than sequential ones, it is way more complex to use them efficiently and it is the responsibility of the developer to do so.
 Moreover since a few years we are reaching yet another physical limitation.
-We are capable of reducing the size of transistors, hence increasing the number of transistors in a chip, but more transistors means more heat, and it is not possible to dissipate efficiently heat in a few tens of nano meters.
+We are capable of reducing the size of transistors, hence increasing the number of transistors in a chip, but more transistors means more heat, and there is a maximum of heat that an area can produce before physical effects starts to change the expected behavior of the transistor (electrical leakage).
 As a result, vendors are now building machines with several sockets, each one embedding several cores.
 
 % Gap CPU / memory => caches
 At the same time, processors became significantly faster than memory, thus, \glspl{CPU} embed small caches memory to limit the impact of this gap on performances.
-To serve efficiently each core of a \gls{CPU} these caches are organized hierarchically.
-Furthermore, for the same reason, computers with several sockets have a \gls{NUMA} which means that each socket has a privileged access to a subpart of the memory.
-Consequently, the memory access patterns of an application can significantly impact its performances.
+Theses caches are designed to benefit from two patterns that occurs in most programs: spacial locality: using data close in memory, and temporal locality: using several times the same data in a short time lapse.
+One of the things that makes the caches faster than the main memory is their size, the smaller they are, the faster it is to retrieve a data.
+Therefore \glspl{CPU} embed several level of caches (usually three), the first level is very fast and small few Kilo Bytes and designed for very close accesses (loop on an array), while the  last level is bigger and slower, about \SI{10}{MBytes} and designed for more distant accesses.
+As the \glspl{CPU} embed several cores, theses caches are organized hierarchically, the last level is shared by all cores while the each core has a private access to a first level cache.
+This hierarchy helps isolating private data and benefit from well structured sharing, moreover it reduces the required bandwidth in the caches.
+Furthermore, for similar reasons, computers with several sockets have a \gls{NUMA} which means that each socket has a privileged access to a subpart of the memory.
+Consequently, the memory access patterns of an application can significantly impact its performances~\cite{Drepper07What}.
+Indeed, four threads working on small and separate piece of data will benefit from their private caches while patterns such as all to all sharing will result in a lot of conflicts.
+Moreover, if some sharing occurs between threads that are close in this hierarchy, the shared caches will contain shared data and one thread will benefit from the accesses of the other.
+At the opposite, if theses threads are far in the hierarchy, the sharing will generate some noise and maybe some contention on the memory bus.
 
 % Need for perf analysis
-In the end, writing an efficient program requires to consider the architecture of the computer that will run it, even if the program is sequential.
-This task is extremely complex even for \gls{HPC} specialists.
+In the end, writing an efficient program requires to consider the architecture of the computer that will run it, and the patterns, and their matching, even if the program is sequential.
+Although there are some general rules: privileging sequential accesses, working on small set of data, this task is extremely complex even for \gls{HPC} specialists as every accesses matters.
 Thus, performance analysis tools are extremely helpful to understand and optimize the performances of any application.
 
 % Classic tool not good for memory related issue
 The first step to optimize the performance of an application is to find the hotspots, which means the parts of code that are inefficient and understand their nature.
 Only at this point it is possible to decide what part of code should be improved and how.
-There are many tools designed to analyze the performances of an application, most of them relies on performance counters to collect a trace of the application.
+There are many tools designed to analyze the performances of an application~\cite{Pillet95PARAVER,Browne00Portable,Shende06Tau,Treibig10LIKWID,Adhianto10HPCTOOLKIT} most of them rely on performance counters to collect a trace of the application.
 These are \gls{CPU} register dedicated to performance analysis which enable efficient collection of performance data.
-While these counters can be very useful, they consider the memory as a monolithic entity which is not the case on recent architecture.
-As a result, tools based on performance counters can help find memory related performance issues, but they are not always able to identify the nature of the issue and they cannot show the pattern responsible for the bad performances.
-Thus, specific tools should be used for memory performance analysis.
+
+In this thesis we ran a case study on the performance analysis of a physical simulation framework: \gls{SOFA}.
+To analyze the performances of this application, we used \gls{Likwid}~\cite{Treibig10LIKWID}, a classical performance analysis tool an trace several metrics concerning the memory usage.
+With this tool we are able to detect memory related performance issues and guess the nature of some of them, but it was impossible to spot their location on the memory and the patterns responsible for the bad performances.
+Indeed, if these counters can be very useful, they consider the memory as a monolithic entity which is not the case on recent architecture.
+Thus, specific tools should be used for analyzing performances in view of memory.
 
 % Memory analysis is complex
-Analyzing an application performances in regards of the memory raises two challenges: the first one is the collection of the trace itself.
+Analyzing an application performances in view of the memory raises two challenges: the first one is the collection of the trace itself.
 This is a complex task as there is no hardware comparable to the performance counters for tracing memory accesses.
 Furthermore, every instructions of a program triggers at least one memory access, thus, collecting every single memory accesses of an application is not possible.
 Additionally, due to the lack of tracing hardware, a memory collection tool might easily become invasive and significantly change the behavior of the analyzed application.
 The second challenge is the presentation of the trace.
 Indeed, memory traces are extremely complex as they are spread over five dimensions: time, address space, \gls{CPU} location, threads and access type.
 Furthermore, some of these dimensions are not trivial to represent, for instance the address space can be virtual or physical and the \gls{CPU} location is organized hierarchically.
-In the end, memory analysis tools have to extract pertinent data and present them in a comprehensive way.
+In the end, memory analysis tools have to extract pertinent data and present them in an understanble way.
 
 % Perfect memory tool
 An ideal memory analysis tool should be able to present the memory access patterns of a program to its developer, including information about data sharing between threads and the location of the access on the machine architecture.
 Furthermore, such tool should highlight inefficient patterns.
 
 % Existing tools
-Several tools were designed for memory performance analysis, however most of them addresses the trace collection challenge by doing an instruction sampling.
-Instruction sampling is a hardware based technique that enable tracing some instructions at a defined frequency.
-While this method enables efficient tracing it skip most of the memory address space.
+Several tools were designed for memory performance analysis~\cite{Lachaize12MemProf,Liu14Tool,Gimenez14Dissecting}, however most of them addresses the trace collection challenge by doing an instruction sampling.
+Instruction sampling is a hardware based technique that enable tracing some instructions at a defined frequency~\cite{Drongowski07Instructionbased,Levinthal09Performance}.
+While this method enables efficient tracing, it does not trace the whole memory space addressed.
 As a result, it is impossible to visualize memory patterns from the collected trace.
-
-% Proposition
-In this thesis we propose two tools to analyze the memory behavior of an application.
-Our first tool, called \gls{Tabarnac}, collects global memory traces without temporal information and present an overview of the sharing patterns inside the data structures, between the threads of the execution.
-The second one, called \gls{Moca}, collects generic, fine grained  memory traces with temporal information.
-We proposed two approaches to visualize \gls{Moca} traces, the first one is based on \gls{Framesoc} an existing generic trace analysis framework, while the second one relies on a programmatic exploration using \gls{R}.
-
-% Experiments
-Conducting experiments in computer science can be extremely simple, but doing it in a reproducible way requires more planning and methodology.
-Performance analysis whether it is for optimizing an application or to evaluate a tool requires to do complete experimental campaigns.
-In this thesis we, we take a particular attention at making our experiments as reproducible as possible.
-To do so, we clearly describe our experimental methodology and distribute the files required to reproduce each step of the presented experiments.
 
 \section{Contributions}
 
-In this thesis we proposed two approach to analyze the memory behavior of an application.
-Our first approach focuses on the global sharing behavior and is specifically designed for \gls{NUMA} machines.
-The second one collects fine grained traces and propose a deeper analysis.
-Furthermore we ran several experimental campaigns to evaluate these tools and analyze memory traces taking a particular care for reproducibility.
-All the files required to reproduce all these experiments are publicly available online.
+% Proposition
+In this thesis we propose two tools to analyze the memory behavior of an application.
+Our first tool, called \gls{Tabarnac}, collects global memory traces without temporal information and presents an overview of the sharing patterns inside the data structures, between the threads of the execution.
+The second one, called \gls{Moca}, collects generic, fine grained  memory traces with temporal information.
+We propose two approaches to visualize \gls{Moca} traces, the first one is based on \gls{Framesoc} an existing generic trace analysis framework, while the second one relies on a programmatic exploration using \gls{R}.
 
-\subsection{Global overview of the sharing patterns}
+% Experiments
+Conducting experiments in computer science can be extremely simple, but doing it in a reproducible way requires more planning and methodology.
+Performance analysis, whether it is for optimizing an application or to evaluate a tool requires to do complete experimental campaigns.
+In this thesis we, we take a particular attention at making our experiments as reproducible as possible.
+To do so, we clearly describe our experimental methodology and distribute the files required to reproduce each step of the presented experiments.
+
+\subsection{Global overview of the memory sharing patterns}
 
 We designed \gls{Tabarnac} to analyze the memory sharing patterns of applications running on \gls{NUMA} machines.
 This tool relies on an existing, lightweight binary instrumentation, based on the \gls{Intel} \gls{Pin} library, which counts how much each thread of an application accesses each page.
@@ -90,10 +94,11 @@ Moreover we designed several comprehensive visualizations of the collected trace
 Using these visualizations we where able to identify some performance issues and improve the performances of a well known benchmark by \SI{20}{\%}.
 
 These results were published in an article at \gls{VPA} 2015 a Super Computing workshop~\cite{Beniamine15TABARNAC}.
-Furthermore \gls{Tabarnac} is distributed as a free software under the \gls{GPL}: \url{https://github.com/dbeniamine/Tabarnac}.
+Furthermore \gls{Tabarnac} is distributed as a free software under the \gls{GPL}:\\
+\url{https://github.com/dbeniamine/Tabarnac}.
 This work is the result of a collaboration with M. Diener and P.O.A Navaux from the informatica team of the \gls{UFRGS}, Porto Alegre, Brazil, financed by CAMPUS France.
 
-\subsection{Fine grain memory trace analysis}
+\subsection{Fine grain memory trace collection}
 
 \gls{Moca} is our main contribution.
 This tool relies on a \gls{Linux} kernel module to collect efficiently fine grain memory traces.
@@ -107,12 +112,19 @@ This work is the subject of two Inria research reports~\cite{Beniamine15Memory,B
 As the previous tool, \gls{Moca} is distributed under the \gls{GPL} license:\\
 \url{https://github.com/dbeniamine/Moca}.
 
+\subsection{Fine grain memory trace analysis}
+
 We proposed two different approaches to visualize \gls{Moca} traces.
 The first one is based on an existing general trace management and analysis framework called \gls{Framesoc}.
 More precisely, it relies on \gls{Ocelotl} a \gls{Framesoc} tool that aggregates similar parts of the trace and present a simplified overview highlighting anomalies.
+With this tool we were able to identify classical inefficient memory patterns on a test application.
+Nevertheless we encountered several scalability issues due to the generic representation of the trace inside the tool.
 
-To make the visualization more scalable and use advanced filtering and zooms, we explored several \gls{Moca} traces with a programmatic approach using \gls{R}.
-These analysis are saved and versioned in a labbook publicly available at github: \url{https://github.com/dbeniamine/Moca_visualization}.
+To overpass theses scalability issues, we also explored several \gls{Moca} traces with a programmatic approach using \gls{R}.
+This approach enables using advanced filtering and zooms, and to design specific visualization for each traces.
+With this method we were able to explore more complex traces and detect some interesting and unknown memory patterns.
+These analysis are saved and versioned in a labbook publicly available at github:\\
+\url{https://github.com/dbeniamine/Moca_visualization}.
 
 \section{Thesis organization}
 
@@ -132,4 +144,6 @@ Then we provide an extensive experimental evaluation comparing \gls{Moca} to two
 We first introduce \gls{Framesoc} and \gls{Ocelotl} and the discuss the results obtained with these tools.
 Then we propose a programmatic approach and present the visualizations and results obtained with it.
 Finally we draw our conclusions and present some perspectives of future work in \chap{cncl}
+
+\glsresetall
 % vim: et si sta lbr  sw=4 ts=4 spelllang=en_us
