@@ -1,4 +1,5 @@
 %!TEX encoding=UTF-8 Unicode
+
 \chapter{Résumé étendu}
 
 % De tout temps les Hommes
@@ -74,7 +75,7 @@ L'analyse de performances, qu'elle soit dans le but d'optimiser une application 
 Dans cette thèse, nous avons porté une attention particulière pour rendre nos expériences aussi reproductibles que possible.
 Dans ce but, nous décrivons clairement notre méthodologie expérimental et distribuons tous les fichiers requis afin de reproduire chaque étapes des expériences présentées.
 
-\section{Contributions}
+\section*{Contributions}
 
 Dans cette thèse, nous proposons deux approches pour analyser le comportement mémoire d'une application.
 Notre première approche se concentre sur les comportement global de partage de la mémoire entre les flux d'exécution et est spécifiquement conçus pour les machine NUMA.
@@ -82,7 +83,7 @@ La deuxième se base sur un outil qui collecte des traces mémoire à grain fin 
 De plus nous avons mené plusieurs campagnes d'expériences, afin d'évaluer ses outils et d'analyser des traces mémoire, en portant une attention particulière à la reproductibilité de ses expériences.
 Tous les fichiers requis afin de reproduire ces expériences sont publiquement téléchargeables en ligne.
 
-\subsection{Vue d'ensemble des schémas de partage}
+\subsection*{Vue d'ensemble des schémas de partage}
 
 Nous avons conçus \gls{Tabarnac} afin d'analyser les schémas de partages d'applications s'exécutant sur des machines NUMA.
 Cet outil est basé sur une instrumentation binaire légère pré-existante, elle même basé sur la bibliothèque \gls{Pin} d'\gls{Intel}.
@@ -95,7 +96,7 @@ Ces résultats on été publiés dans un article à \gls{VPA} 2015, un séminair
 De plus, \gls{Tabarnac} est distribué en tant que logiciel libre sous la licence \gls{GPL} : \url{https://github.com/dbeniamine/Tabarnac}.
 Ce travail est le fruit d'une collaboration avec M. Diener et P.O.A Navaux de l'équipe informatica de l'\gls{UFRGS}, Porto Alegre, Bresil, financé par CAMPUS France.
 
-\subsection{Fine grain memory trace analysis}
+\subsection*{Fine grain memory trace analysis}
 
 \gls{Moca} is our main contribution.
 This tool relies on a \gls{Linux} kernel module to collect efficiently fine grain memory traces.
@@ -116,7 +117,7 @@ More precisely, it relies on \gls{Ocelotl} a \gls{Framesoc} tool that aggregates
 To make the visualization more scalable and use advanced filtering and zooms, we explored several \gls{Moca} traces with a programmatic approach using \gls{R}.
 These analysis are saved and versioned in a labbook publicly available at github: \url{https://github.com/dbeniamine/Moca_visualization}.
 
-\section{Thesis organization}
+\section*{Thesis organization}
 
 The remaining of this thesis is organized as follow:
 in \chap{perf} we present a case study on the performance analysis of \gls{SOFA}, a physical simulation tool.
