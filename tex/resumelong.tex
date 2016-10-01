@@ -46,16 +46,16 @@ C'est uniquement après cette étape qu'il est possible de décider quelle parti
 Il existe de nombreux outils conçus pour analyser les performances d'une application~\cite{Pillet95PARAVER,Browne00Portable,Shende06Tau,Treibig10LIKWID,Adhianto10HPCTOOLKIT}, la plupart d'entre eux utilisent les compteurs de performances pour collecter la trace d'une application.
 Ces compteurs sont des registres processeurs dédiées à l'analyse de performances qui permettent la collecte efficace de données concernant les performances.
 
-Dans cette thèse nous avons mené une étude de cas sur l'analyse de performance d'un outil de simulation physique: \gls{SOFA}.
+Dans cette thèse nous avons mené une étude de cas sur l'analyse de performance d'un outil de simulation physique : \gls{SOFA}.
 Afin d'analyser les performances de cette application, nous avons utilisé \gls{Likwid}~\cite{Treibig10LIKWID}, un outil classique d'analyse de performances, et nous avons tracé plusieurs métriques concernant l'utilisation de la mémoire.
 Avec cet outil nous avons été capable de détecter  des problèmes de performances liés à la mémoire, mais il était impossible de trouver leur position dans la mémoire et les schémas responsable des mauvaises performances.
 En effet, si ces compteurs peuvent s'avérer très utiles, ils voient la mémoire comme une entité monolithique ce qui n'est pas le cas pour les architecture récentes.
 Par conséquent, des outils spécifiques doivent être utilisés pour analyser les performances du point de vue de la mémoire.
 
 % Memory analysis is complex
-Analyser les performances d'une application au regard de la mémoire soulève deux défis techniques: le premier est la collecte de la trace elle-même.
+Analyser les performances d'une application au regard de la mémoire soulève deux défis techniques : le premier est la collecte de la trace elle-même.
 C'est une t\^ache compliquée car il n'existe pas de matériel comparable aux compteurs de performances pour tracer les accès mémoire.
-De plus, chaque instruction d'un programme déclenche au moins un accès mémoire: collecter chaque accès mémoire d'une application n'est donc pas possible.
+De plus, chaque instruction d'un programme déclenche au moins un accès mémoire : collecter chaque accès mémoire d'une application n'est donc pas possible.
 Par ailleurs, l'absence de matériel pour tracer les accès mémoire implique qu'un outil de collection peut facilement devenir envahissant et modifier  significativement le comportement de l'application analysée.
 Le deuxième défi technique consiste à présenter la trace de manière simple et compréhensible.
 En effet, les traces mémoire sont extrêmement complexes puisqu'elles sont étalées sur cinq dimensions : le temps, l'espace d'adressage, la localité processeur, les flux d'exécution et le type d'accès.
@@ -109,12 +109,12 @@ De plus nous avons porté notre bibliothèque qui trace les structures de donné
 Nous avons aussi exécuté une campagne expérimentale approfondie, comparant \gls{Moca} à \gls{Tabarnac} ainsi que deux outils existants de collecte de traces mémoire, en termes de surcout, précision et complétude.
 
 Ce travail est le sujet de deux rapport de rechercher Inria~\cite{Beniamine15Memory,Beniamine16Moca} et a été soumis à \gls{CCGRID} 2017.
-Comme l'outil précédent, \gls{Moca} est distribué sous licence \gls{GPL}: \url{https://github.com/dbeniamine/Moca}.
+Comme l'outil précédent, \gls{Moca} est distribué sous licence \gls{GPL} : \url{https://github.com/dbeniamine/Moca}.
 
 \subsection*{Analyse de traces mémoires à grain fin}
 
 Nous proposons deux approches différentes pour visualiser les traces de \gls{Moca}.
-La première est basée sur un outil générique de gestion et d'analyse de traces: \gls{Framesoc}~\cite{Pagano14frameSoC}.
+La première est basée sur un outil générique de gestion et d'analyse de traces : \gls{Framesoc}~\cite{Pagano14frameSoC}.
 Plus particulièrement, elle repose sur \gls{Ocelotl}~\cite{Dosimont14Ocelotl}, un outil \gls{Framesoc} qui agrège les parties similaires de la trace et présente une vue globale simplifiée qui met en avant les anomalies.
 Avec cet outil nous avons pu identifier des schémas inefficaces en mémoire connus sur une application de test.
 Cependant nous avons rencontré plusieurs problèmes de passage à l'échelle dus à la représentation générique de la trace dans \gls{Framesoc}.
@@ -122,7 +122,7 @@ Cependant nous avons rencontré plusieurs problèmes de passage à l'échelle du
 Afin de dépasser ces limites, nous avons aussi exploré plusieurs traces \gls{Moca} avec une approche programmatique utilisant le langage \gls{R}.
 Cette approche permet d'utiliser des filtres et zooms avancés, et de concevoir des visualisations spécifiques pour chaque trace.
 Avec cette méthode, nous avons pu analyser des traces plus complexes et détecter des comportements mémoires inconnus et intéressants.
-Afin d'être reproductibles, ces analyses sont sauvées et versionnées dans un cahier de laboratoire publiquement accessible sur github:\\
+Afin d'être reproductibles, ces analyses sont sauvées et versionnées dans un cahier de laboratoire publiquement accessible sur github :\\
 \url{https://github.com/dbeniamine/Moca_visualization}.
 
 \section*{Thesis organization}
