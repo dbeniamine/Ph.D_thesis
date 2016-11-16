@@ -26,9 +26,9 @@ all : $(PDFS)
 # $(AUX) but as the last compilation re write $(AUX) if we do so, make will
 # always think that we need to redo the $(BBL) and $(PDF) targets.
 %.pdf : %.tex $(TEXSUBSRC) %.aux %.bbl
-	if $* -eq "$(MAIN)"; then \
-	$(GLOSSARY) $* ; \
-	fi
+	if [ $@ == $(MAIN) ]; then \
+		$(GLOSSARY) $* ; \
+		fi
 	$(TEX) $*.tex
 	$(TEX) $*.tex
 

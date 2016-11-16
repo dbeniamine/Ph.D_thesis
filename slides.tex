@@ -10,6 +10,7 @@
 \usepackage[T1]{fontenc}
 % Fix size errors due to T1 in bbl file
 \usepackage{fix-cm}
+\usepackage{siunitx}
 %=============================================================================
 
 %========================= Todo notes  =======================================
@@ -40,14 +41,14 @@
 %========================= Hyperref ==========================================
 
 
-\hypersetup{
-    colorlinks=true, %colore les liens
-    breaklinks=true, %permet le retour à la ligne dans les liens trop longs
-    urlcolor= blue, %couleur des hyperliens
-    linkcolor= black, %couleur des liens internes
-    bookmarksopen=true,
-    citecolor=black,
-}
+%\hypersetup{
+%    colorlinks=false, %colore les liens
+%    breaklinks=true, %permet le retour à la ligne dans les liens trop longs
+%    urlcolor= blue, %couleur des hyperliens
+%    %linkcolor= black, %couleur des liens internes
+%    bookmarksopen=true,
+%    citecolor=black,
+%}
 %=============================================================================
 
 %========================= Other useful includes =============================
@@ -66,6 +67,9 @@
 }
 
 \usetheme{AntibesCompact}
+
+\definecolor{INstruct}{HTML}{82A382}
+\setbeamercolor{structure}{fg=INstruct}
 
 \newcommand{\alertitem}{\item<+-|alert@+>}
 \newcommand\alertblockat[3]{
@@ -225,45 +229,158 @@ Supervisors: & Pr, Bruno Raffin \\
 \section{State of the art}
 
 \begin{frame}{Generic performance analysis tools}
-    <++>
+    \alertblockat{<1>}{Low level trace collection}{
+        \begin{itemize}
+            \item Likwid~\cite{Treibig10LIKWID}
+            \item PAPI~\cite{Browne00Portable}
+        \end{itemize}
+    }
+    \pause
+    \alertblockat{<2>}{Higher level tools}{
+        \begin{itemize}
+            \item VTune~\cite{Reinders05VTune}
+            \item HPCToolkit~\cite{Adhianto10HPCTOOLKIT}
+            \item PARAVER~\cite{Pillet95PARAVER}
+            \item MAQAO~\cite{Djoudi05MAQAO}
+        \end{itemize}
+    }
+    \pause
+    \begin{alertblock}{Limitations}
+        Indirect information on the memory usage using  CPU performance counters
+    \end{alertblock}
 \end{frame}
 
 \begin{frame}{Existing memory profiling tools}
-    <++>
+    \begin{block}{Instruction sampling~\cite{Drongowski07Instructionbased,Levinthal09Performance}}
+        \begin{itemize}
+            \item  MemPhis~\cite{McCurdy10Memphis}
+            \item  MemProf~\cite{Lachaize12MemProf}
+            \item  HPCToolkit extension~\cite{Liu14Tool}
+            \item  MemAxes / Mitos~\cite{Gimenez14Dissecting}
+        \end{itemize}
+    \end{block}
+    \pause 
+    \begin{alertblock}{Limitations}
+        \begin{itemize}
+            \item Not complete: miss significant part of memory
+            \item Not precise enough for pattern analysis
+        \end{itemize}
+    \end{alertblock}
 \end{frame}
 
 \section{Analyzing the global memory behavior}
 
 \subsection{Tabarnac}
 
-\begin{frame}{Trace collection}
-    <++>
+\begin{frame}{Trace collection mechanism}
+    \begin{itemize}[<+-|alert@+>]
+        \item Aims at improving performances on NUMA machines
+        \item Pin~\cite{Luk05Pin} instrumentation
+        \item Based on Numalyze~\cite{Diener15Characterizing}
+        \item Collects 1 counter per page and per threads
+        \item Lock free
+        \item Differentiate access types (reads / writes)
+        \item Retrieve data structure information
+    \end{itemize}
 \end{frame}
 
 \begin{frame}{Visualizations}
-    <++>
+    \alt<1>{
+        \begin{columns}
+            \begin{column}{.45\linewidth}
+                \centering
+                \includegraphics[width=\linewidth]{img/tabarnac/example_sz.png}
+            \end{column}
+            \begin{column}{.45\linewidth}
+                \includegraphics[width=\linewidth]{img/tabarnac/example_rw.png}
+            \end{column}
+        \end{columns}
+    }{
+        \centering
+        \alt<2>{
+            \includegraphics[height=.7\textheight]{img/tabarnac/example_ft.png}
+            \begin{block}{}
+                First touch distribution for one data structure
+            \end{block}
+        }{
+            \includegraphics[height=.75\textheight]{img/tabarnac/is_b_kb2_orig.png}
+            \begin{block}{}
+                Accesses distribution for one data structure
+            \end{block}
+        }
+    }
+    \pause
+    \pause
 \end{frame}
 
-\subsection{Using Tabarnac to optimize a well known benchmark: IS}
+\subsection{Using Tabarnac to optimize a well known benchmark}
 
 \begin{frame}{First analysis}
-    <++>
+\begin{figure}[htb]
+    \begin{columns}
+        \begin{column}{.45\linewidth}
+            \includegraphics[width=\linewidth]  {tabarnac/is_b_kb2_orig}
+        \end{column}
+        \begin{column}{.45\linewidth}
+            \includegraphics[width=\linewidth]  {tabarnac/is_b_kb1_orig}
+        \end{column}
+    \end{columns}
+\end{figure}
+
 \end{frame}
 
 \begin{frame}{Issue and optimization}
-    <++>
+    \alt<1-2>{
+        \scalebox{.8}{
+            \centering
+            \input{tikz/is-curve-nocolor}
+        }
+        \pause
+        \begin{block}{Original code}
+            \#pragma omp for schedule(dynamic)
+        \end{block}
+    }{
+        \scalebox{.8}{
+            \centering
+            \input{tikz/is-curve}
+        }        \begin{block}{Modified code}
+            \#pragma omp for schedule(static, size/(2*num\_threads))
+        \end{block}
+    }
+    \pause
 \end{frame}
 
 \begin{frame}{Second analysis}
-    <++>
+    \begin{columns}
+        \begin{column}{.45\linewidth}
+            \includegraphics[width=\linewidth]  {tabarnac/is_b_kb2_modif}
+        \end{column}
+        \begin{column}{.45\linewidth}
+            \includegraphics[width=\linewidth]  {tabarnac/is_b_kb1_modif}
+        \end{column}
+    \end{columns}
 \end{frame}
 
 \begin{frame}{Results}
-    <++>
+    \includegraphics[width=\linewidth]{tabarnac/is_exectime}
 \end{frame}
 
 \begin{frame}{Conclusions}
-    <++>
+    \begin{itemize}[<+-|alert@+>]
+        \item Collaboration with M. Diener, UFRGS, P.O.A, Brasil
+        \item Improved trace collection tool
+        \item Simple yet meaningful visualization
+        \item Enables significant optimizations
+        \item Published at VPA'15~\cite{Beniamine15TABARNAC}
+    \end{itemize}
+    \uncover<6->{
+        \begin{alertblock}{Limitations}
+            \begin{itemize}
+                \item No temporal informations
+                \item Cannot detect precise sharing
+            \end{itemize}
+        \end{alertblock}
+    }
 \end{frame}
 
 \section{Collecting and analyzing fine grained traces}
@@ -353,10 +470,50 @@ Supervisors: & Pr, Bruno Raffin \\
 \bibliography{biblio}
 
 %========================= Backup slides =====================================
-%\section*{Hidden slides}
+\section*{Hidden slides}
 %put this line before each frame
-
 %\setcounter{framenumber}{\value{finalframe}}
+
+\subsection*{Tabarnac}
+
+\setcounter{framenumber}{\value{finalframe}}
+\begin{frame}{Experimental setup}
+    \small
+    \centering
+    \begin{tabular}{lccccc}
+        \toprule
+        & \multicolumn{5}{c}{\textbf{Hardware totals}}\\
+        \cmidrule(lr){2-6}
+        & Nodes & Threads & Vendor & Model & Memory \\
+        \cmidrule(lr){2-6}
+        \texttt{Turing}   & $4$ & $64$ & Intel & Xeon X7550   & \SI{128}{Gib} \\
+        \texttt{Idfreeze} & $8$ & $48$ & AMD   & Opteron 6174 & \SI{256}{Gib}\\
+        \midrule
+        & \multicolumn{5}{c}{\textbf{Hardware per node}}\\
+        \cmidrule(lr){2-6}
+        & Cores & Threads & Frequency & L3 Cache & Memory \\
+        \cmidrule(lr){2-6}
+        \texttt{Turing}   & $8$ & $16$ & \SI{2.00}{Ghz}& \SI{18}{Mib} & \SI{32}{Gib} \\
+        \texttt{Idfreeze} & $6$ & $6$  & \SI{2.20}{Ghz}& \SI{12}{Mib} & \SI{32}{Gib}\\
+        \midrule
+        & \multicolumn{5}{c}{\textbf{Software}}\\
+        \cmidrule(lr){2-6}
+        & Kernel & \multicolumn{2}{c}{Distribution} &
+        \multicolumn{2}{c}{Bios configurations} \\
+        \cmidrule(lr){2-6}
+        \texttt{Turing}   & Linux 3.13 & \multicolumn{2}{c}{Ubuntu 12.04} &
+        \multicolumn{2}{c}{Hyper threading} \\
+        \texttt{Idfreeze} & Linux 3.2 & \multicolumn{2}{c}{Debian Jessie} &
+        \multicolumn{2}{c}{No hyper threading}\\
+        \bottomrule
+    \end{tabular}
+\end{frame}
+
+\setcounter{framenumber}{\value{finalframe}}
+\begin{frame}{Tabarnac overhead}
+    \includegraphics[width=\linewidth]{tabarnac/tool-ovh.pdf}
+\end{frame}
+
 %=============================================================================
 \end{document}
 
