@@ -77,7 +77,9 @@
         \coordinate (cjint) at (.1,9.3);
         \coordinate (ckint) at (.1,8.9);
         \coordinate (ck) at (.6,8.9);
-        \path[draw,SwapA] (cj) .. controls (cjint) and (ckint) ..(ck);
+        \uncover<2->{
+            \path[draw,SwapA] (cj) .. controls (cjint) and (ckint) ..(ck);
+        }
 
         \node[matgrid={A}{5}] at (0,0){};
         \node[matgrid={B}{5}] at (6,6){};
@@ -96,7 +98,9 @@
         \draw[PrimaryA,ColK]   (mB-0N) -- node(bk) [left]  {\textbf{k}} (mB-00);
         \draw[SecondaryA,ColJ] (mB-0N) -- node(bj) [above] {\textbf{j}} (mB-NN);
 
-        \draw[SwapA] (bj.south) edge[out=-90,in=0] (bk.east);
+        \uncover<2->{
+            \draw[SwapA] (bj.south) edge[out=-90,in=0] (bk.east);
+        }
 
         %% C
         \draw[PrimaryA,ColJ]   (mC-0N) -- node [above] {\textbf{j}} (mC-NN);

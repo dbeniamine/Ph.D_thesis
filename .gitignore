@@ -4,6 +4,7 @@
 *.alg
 *.out
 thesis.pdf
+slides.pdf
 sty/*.pdf
 sty/*/*.pdf
 *.tdo
@@ -18,3 +19,5 @@ sty/*/*.pdf
 *.toc
 *.ac?
 *.ist
+*.nav
+*.snm

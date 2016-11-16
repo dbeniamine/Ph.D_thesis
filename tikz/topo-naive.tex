@@ -1,0 +1,55 @@
+%!TEX encoding=UTF-8 Unicode
+%Palette GnBu 5 col + white
+\definecolor{ColPU}{HTML}{FFFFFF}
+\definecolor{ColCore}{HTML}{F0F9E8}
+\definecolor{ColL1}{HTML}{BAE4BC}
+\definecolor{ColL2}{HTML}{7BCCC4}
+\definecolor{ColL3}{HTML}{43A2CA}
+\definecolor{ColM}{HTML}{0868AC}
+\definecolor{ColS}{HTML}{FFFFFF}
+
+\pgfdeclarelayer{bg}
+\pgfdeclarelayer{bbg}
+\pgfdeclarelayer{bbbg}
+\pgfsetlayers{bbbg,bbg,bg,main}
+
+
+\tikzset{
+    box/.style={
+        shape=rectangle,
+        text centered,
+        draw,
+    },
+}
+
+\begin{tikzpicture}[font=\small, every pic/.style={scale=.9}]
+    \node[box,fill=ColPU] (PU-0) at (0,0) {Thread};
+    \node[minimum width=3.3em] (name) at ($(PU-0)+(0,1)$) {Core};
+
+    \begin{pgfonlayer}{bg}
+        \node[box,fill=ColCore, fit=(name) (PU-0) ] (core-0) {};
+    \end{pgfonlayer}
+
+    \node (cache) at ($(core-0.north)+(0,1)$) {};
+
+    \uncover<4->{
+        \draw (core-0.north) -- (cache);
+
+        \draw[fill=ColL3] ($(core-0.north west)+(0,.5)$) rectangle
+            ($(core-0.north east)+(0,1)$) node[pos=.5] {Cache};
+    }
+
+    \node (cpu-name) at ($(cache)+(0,.5)$) {CPU};
+
+    \begin{pgfonlayer}{bbg}
+        \node[box,fill=ColS,fit=(core-0) (cpu-name)] (cpu) {};
+    \end{pgfonlayer}
+
+    \draw[line width=.5em] (cpu.north) -- ($(cpu.north)+(0,1)$);
+
+    \draw[fill=ColM, text=white] ($(cpu.north west)+(-.5,1)$) rectangle
+        ($(cpu.north east)+(.5,2)$) node[pos=.5]{Memory};
+
+
+\end{tikzpicture}
+% vim: et si sta lbr  sw=4 ts=4 spelllang=en_us

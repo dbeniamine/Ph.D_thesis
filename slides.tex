@@ -1,0 +1,365 @@
+%!TEX encoding=UTF-8 Unicode
+\input{custom/magic}
+\documentclass[xcolor={usenames,dvipsnames},hyperref={pdfusetitle}]{beamer}
+\usepackage{lmodern}
+
+%=========================Language and encoding ==============================
+
+\usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
+\usepackage[T1]{fontenc}
+% Fix size errors due to T1 in bbl file
+\usepackage{fix-cm}
+%=============================================================================
+
+%========================= Todo notes  =======================================
+
+\input{custom/macros.tex}
+\usepackage{todonotes}
+\presetkeys{todonotes}{inline}{}
+
+%=============================================================================
+
+%========================= Figures ===========================================
+
+\usepackage[]{caption}
+\usepackage[]{subcaption}
+\usepackage{graphicx} % support the \includegraphics command and options
+\graphicspath{{./img/}{./style/}{./tikz/}}
+\input{custom/tikz}
+\input{custom/algo.tex}
+\usepackage{epstopdf}
+\usepackage{booktabs}
+\usepackage{multirow}
+%\usepackage{subcaption}
+
+%=============================================================================
+
+%=============================================================================
+
+%========================= Hyperref ==========================================
+
+
+\hypersetup{
+    colorlinks=true, %colore les liens
+    breaklinks=true, %permet le retour à la ligne dans les liens trop longs
+    urlcolor= blue, %couleur des hyperliens
+    linkcolor= black, %couleur des liens internes
+    bookmarksopen=true,
+    citecolor=black,
+}
+%=============================================================================
+
+%========================= Other useful includes =============================
+
+\usepackage{ifthen}
+\usepackage[absolute,overlay]{textpos} %to set some blocks position
+%=============================================================================
+
+%========================= Beamer theme =====================================
+
+%Stuff for printable version
+\mode<handout>{
+    \usetheme{default}
+    \setbeamercolor{background canvas}{bg=black!5}
+    \pgfpagesuselayout{4 on 1}[a4paper,landscape,border shrink=2.5mm]
+}
+
+\usetheme{AntibesCompact}
+
+\newcommand{\alertitem}{\item<+-|alert@+>}
+\newcommand\alertblockat[3]{
+    \alt#1{
+        \begin{alertblock}{#2}
+            #3
+        \end{alertblock}
+    }{
+        \begin{block}{#2}
+            #3
+        \end{block}
+    }
+}
+
+%=============================================================================
+
+%========================= Title frame  ======================================
+\title[]{Analyzing the memory behavior of parallel scientific applications}
+\author[David Beniamine]{\textbf{David Beniamine}}
+\institute[Polaris / Datamove]{
+    \includegraphics[height=.10\textheight]{img/logoUGA.jpg}
+    \quad
+    \includegraphics[width=.10\textwidth]{img/LIG_coul.jpg}
+    \quad
+    \includegraphics[width=.15\textwidth]{img/inria.jpg}
+    \quad
+    \includegraphics[width=.18\textwidth]{img/polaris.png}
+    \quad
+    \includegraphics[width=.18\textwidth]{img/datamove.png}
+}
+
+
+\newcommand{\enableTocAtSection}{
+    \AtBeginSection[]
+    {
+        \ifthenelse{\boolean{sectiontoc}}{
+            \begin{frame}<beamer>
+                \frametitle{Outline}
+                \tableofcontents[currentsection,currentsubsection]
+            \end{frame}
+        }
+    }
+    \AtBeginSubsection[]
+    {
+        \ifthenelse{\boolean{sectiontoc}}{
+            \begin{frame}<beamer>
+                \frametitle{Outline}
+                \tableofcontents[currentsection,currentsubsection]
+            \end{frame}
+        }
+    }
+}
+
+%=============================================================================
+
+\begin{document}
+%========================= Title and outlines ================================
+\begin{frame}{}
+    \titlepage
+\small
+{\centering\itshape Jury members\par}
+\begin{tabular}[t]{@{}l@{\hspace{3pt}}p{.45\textwidth}@{}}
+President: & Pr, Martin Quinson\\
+Reviewers: & Pr, Jes\'us Labarta Mancho \\
+& Pr,  Raymond Namyst \\
+Examiners: & Dr, Lucas M. Schnorr \\
+\end{tabular}%
+\begin{tabular}[t]{@{}l@{\hspace{3pt}}p{.45\textwidth}@{}}
+Supervisors: & Pr, Bruno Raffin \\
+ & Dr, Guillaume Huard
+\end{tabular}%
+\end{frame}
+
+\newboolean{sectiontoc}
+\setboolean{sectiontoc}{true} % default to true
+
+%=============================================================================
+
+%========================= Real presentation =================================
+
+\section{Context}
+
+\begin{frame}{Scientific applications and performances}
+    \todo{Put something here}
+\end{frame}
+
+\begin{frame}{Improving sequential computer performances}
+    \begin{columns}
+        \begin{column}{.45\textwidth}
+            \centering
+            \input{tikz/topo-naive}
+        \end{column}
+        \begin{column}{.45\textwidth}
+            \pause
+            \begin{block}{Increase cpu frequency}
+                \begin{itemize}[<+->]
+                    \item Done for years
+                    \alertitem Gap CPU / Memory
+                    \begin{itemize}
+                        \alertitem Add memory caches
+                    \end{itemize}
+                    \alertitem Physical limits
+                        \begin{itemize}
+                            \alertitem Energy consumption
+                            \alertitem Heat dissipation
+                        \end{itemize}
+                \end{itemize}
+            \end{block}
+            \uncover<8->{
+                \begin{alertblock}{Build parallel machines}
+                    Writing efficient code becomes complex
+                \end{alertblock}
+            }
+        \end{column}
+    \end{columns}
+\end{frame}
+
+\begin{frame}{An simple example}
+    \centering
+    \scalebox{.6}{
+        \input{tikz/mat-mult}
+    }
+\end{frame}
+
+\begin{frame}{Parallel and NUMA machines}
+    \centering
+    \scalebox{.6}{
+        \input{tikz/topo-NUMA.tex}
+    }
+    \pause
+\end{frame}
+
+\begin{frame}{Research statement}
+    \begin{alertblock}{Statement}
+        How can we analyze the memory behavior of an application to optimize its performances ?
+    \end{alertblock}
+    \pause
+    \begin{block}{Challenges}
+        \begin{itemize}[<+->]
+                \alertitem Collect memory traces
+                \begin{itemize}
+                    \item \textbf{Complete}: do not miss part of the address space
+                    \item \textbf{Precise}:  enough to detect patterns
+                    \item \textbf{Detailed}: embed all meta data about the access
+                \end{itemize}
+                \alertitem Visualize memory traces
+                \alertitem Take advantage of the obtained knowledge
+        \end{itemize}
+    \end{block}
+\end{frame}
+
+\enableTocAtSection
+\begin{frame}{Outline}
+    \tableofcontents
+\end{frame}
+
+\section{State of the art}
+
+\begin{frame}{Generic performance analysis tools}
+    <++>
+\end{frame}
+
+\begin{frame}{Existing memory profiling tools}
+    <++>
+\end{frame}
+
+\section{Analyzing the global memory behavior}
+
+\subsection{Tabarnac}
+
+\begin{frame}{Trace collection}
+    <++>
+\end{frame}
+
+\begin{frame}{Visualizations}
+    <++>
+\end{frame}
+
+\subsection{Using Tabarnac to optimize a well known benchmark: IS}
+
+\begin{frame}{First analysis}
+    <++>
+\end{frame}
+
+\begin{frame}{Issue and optimization}
+    <++>
+\end{frame}
+
+\begin{frame}{Second analysis}
+    <++>
+\end{frame}
+
+\begin{frame}{Results}
+    <++>
+\end{frame}
+
+\begin{frame}{Conclusions}
+    <++>
+\end{frame}
+
+\section{Collecting and analyzing fine grained traces}
+
+\subsection{Moca an efficient memory trace collection system}
+
+\begin{frame}{Background knowledge}
+    <++>
+\end{frame}
+
+\begin{frame}{Design}
+    <++>
+\end{frame}
+
+\begin{frame}{Handling page faults}
+    <++>
+\end{frame}
+
+
+\begin{frame}{Experimental setup}
+    <++>
+\end{frame}
+
+\begin{frame}{Experimental results: trace precision}
+    <++>
+\end{frame}
+
+\begin{frame}{Experimental results: overhead}
+    <++>
+\end{frame}
+
+\subsection{Visualizing and analyzing Moca traces}
+
+\begin{frame}{Framesoc / Ocelotl}
+    <++>
+\end{frame}
+
+\begin{frame}{Example: Matrix multiplication}
+    <++>
+\end{frame}
+
+\begin{frame}{Limits}
+    <++>
+\end{frame}
+
+\begin{frame}{Programmatic approach}
+    <++>
+\end{frame}
+
+\begin{frame}{Example: ??}
+    <++>
+\end{frame}
+
+\section{Conclusions and perspectives}
+
+\begin{frame}{Global overview}
+    \cite{Beniamine15TABARNAC}
+    <++>
+\end{frame}
+
+\begin{frame}{Fine trace collecion}
+    \cite{Beniamine16Moca}
+    <++>
+\end{frame}
+
+\begin{frame}{Trace analysis}
+    <++>
+\end{frame}
+
+\begin{frame}{Perspectives}
+    <++>
+\end{frame}
+
+\newcounter{finalframe}
+\setcounter{finalframe}{\value{framenumber}}
+%Last numbered frame go here
+
+\begin{frame}{Perspectives}
+\end{frame}
+%=============================================================================
+
+%=============================================================================
+%Uncomment next lines for uncounted backup slides & biblio
+\section*{Bibliography}
+%
+\bibliographystyle{apalike}
+\bibliography{biblio}
+
+%========================= Backup slides =====================================
+%\section*{Hidden slides}
+%put this line before each frame
+
+%\setcounter{framenumber}{\value{finalframe}}
+%=============================================================================
+\end{document}
+
+
+
+

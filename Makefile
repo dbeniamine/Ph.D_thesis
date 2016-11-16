@@ -5,17 +5,10 @@ BIBSRC = $(wildcard *.bib)
 SUBDIRS=tex custom style tikz
 TEXSUBSRC = $(foreach d, $(SUBDIRS),$(wildcard $d/*.tex))
 TEXALLSRC = $(TEXSRC) $(TEXSUBSRC)
-
-# Intermediate files
-PDF = $(TEXSRC:.tex=.pdf)
 AUX = $(TEXSRC:.tex=.aux)
-BBL = $(TEXSRC:.tex=.bbl)
-GLS = $(TEXSRC:.tex=.acr)
-
-
 
 # Temporary files
-TEMP=*.bbl *.blg *.synctex.gz *.aux *.toc *.ptc *.out *.ist *.ac? *.alg *.tdo *.lo? *.gl?
+TEMP=*.bbl *.blg *.synctex.gz *.aux *.toc *.ptc *.out *.ist *.ac? *.alg *.tdo *.lo? *.gl? *.snm *.nav
 # Avoid removing temp files
 .INTERMEDIATE: $(TEMP)
 
@@ -23,32 +16,32 @@ TEMP=*.bbl *.blg *.synctex.gz *.aux *.toc *.ptc *.out *.ist *.ac? *.alg *.tdo *.
 TEX = pdflatex -interaction=nonstopmode -synctex=1
 BIB = bibtex
 GLOSSARY = makeglossaries
-TEXCOMPILE = $(TEX) $(TEXSRC)
-BIBCOMPILE = $(BIB) $(AUX)
+MAIN=thesis.pdf
+SLIDES=slides.pdf
+PDFS= $(MAIN) $(SLIDES)
 
-all : $(PDF)
+all : $(PDFS)
 
 # Note that $(PDF) should only depends on $(BBL) and $(BBL) should depends on
 # $(AUX) but as the last compilation re write $(AUX) if we do so, make will
 # always think that we need to redo the $(BBL) and $(PDF) targets.
-$(PDF) : $(AUX) $(GLS) $(BBL)
-	$(TEXCOMPILE)
-	$(TEXCOMPILE)
-
-# Glossary
-$(GLS): $(TEXALLSRC)
-	$(GLOSSARY) $(TEXSRC:.tex=)
+%.pdf : %.tex $(TEXSUBSRC) %.aux %.bbl
+	if $* -eq "$(MAIN)"; then \
+	$(GLOSSARY) $* ; \
+	fi
+	$(TEX) $*.tex
+	$(TEX) $*.tex
 
 # Bibtex
-$(BBL): $(BIBSRC) $(TEXALLSRC)
-	$(BIBCOMPILE)
+%.bbl: $(BIBSRC) $(TEXSUBSRC)
+	$(BIB) $*.aux
 
 # First compilation
-$(AUX): $(TEXALLSRC)
-	$(TEXCOMPILE)
-	$(TEXCOMPILE)
+%.aux: %.tex $(TEXSUBSRC)
+	$(TEX) $*.tex
+	$(TEX) $*.tex
 
-tests: $(PDF) testbadspace testrefs testbib testbibtex testplaceholders testreffloats testfonts testpdfversion testcountpages testcountbib
+tests: $(PDFS) testbadspace testrefs testbib testbibtex testplaceholders testreffloats testfonts testpdfversion testcountpages testcountbib
 
 testbadspace:
 	@echo "Looking bad spaces '\ u8'"
@@ -57,42 +50,54 @@ testbadspace:
 
 testbibtex:
 	@echo "Looking for Warnings in bibtex compilation"
-	[ `$(BIBCOMPILE) | grep -c "^Warning"` -eq 0 ]
+	for f in $(AUX); do \
+		[ `$(BIB)  $$f | grep -c "^Warning"` -eq 0 ] ;\
+		done
 	@echo "PASSED"
 
 testbib:
 	@echo "Checking for bad citations"
-	[ `pdfgrep -c '\[\?\]' $(PDF)` -eq 0 ]
+	for f in $(PDFS); do \
+		[ `pdfgrep -c '\[\?\]' $$f` -eq 0 ] ; \
+		done
 	@echo "PASSED"
 
 testrefs:
 	@echo "Checking for bad references"
-	[ `pdfgrep -c '\?\?' $(PDF)` -eq 0 ]
+	for f in $(PDFS); do \
+		[ `pdfgrep -c '\?\?' $$f` -eq 0 ]; \
+		done
 	@echo "PASSED"
 
 testfonts:
 	@echo "Checking that all fonts are embedded"
-	[ -z "`pdffonts $(PDF) | awk '{print $$5}' | grep no`" ]
+	for f in $(PDFS); do \
+		[ -z "`pdffonts $$f | awk '{print $$5}' | grep no`" ]; \
+		done
 	@echo "PASSED"
 
 testpdfversion:
 	@echo "Checking version of the produced pdf"
-	[ "`pdfinfo $(PDF) | grep "version" | awk '{print $$3}'`" = "1.4" ]
+	for f in $(PDFS); do \
+		[ "`pdfinfo $$f | grep "version" | awk '{print $$3}'`" = "1.4" ]; \
+		done
 	@echo "PASSED"
 
 testplaceholders:
 	@echo "Checking for remaining placeholders"
-	[ `pdfgrep -c '<\+\+>' $(PDF)` -eq 0 ]
+	for f in $(PDFS); do \
+		[ `pdfgrep -c '<\+\+>' $$f` -eq 0 ]; \
+		done
 	@echo "PASSED"
 
 testcountbib:
-	$(eval BITEMS=$(shell grep -c bibitem $(TEXSRC:.tex=.bbl)))
+	$(eval BITEMS=$(shell grep -c bibitem $(MAIN:.pdf=.bbl)))
 	@echo "Total bibliographic entries: $(BITEMS)"
 	[ $(BITEMS) -ge 70 ]
 	@echo "PASSED"
 
 testcountpages:
-	$(eval PAGES=$(shell pdfinfo $(PDF) | grep Pages | awk '{print $$2}'))
+	$(eval PAGES=$(shell pdfinfo $(MAIN) | grep Pages | awk '{print $$2}'))
 	@echo "Total pages: $(PAGES)"
 	[ $(PAGES) -gt 120 ]
 	@echo "PASSED"
@@ -109,4 +114,4 @@ clean:
 	rm -rf $(TEMP)
 
 distclean: clean
-	rm -rf $(PDF)
+	rm -rf $(PDFS)

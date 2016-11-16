@@ -102,10 +102,12 @@
                 \node[box,fill=ColS,fit=(minnode) (maxnode)] (cpu-#2) {};
             \end{pgfonlayer}
            % Memory
-            \draw[fill=ColM,text=white] ($(cpu-#2.#4 west)#3(0,.5)$) rectangle ($(cpu-#2.#4 east)#3(0,1.5)$)%
-            node[pos=.5]{Memory bank \##2};
+            \uncover<1,3->{
+                \draw[fill=ColM,text=white] ($(cpu-#2.#4 west)#3(0,.5)$) rectangle ($(cpu-#2.#4 east)#3(0,1.5)$)%
+                node[pos=.5]{Memory bank \##2};
 
-            \draw[link] (cpu-#2.#4) -- ($(cpu-#2.#4)#3(0,.5)$);
+                \draw[link] (cpu-#2.#4) -- ($(cpu-#2.#4)#3(0,.5)$);
+            }
 
         }
     },
@@ -113,16 +115,20 @@
 
 \begin{tikzpicture}[font=\small, every pic/.style={scale=.9}]
     \pic at (0,0)  {socket={2}{0}{+}{north}};
-    \pic at (6.5,0)  {socket={2}{1}{+}{north}};
-    \pic at (0,-2) {socket={2}{2}{-}{south}};
-    \pic at (6.5,-2) {socket={2}{3}{-}{south}};
+    \only<2->{
+        \pic at (6.5,0)  {socket={2}{1}{+}{north}};
+        \pic at (0,-2) {socket={2}{2}{-}{south}};
+        \pic at (6.5,-2) {socket={2}{3}{-}{south}};
+    }
+    \only<3->{
 
-    \begin{pgfonlayer}{bbbg}
-        \draw[link] (cpu-0) -- (cpu-2);
-        \draw[link] (cpu-0) -- (cpu-1);
-        \draw[link] (cpu-1) -- (cpu-3);
-        \draw[link] (cpu-2) -- (cpu-3);
-    \end{pgfonlayer}
+        \begin{pgfonlayer}{bbbg}
+            \draw[link] (cpu-0) -- (cpu-2);
+            \draw[link] (cpu-0) -- (cpu-1);
+            \draw[link] (cpu-1) -- (cpu-3);
+            \draw[link] (cpu-2) -- (cpu-3);
+        \end{pgfonlayer}
+    }
 
 \end{tikzpicture}
 % vim: et si sta lbr  sw=4 ts=4 spelllang=en_us
