@@ -153,8 +153,8 @@ Supervisors: & Pr, Bruno Raffin \\
 
 \section{Context}
 
-\begin{frame}{Scientific applications and performances}
-    \todo{Put something here}
+\begin{frame}{Science and computers}
+    \input{tikz/intro}
 \end{frame}
 
 \begin{frame}{Improving sequential computer performances}
@@ -288,16 +288,27 @@ Supervisors: & Pr, Bruno Raffin \\
 \subsection{Tabarnac}
 
 \begin{frame}{Trace collection mechanism}
-    \todo{Couper existant / modifs}
-    \begin{itemize}[<+-|alert@+>]
-        \item Aims at improving performances on NUMA machines
-        \item Pin~\cite{Luk05Pin} instrumentation
-        \item Based on Numalyze~\cite{Diener15Characterizing}
-        \item One counter per page and per threads
-        \item Lock free
-        \item Differentiate access types (reads / writes)
-        \item Retrieve data structure information
-    \end{itemize}
+    \begin{block}{Numalyze~\cite{Diener15Characterizing}}
+        \begin{itemize}
+            \item Pin~\cite{Luk05Pin} instrumentation
+            \item One counter per page and per threads
+            \item Lock free
+        \end{itemize}
+    \end{block}
+    \pause
+    \begin{alertblock}{Tabarnac}
+        \begin{itemize}
+            \item Differentiate access types (reads / writes)
+            \item Retrieve data structure information
+                \begin{itemize}
+                    \item Read binary for static data structures
+                    \item Intercepts allocations
+                    \item Uses debug flags to decide data structure names
+                \end{itemize}
+            \item Designed for improving performances on NUMA Machines
+            \item Simple yet meaningful R visualizations
+        \end{itemize}
+    \end{alertblock}
 \end{frame}
 
 \begin{frame}{Visualizations}
@@ -513,51 +524,120 @@ Supervisors: & Pr, Bruno Raffin \\
 
 \subsection{Visualizing and analyzing Moca traces}
 
-\begin{frame}{Framesoc / Ocelotl}
-    <++>
+\begin{frame}{FrameSoc and Ocelotl}
+    \begin{block}{FrameSoc~\cite{Pagano14frameSoC}}
+        \begin{itemize}
+            \item Generic trace management tool
+            \item Several representation of same trace
+            \item Designed for trace exploration
+        \end{itemize}
+    \end{block}
+    \pause
+    \begin{alertblock}{Ocelotl~\cite{Dosimont14Ocelotl}}
+        \begin{itemize}
+            \item FrameSoc Tool
+            \item Aggregates trace aiming at reducing information loss
+            \item Simple zoom and filters operations
+        \end{itemize}
+    \end{alertblock}
 \end{frame}
 
 \begin{frame}{Example: Matrix multiplication}
-    <++>
+    \centering
+    \includegraphics[width=\linewidth]{ocelotl/overview.png}
 \end{frame}
 
 \begin{frame}{Limits}
-    <++>
+    \begin{itemize}
+        \item FrameSoc trace model not well suited for memory traces
+        \item Interaction is too slow
+        \item Hard to identify / filter by data structures
+    \end{itemize}
 \end{frame}
 
 \begin{frame}{Programmatic approach}
-    <++>
+    \begin{block}{Idea}
+        \begin{itemize}
+            \item Programmatic method using R
+            \item Orgmod labbook to record our analysis
+            \item Basic visualizations inspired from Tabarnac ones
+            \item Custom visualizations depending on the trace
+        \end{itemize}
+    \end{block}
 \end{frame}
 
-\begin{frame}{Example: ??}
-    <++>
+\begin{frame}{Example: dgetrf}
+    \centering
+    \includegraphics[width=\linewidth]{labbook/intensity_RW_dgetrf_zoom}
 \end{frame}
 
 \section{Conclusions and perspectives}
 
-\begin{frame}{Global overview}
-    \cite{Beniamine15TABARNAC}
-    <++>
+\begin{frame}{Global Memory analysis}
+    \begin{block}{Tabarnac}
+        \begin{itemize}
+            \item Collaboration with M. Diener
+            \item Based on state of the art tool
+            \item Results in significant performance gain
+            \item Simple to use
+            \item Published at VPA'15~\cite{Beniamine15TABARNAC}
+        \end{itemize}
+    \end{block}
+    \pause
+    \begin{alertblock}{Limitations}
+        \begin{itemize}
+            \item No temporal view
+            \item Sharing detection is not precise
+            \item Patterns analysis is not possible
+        \end{itemize}
+    \end{alertblock}
 \end{frame}
 
-\begin{frame}{Fine trace collecion}
-    \cite{Beniamine16Moca}
-    <++>
-\end{frame}
-
-\begin{frame}{Trace analysis}
-    <++>
+\begin{frame}{Fine grained memory analysis}
+    \begin{alertblock}{Moca}
+        \begin{itemize}
+            \item Based on widely used mechanism
+            \item More precise trace than existing tools
+            \item Contains all information for pattern detection
+            \item Submitted at CCGRID'16
+            \item Research reports~\cite{Beniamine16Moca,Beniamine15Memory}
+        \end{itemize}
+    \end{alertblock}
+    \pause
+    \begin{block}{Visualization}
+        \begin{itemize}
+            \item FrameSoc / Ocelotl approach promising but does not scale
+            \item R approach permit to visualize actual issues
+            \item Still a work in progress
+        \end{itemize}
+    \end{block}
 \end{frame}
 
 \begin{frame}{Perspectives}
-    <++>
+    \alertblockat{<1>}{Short term}{
+        \begin{itemize}
+            \item Use Moca traces to understand Intel MKL performaances
+            \item Analyze real application
+            \item Couple Moca traces with performances information
+        \end{itemize}
+    }
+    \pause
+    \alertblockat{<2>}{Long term}{
+        \begin{itemize}
+            \item Higher level trace visualization for Moca
+            \item Similar tools for GPU / Accelerators
+        \end{itemize}
+    }
 \end{frame}
 
 \newcounter{finalframe}
 \setcounter{finalframe}{\value{framenumber}}
 %Last numbered frame go here
 
-\begin{frame}{Perspectives}
+\begin{frame}{}
+    \centering
+    \Huge
+    Thank You !
 \end{frame}
 %=============================================================================
 
@@ -663,5 +743,54 @@ Supervisors: & Pr, Bruno Raffin \\
     \resizebox{!}{.85\textheight}{
         \input{tikz/moca-tikz-slides}
     }
-\end{frame}%=============================================================================
+\end{frame}
+
+\setcounter{framenumber}{\value{finalframe}}
+\begin{frame}{Matrix multiplication full example}
+    \centering
+    \alt<1>{
+        \resizebox{.8\linewidth}{!}{
+            \input{tikz/mat-mult-par.tex}
+        }
+    }{
+        \alt<2>{
+            \includegraphics[width=\textwidth]{ocelotl/TaskView.png}
+        }{
+            \alt<3>{
+                \includegraphics[width=\textwidth]{ocelotl/TaskView-zoom-init.png}
+            }{
+                \alt<4>{
+                    \includegraphics[width=\textwidth]{ocelotl/Sharing.png}
+                }{
+                    \includegraphics[width=\textwidth]{ocelotl/Sharing-zoom.png}
+                }
+            }
+        }
+    }
+    \pause
+    \pause
+    \pause
+    \pause
+\end{frame}%
+\setcounter{framenumber}{\value{finalframe}}
+\begin{frame}{dgetrf full example}
+    \centering
+    \alt<1>{
+        \includegraphics[width=\textwidth]{labbook/intensity_Rw_dgetrf}
+    }{
+        \alt<2>{
+            \includegraphics[width=\textwidth]{labbook/intensity_RW_dgetrf_zoom}
+        }{
+            \alt<3>{
+                \includegraphics[width=\textwidth]{labbook/intensity_Share_dgetrf_zoom-init}
+            }{
+                \includegraphics[width=\textwidth]{labbook/intensity_Share_dgetrf_zoom-init1}
+            }
+        }
+    }
+    \pause
+    \pause
+    \pause
+\end{frame}%
+%=============================================================================
 \end{document}

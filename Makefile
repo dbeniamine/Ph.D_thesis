@@ -23,7 +23,7 @@ PDFS= $(MAIN) $(SLIDES)
 all : $(PDFS)
 
 presentation: $(SLIDES)
-	pdfpc -g -s -d 0 -l 40 $<
+	pdfpc -d 0 -s $<
 
 # Note that $(PDF) should only depends on $(BBL) and $(BBL) should depends on
 # $(AUX) but as the last compilation re write $(AUX) if we do so, make will
