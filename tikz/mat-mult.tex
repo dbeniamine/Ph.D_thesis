@@ -77,13 +77,19 @@
         \coordinate (cjint) at (.1,9.3);
         \coordinate (ckint) at (.1,8.9);
         \coordinate (ck) at (.6,8.9);
-        \uncover<2->{
+        \uncover<5->{
             \path[draw,SwapA] (cj) .. controls (cjint) and (ckint) ..(ck);
         }
 
-        \node[matgrid={A}{5}] at (0,0){};
-        \node[matgrid={B}{5}] at (6,6){};
-        \node[matgrid={C}{5}] at (6,0){};
+        \uncover<2->{
+            \node[matgrid={A}{5}] at (0,0){};
+        }
+        \uncover<4->{
+            \node[matgrid={B}{5}] at (6,6){};
+        }
+        \uncover<3->{
+            \node[matgrid={C}{5}] at (6,0){};
+        }
 
     \end{pgfonlayer}
 
@@ -91,20 +97,26 @@
 
     \begin{pgfonlayer}{foreground}
         %% A
-        \draw[PrimaryA,ColK]   (mA-0N) -- node [above] {\textbf{k}} (mA-NN);
-        \draw[SecondaryA,ColI] (mA-0N) -- node [left]  {\textbf{i}} (mA-00);
+        \uncover<2->{
+            \draw[PrimaryA,ColK]   (mA-0N) -- node [above] {\textbf{k}} (mA-NN);
+            \draw[SecondaryA,ColI] (mA-0N) -- node [left]  {\textbf{i}} (mA-00);
+        }
 
         %% B
-        \draw[PrimaryA,ColK]   (mB-0N) -- node(bk) [left]  {\textbf{k}} (mB-00);
-        \draw[SecondaryA,ColJ] (mB-0N) -- node(bj) [above] {\textbf{j}} (mB-NN);
+        \uncover<4->{
+            \draw[PrimaryA,ColK]   (mB-0N) -- node(bk) [left]  {\textbf{k}} (mB-00);
+            \draw[SecondaryA,ColJ] (mB-0N) -- node(bj) [above] {\textbf{j}} (mB-NN);
+        }
 
-        \uncover<2->{
+        \uncover<5->{
             \draw[SwapA] (bj.south) edge[out=-90,in=0] (bk.east);
         }
 
         %% C
-        \draw[PrimaryA,ColJ]   (mC-0N) -- node [above] {\textbf{j}} (mC-NN);
-        \draw[SecondaryA,ColI] (mC-0N) -- node [left]  {\textbf{i}} (mC-00);
+        \uncover<3->{
+            \draw[PrimaryA,ColJ]   (mC-0N) -- node [above] {\textbf{j}} (mC-NN);
+            \draw[SecondaryA,ColI] (mC-0N) -- node [left]  {\textbf{i}} (mC-00);
+        }
     \end{pgfonlayer}
 
 \end{tikzpicture}

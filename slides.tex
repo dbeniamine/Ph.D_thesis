@@ -2,6 +2,7 @@
 \input{custom/magic}
 \documentclass[xcolor={usenames,dvipsnames},hyperref={pdfusetitle}]{beamer}
 \usepackage{lmodern}
+\beamertemplatenavigationsymbolsempty
 
 %=========================Language and encoding ==============================
 
@@ -171,16 +172,12 @@ Supervisors: & Pr, Bruno Raffin \\
                     \begin{itemize}
                         \alertitem Add memory caches
                     \end{itemize}
-                    \alertitem Physical limits
-                        \begin{itemize}
-                            \alertitem Energy consumption
-                            \alertitem Heat dissipation
-                        \end{itemize}
+                    \alertitem Energy consumption
                 \end{itemize}
             \end{block}
-            \uncover<8->{
-                \begin{alertblock}{Build parallel machines}
-                    Writing efficient code becomes complex
+            \uncover<6->{
+                \begin{alertblock}{Solution}
+                    Build parallel machines
                 \end{alertblock}
             }
         \end{column}
@@ -229,7 +226,7 @@ Supervisors: & Pr, Bruno Raffin \\
 \section{State of the art}
 
 \begin{frame}{Generic performance analysis tools}
-    \alertblockat{<1>}{Low level trace collection}{
+    \alertblockat{<1>}{Low level trace collection libraries}{
         \begin{itemize}
             \item Likwid~\cite{Treibig10LIKWID}
             \item PAPI~\cite{Browne00Portable}
@@ -246,7 +243,7 @@ Supervisors: & Pr, Bruno Raffin \\
     }
     \pause
     \begin{alertblock}{Limitations}
-        Indirect information on the memory usage using  CPU performance counters
+        Focus on CPU point of view
     \end{alertblock}
 \end{frame}
 
@@ -259,11 +256,29 @@ Supervisors: & Pr, Bruno Raffin \\
             \item  MemAxes / Mitos~\cite{Gimenez14Dissecting}
         \end{itemize}
     \end{block}
-    \pause 
+    \pause
     \begin{alertblock}{Limitations}
         \begin{itemize}
             \item Not complete: miss significant part of memory
-            \item Not precise enough for pattern analysis
+            \item Not precise enough to detect patterns
+        \end{itemize}
+    \end{alertblock}
+\end{frame}
+
+\begin{frame}{Dynamic mapping tools~\cite{Corbet12Toward,Diener14kMAF}}
+    \begin{block}{Principles}
+        \begin{itemize}
+            \item Collect informations on memory accesses online
+            \item Move data close to thread using them
+        \end{itemize}
+    \end{block}
+    \pause
+    \begin{alertblock}{Limitations}
+        \begin{itemize}
+            \item Do not store the trace
+            \item Do not help understanding issues
+            \item Opportunities of optimization lost during learning process
+            \item Cost of data move
         \end{itemize}
     \end{alertblock}
 \end{frame}
@@ -273,11 +288,12 @@ Supervisors: & Pr, Bruno Raffin \\
 \subsection{Tabarnac}
 
 \begin{frame}{Trace collection mechanism}
+    \todo{Couper existant / modifs}
     \begin{itemize}[<+-|alert@+>]
         \item Aims at improving performances on NUMA machines
         \item Pin~\cite{Luk05Pin} instrumentation
         \item Based on Numalyze~\cite{Diener15Characterizing}
-        \item Collects 1 counter per page and per threads
+        \item One counter per page and per threads
         \item Lock free
         \item Differentiate access types (reads / writes)
         \item Retrieve data structure information
@@ -331,8 +347,8 @@ Supervisors: & Pr, Bruno Raffin \\
 
 \begin{frame}{Issue and optimization}
     \alt<1-2>{
+        \centering
         \scalebox{.8}{
-            \centering
             \input{tikz/is-curve-nocolor}
         }
         \pause
@@ -340,12 +356,13 @@ Supervisors: & Pr, Bruno Raffin \\
             \#pragma omp for schedule(dynamic)
         \end{block}
     }{
+        \centering
         \scalebox{.8}{
-            \centering
             \input{tikz/is-curve}
-        }        \begin{block}{Modified code}
+        }
+        \begin{alertblock}{Modified code}
             \#pragma omp for schedule(static, size/(2*num\_threads))
-        \end{block}
+        \end{alertblock}
     }
     \pause
 \end{frame}
@@ -388,28 +405,110 @@ Supervisors: & Pr, Bruno Raffin \\
 \subsection{Moca an efficient memory trace collection system}
 
 \begin{frame}{Background knowledge}
-    <++>
+    \begin{block}{Page faults}
+        \begin{itemize}
+            \item Mechanism triggered by hardware
+            \item Handled by Operation System
+            \item Happens at first write
+        \end{itemize}
+    \end{block}
 \end{frame}
 
 \begin{frame}{Design}
-    <++>
+    \begin{alertblock}{Linux kernel module}
+        \begin{itemize}
+            \item Tracks thread creation
+            \item Intercept page faults
+            \item Injects false page faults
+            \item Keep the recent trace (kernel space)
+        \end{itemize}
+    \end{alertblock}
+    \pause
+    \begin{block}{User space process}
+        \begin{itemize}
+            \item Run application with context library
+            \item Run application with kernel module loaded
+            \item Retrieve trace in user space
+        \end{itemize}
+    \end{block}
 \end{frame}
 
 \begin{frame}{Handling page faults}
-    <++>
+    \centering
+    \resizebox{!}{.7\textheight}{
+        \input{tikz/moca-fpf}
+    }
 \end{frame}
 
+\subsection{Experimental evaluation}
 
-\begin{frame}{Experimental setup}
-    <++>
+\begin{frame}{Tools comparison}
+    \small
+    \begin{tabular}{lcccc}
+        \toprule
+         & \textbf{Moca} & \textbf{Tabarnac} & \textbf{Mitos} & \textbf{MemProf} \\
+            \midrule
+            \textbf{Design} & & & &\\
+            \midrule
+            Mechanisms   & Page faults  & Inst* & PEBS + Inst* & IBS \\
+            Architecture & \textbf{Any} & Intel (AMD) & Intel & AMD   \\
+            \midrule
+            \textbf{Completeness} & & & &\\
+            \midrule
+            Granularity & \textbf{Address} & Page          & \textbf{Address} & \textbf{Address} \\
+            Superset          & \textbf{Page} & \textbf{Page} & None             & None             \\
+            \midrule
+            \textbf{Detail} & & & &\\
+            \midrule
+            Temporal data & \textbf{Yes} & No          & \textbf{Yes} & \textbf{Yes} \\
+            CPU location  & \textbf{Yes} & No          & \textbf{Yes} & \textbf{Yes} \\
+            Nature        & \textbf{Yes} &\textbf{Yes} & Yes**         & Yes**       \\
+        \bottomrule
+    \end{tabular}
+\end{frame}
+
+\begin{frame}{Benchmarks}
+    \small
+    \begin{tabular}{lrll}
+        \toprule
+        \textbf{Name} & \textbf{Footprint*} & \textbf{Description} & \textbf{Group} \\
+        \midrule
+        \IS & \SI{132}{Mib} & Integer Sort  &
+        \multirow{4}{*}{Memory Intensive}\\
+        \CG & \si{125}{Mib} & Conjugate Gradient & \\
+        \MG & \si{508}{Mib}& Multi-grid & \\
+        \FT & \si{398}{Mib}& Discrete 3D FFT & \\
+        \midrule
+        \UA & \si{112}{Mib}& Unstructured Adaptive mesh &
+        \multirow{2}{*}{Unstructured} \\
+        \DC & $1.46$Gib & Data Cube & \\
+        \midrule
+        \BT & \si{120}{Mib}& Block Tri-diagonal solver &
+        \multirow{3}{*}{Pseudo Apps} \\
+        \SP & \si{122}{Mib}& Scalar Penta-diagonal solver & \\
+        \LU & \si{118}{Mib}& Lower-Upper Gauss-Seidel solver & \\
+        \midrule
+        \EP & \si{78}{Mib}& Embarrassingly parallel & CPU bound\\
+        \bottomrule
+    \end{tabular}
 \end{frame}
 
 \begin{frame}{Experimental results: trace precision}
-    <++>
+    \alt<1>{
+        \includegraphics[width=\linewidth]{moca/moca_pages_intel.pdf}
+    }{
+        \includegraphics[width=\linewidth]{moca/moca_addr_intel.pdf}
+    }
+    \pause
 \end{frame}
 
 \begin{frame}{Experimental results: overhead}
-    <++>
+    \alt<1>{
+        \includegraphics[width=\linewidth]{moca/moca_overhead_intel.pdf}
+    }{
+        \includegraphics[width=\linewidth]{moca/moca_overhead_amd.pdf}
+    }
+    \pause
 \end{frame}
 
 \subsection{Visualizing and analyzing Moca traces}
@@ -514,9 +613,55 @@ Supervisors: & Pr, Bruno Raffin \\
     \includegraphics[width=\linewidth]{tabarnac/tool-ovh.pdf}
 \end{frame}
 
-%=============================================================================
+\subsection*{Moca}
+
+\setcounter{framenumber}{\value{finalframe}}
+\begin{frame}{Experimental setup}
+    \small
+    \begin{tabular}{lllllllllll}
+        \toprule
+        & \multicolumn{5}{c}{\textbf{Hardware totals}}\\
+        \cmidrule(lr){2-6}
+        & Nodes & Threads & \multicolumn{2}{c}{CPU} & Memory \\
+        \cmidrule(lr){2-6}
+        \texttt{Edel}    & $2$ & $8$  & \multicolumn{2}{c}{Intel Xeon E5520}      & \SI{24}{Gib} \\
+        \texttt{StRemi} & $2$ & $24$ & \multicolumn{2}{c}{AMD Opteron 6164 HE }& \SI{48}{Gib} \\
+        \midrule
+        & \multicolumn{5}{c}{\textbf{Hardware per node}}\\
+        \cmidrule(lr){2-6}
+        & Cores & Threads & Frequency & L3 Cache & Memory \\
+        \cmidrule(lr){2-6}
+        \texttt{Edel}   & $4$  & $4$   & \SI{2.27}{Ghz}& \SI{8}{Mib}  & \SI{12}{Gib} \\
+        \texttt{StRemi} & $12$ & $12$  & \SI{1.70}{Ghz}& \SI{12}{Mib} & \SI{24}{Gib}\\
+        \midrule
+        & \multicolumn{5}{c}{\textbf{Software}}\\
+        \cmidrule(lr){2-6}
+        & \multicolumn{2}{c}{Distribution} & Kernel &
+            \multicolumn{2}{c}{Bios configurations} \\
+        \cmidrule(lr){2-6}
+        \texttt{Turing}   & \multicolumn{2}{c}{Debian Jessie} & Linux 3.16.0-4 &
+            \multicolumn{2}{c}{No hyper threading} \\
+        \texttt{Idfreeze} & \multicolumn{2}{c}{Debian Jessie} & Linux 3.16.0-4 &
+            \multicolumn{2}{c}{No hyper threading}\\
+        \bottomrule
+    \end{tabular}
+\end{frame}
+
+\setcounter{framenumber}{\value{finalframe}}
+\begin{frame}{Parameters evaluation}
+   \alt<1>{
+    \includegraphics[width=\linewidth]{moca/moca_param.pdf}
+    }{
+        \includegraphics[width=\linewidth]{moca/moca_param_events.pdf}
+    }
+    \pause
+\end{frame}
+
+\setcounter{framenumber}{\value{finalframe}}
+\begin{frame}{Internal design}
+    \centering
+    \resizebox{!}{.85\textheight}{
+        \input{tikz/moca-tikz-slides}
+    }
+\end{frame}%=============================================================================
 \end{document}
-
-
-
-

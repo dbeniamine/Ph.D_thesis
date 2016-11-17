@@ -46,59 +46,86 @@ text width=6.5em]
     \begin{tikzpicture}[scale=0.8]
 
         \node [lblock]   (pf)  at (0,0) {PageFault(task, @)};
-        \node [mblock]   (pfi) at (10,0) {InterceptPageFault(task,@)};
 
-        \node [decision] (mon) at (10,-2) {Is task monitored ?};
-
-        \node [decision] (shou) at (5,-3) {Should we monitor it ?};
         \node [lblock]   (hpf)  at (0,-5) {HandleFault(task,@)};
 
-        \node [mblock] (Add1) at (5,-5) {Monitor(task)};
-        \node [mblock] (Add)  at (10,-5) {AddToChunk(task,@)};
-
-        \node [decision] (sfix)     at (10,-7) {Is it a false page fault ?};
         \node [lblock]   (resume)   at (0,-9){Resume execution};
 
-        \node [mblock]   (fix)      at (10,-9) {FixFalsePageFault(task,@)};
+        \uncover<2->{
+            \node [mblock]   (pfi) at (10,0) {InterceptPageFault(task,@)};
 
+            \node [decision] (mon) at (10,-2) {Is task monitored ?};
+
+        }
+        \uncover<3->{
+            \node [decision] (shou) at (5,-3) {Should we monitor it ?};
+            \node [mblock] (Add)  at (10,-5) {AddToChunk(task,@)};
+        }
+
+        \uncover<4->{
+            \node [mblock] (Add1) at (5,-5) {Monitor(task)};
+        }
+
+        \uncover<5->{
+            \node [decision] (sfix)     at (10,-7) {Is it a false page fault ?};
+        }
+
+        \uncover<6->{
+            \node [mblock]   (fix)      at (10,-9) {FixFalsePageFault(task,@)};
+
+        }
         \node[fit=(pfi) (shou) (fix),header={Moca}{white},basic box] (Moca) {};
         \node[fit=(pf) (hpf) (resume),header={Linux}{white},basic box] (OS) {};
 
-        \path [line] (pf.south) -- ($(pf.south)+(0,-.4)$) --
+        \only<1>{
+            \draw [line] (pf) -- (hpf);
+        }
+        \path [line] (hpf) -- (resume);
+
+        \only<2->{
+            \path [line] (pf.south) -- ($(pf.south)+(0,-.4)$) --
             ($(pf.south)+(5,-.4)$)  -- ($(pfi.north)+(-5,.4)$) --
             ($(pfi.north)+(0,.4)$) -- (pfi.north);
 
-        \draw [-latex, strike thru arrow,dashed] (pf) -- (hpf);
+            \draw [-latex, strike thru arrow,dashed] (pf) -- (hpf);
 
-        \path [line] (pfi.south) -- (mon.north);
+            \path [line] (pfi.south) -- (mon.north);
+        }
 
-        \path [line] (hpf) -- (resume);
 
-        \path [line] (mon.south) -- node [pos=.2,right] {Yes} (Add.north);
+        \only<3->{
 
-        \path [line] (mon.west) -- node [pos=.2,above] {No} ($(mon)+(-5,0)$)
-        -- (shou.north);
+            \path [line] (mon.west) -- node [pos=.2,above] {No} ($(mon)+(-5,0)$)
+            -- (shou.north);
+            \path [line] (mon.south) -- node [pos=.2,right] {Yes} (Add.north);
+        }
+        \only<4->{
 
-        \path [line] (shou.west)  -- node [pos=.9,above] {No} ($(shou)+(-2.25,0)$)
-        -- ($(shou)+(-2.25,-.5)$) -- ($(hpf)+(0,1.5)$) -- (hpf.north);
+            \path [line] (shou.west)  -- node [pos=.9,above] {No} ($(shou)+(-2.25,0)$)
+            -- ($(shou)+(-2.25,-.5)$) -- ($(hpf)+(0,1.5)$) -- (hpf.north);
 
-        \path [line] (shou.south) -- node [right] {Yes} (Add1.north);
+            \path [line] (shou.south) -- node [right] {Yes} (Add1.north);
 
-        \path [line] (Add1.south) -- ($(Add1.south)+(0,-.5)$)
-        -- ($(Add1.south)+(2,-.5)$) -- ($(Add.north)+(-3,1)$)
-        -- ($(Add.north)+(0,1)$) -- (Add.north);
+            \path [line] (Add1.south) -- ($(Add1.south)+(0,-.5)$)
+            -- ($(Add1.south)+(2,-.5)$) -- ($(Add.north)+(-3,1)$)
+            -- ($(Add.north)+(0,1)$) -- (Add.north);
 
-        \path [line] (Add.south) -- (sfix);
+        }
+        \only<5->{
+            \path [line] (Add.south) -- (sfix);
 
-        \path [line] (sfix.west) -- node [pos=.1,above] {No}
-        ($(sfix)+(-7.25,0)$) -- ($(sfix)+(-7.25,3.5)$)
-        -- ($(hpf)+(0,1.5)$) -- (hpf.north);
+        }\only<6->{
+            \path [line] (sfix.west) -- node [pos=.1,above] {No}
+            ($(sfix)+(-7.25,0)$) -- ($(sfix)+(-7.25,3.5)$)
+            -- ($(hpf)+(0,1.5)$) -- (hpf.north);
 
-        \path [line] (sfix.south) -- node [right] {Yes} (fix.north);
-
-        \path [line] (fix.south) -- ($(fix.south)+(0,-.5)$)
-        -- ($(fix.south)+(-7.25,-.5)$) -- ($(fix)+(-7.25,1.5)$)
-        -- ($(resume)+(0,1.5)$) --(resume.north);
+            \path [line] (sfix.south) -- node [right] {Yes} (fix.north);
+        }
+        \only<7->{
+            \path [line] (fix.south) -- ($(fix.south)+(0,-.5)$)
+            -- ($(fix.south)+(-7.25,-.5)$) -- ($(fix)+(-7.25,1.5)$)
+            -- ($(resume)+(0,1.5)$) --(resume.north);
+        }
 
     \end{tikzpicture}
 

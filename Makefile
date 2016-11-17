@@ -22,6 +22,9 @@ PDFS= $(MAIN) $(SLIDES)
 
 all : $(PDFS)
 
+presentation: $(SLIDES)
+	pdfpc -g -s -d 0 -l 40 $<
+
 # Note that $(PDF) should only depends on $(BBL) and $(BBL) should depends on
 # $(AUX) but as the last compilation re write $(AUX) if we do so, make will
 # always think that we need to redo the $(BBL) and $(PDF) targets.
