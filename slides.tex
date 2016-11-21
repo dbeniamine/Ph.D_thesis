@@ -72,18 +72,6 @@
 \definecolor{INstruct}{HTML}{82A382}
 \setbeamercolor{structure}{fg=INstruct}
 
-\newcommand{\alertitem}{\item<+-|alert@+>}
-\newcommand\alertblockat[3]{
-    \alt#1{
-        \begin{alertblock}{#2}
-            #3
-        \end{alertblock}
-    }{
-        \begin{block}{#2}
-            #3
-        \end{block}
-    }
-}
 
 %=============================================================================
 
@@ -102,7 +90,6 @@
     \includegraphics[width=.18\textwidth]{img/datamove.png}
 }
 
-
 \newcommand{\enableTocAtSection}{
     \AtBeginSection[]
     {
@@ -116,10 +103,12 @@
     \AtBeginSubsection[]
     {
         \ifthenelse{\boolean{sectiontoc}}{
-            \begin{frame}<beamer>
-                \frametitle{Outline}
-                \tableofcontents[currentsection,currentsubsection]
-            \end{frame}
+            \ifthenelse{\thesubsection>1}{
+                \begin{frame}<beamer>
+                    \frametitle{Outline}
+                    \tableofcontents[currentsection,currentsubsection]
+                \end{frame}
+            }
         }
     }
 }
@@ -151,7 +140,7 @@ Supervisors: & Pr, Bruno Raffin \\
 
 %========================= Real presentation =================================
 
-\section{Context}
+\begin{section}{Context}
 
 \begin{frame}{Science and computers}
     \input{tikz/intro}
@@ -162,23 +151,54 @@ Supervisors: & Pr, Bruno Raffin \\
         \begin{column}{.45\textwidth}
             \centering
             \input{tikz/topo-naive}
+            \begin{block}{}
+                \only<1-2>{
+                    Before 1990
+                }
+                \uncover<3->{
+                    Early 90's
+                }
+            \end{block}
         \end{column}
         \begin{column}{.45\textwidth}
             \pause
-            \begin{block}{Increase cpu frequency}
-                \begin{itemize}[<+->]
-                    \item Done for years
-                    \alertitem Gap CPU / Memory
-                    \begin{itemize}
-                        \alertitem Add memory caches
-                    \end{itemize}
-                    \alertitem Energy consumption
+            \begin{block}{Increase CPU frequency}
+                \begin{itemize}
+                    \item Gap CPU / Memory
+                    \item Energy consumption
                 \end{itemize}
             \end{block}
-            \uncover<6->{
-                \begin{alertblock}{Solution}
-                    Build parallel machines
-                \end{alertblock}
+            \pause
+            \begin{alertblock}{Memory}
+                \begin{itemize}
+                    \item Spatial locality
+                    \item Temporal locality
+                    \item Caches
+                \end{itemize}
+            \end{alertblock}
+            \pause
+            \begin{alertblock}{Energy}
+                Build parallel machines
+            \end{alertblock}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+\begin{frame}{Parallel and NUMA machines}
+    \begin{columns}
+        \begin{column}{.2\linewidth}
+            \begin{block}{}
+                \alt<1>{
+                    Early 2000's
+                }{
+                    Current machines
+                }
+            \end{block}
+        \end{column}
+        \begin{column}{.8\linewidth}
+            \centering
+            \scalebox{.6}{
+                \input{tikz/topo-NUMA.tex}
             }
         \end{column}
     \end{columns}
@@ -187,16 +207,23 @@ Supervisors: & Pr, Bruno Raffin \\
 \begin{frame}{A simple example}
     \centering
     \scalebox{.6}{
-        \input{tikz/mat-mult}
+        \input{tikz/mat-mult-slides}
     }
 \end{frame}
 
-\begin{frame}{Parallel and NUMA machines}
+\begin{frame}{False sharing}
     \centering
-    \scalebox{.6}{
-        \input{tikz/topo-NUMA.tex}
+    \scalebox{.8}{
+        \input{tikz/false-sharing-slides}
     }
-    \pause
+    \begin{block}{Cache line (64 bytes)}
+        \begin{itemize}
+            \item One access retrieves a whole line
+            \item Cache consistency handled at cache line level
+            \item Two threads writing same line => conflict
+            \item Conflict freeze cache hierarchy
+        \end{itemize}
+    \end{block}
 \end{frame}
 
 \begin{frame}{Research statement}
@@ -205,56 +232,60 @@ Supervisors: & Pr, Bruno Raffin \\
     \end{alertblock}
     \pause
     \begin{block}{Challenges}
-        \begin{enumerate}[<+-|alert@+>]
-                \item Collect memory traces
+        \begin{enumerate}
+                \item<alert@+> Collect memory traces
                 \begin{itemize}
                     \item \textbf{Complete}: do not miss part of the address space
                     \item \textbf{Precise}:  enough to detect patterns
-                    \item \textbf{Detailed}: embed all meta data about the access
+                    \item \textbf{Detailed}: embed time, space, location, nature
                 \end{itemize}
-                \item Visualize memory traces
-                \item Take advantage of the obtained knowledge
+                \item<alert@+> Visualize memory traces
+                \item<alert@+> Optimize applications using the obtained knowledge
         \end{enumerate}
     \end{block}
 \end{frame}
 
-\enableTocAtSection
+\end{section}
+
 \begin{frame}{Outline}
     \tableofcontents
 \end{frame}
 
-\section{State of the art}
+\section{Related work}
+\enableTocAtSection
 
-\begin{frame}{Generic performance analysis tools}
-    \alertblockat{<1>}{Low level trace collection libraries}{
+\begin{frame}{Trace collection mechanisms}
+    \begin{block}{Performance counters}
         \begin{itemize}
-            \item PAPI~\cite{Browne00Portable}
-            \item Likwid~\cite{Treibig10LIKWID}
+            \item Hardware based / lightweight
+            \item CPU point of view
         \end{itemize}
-    }
+    \end{block}
     \pause
-    \alertblockat{<2>}{Higher level tools}{
+    \begin{block}{Instrumentation}
         \begin{itemize}
-            \item PARAVER~\cite{Pillet95PARAVER}
-            \item MAQAO~\cite{Djoudi05MAQAO}
-            \item VTune~\cite{Reinders05VTune}
-            \item HPCToolkit~\cite{Adhianto10HPCTOOLKIT}
-            \item \ldots
+            \item Flexible
+            \item Usually slow
+            \item Vendor specific libraries: Intel Pin~\cite{Luk05Pin}
         \end{itemize}
-    }
+    \end{block}
     \pause
-    \begin{alertblock}{Limitations}
-        Focus on CPU point of view
+    \begin{alertblock}{Instruction sampling~\cite{Drongowski07Instructionbased,Levinthal09Performance}}
+        \begin{itemize}
+            \item Lightweight
+            \item Detailed information on memory
+            \item Coarse grain sampling
+        \end{itemize}
     \end{alertblock}
 \end{frame}
 
 \begin{frame}{Existing memory profiling tools}
-    \begin{block}{Instruction sampling~\cite{Drongowski07Instructionbased,Levinthal09Performance}}
+    \begin{block}{}
         \begin{itemize}
             \item  MemPhis~\cite{McCurdy10Memphis}
-            \item  MemProf~\cite{Lachaize12MemProf}
+            \item<alert@1->  MemProf~\cite{Lachaize12MemProf}
             \item  HPCToolkit extension~\cite{Liu14Tool}
-            \item  MemAxes / Mitos~\cite{Gimenez14Dissecting}
+            \item <alert@1-> MemAxes / Mitos~\cite{Gimenez14Dissecting}
         \end{itemize}
     \end{block}
     \pause
@@ -288,17 +319,33 @@ Supervisors: & Pr, Bruno Raffin \\
 
 \subsection{Design}
 
-\begin{frame}{Trace collection mechanism}
-    \begin{block}{Numalyze~\cite{Diener15Characterizing}}
+\begin{frame}{Goals}
+    \begin{block}{}
         \begin{itemize}
+            \item Global understanding of memory behavior
+            \item Designed for NUMA machines
+            \item Focus on thread sharing and data mapping
+            \item Simple to use
+        \end{itemize}
+    \end{block}
+\end{frame}
+
+\begin{frame}{Numalyze~\cite{Diener15Characterizing}}
+    \begin{block}{}
+        \begin{itemize}
+            \item Existing tool
+            \item Designed to compare mapping tools
             \item Pin~\cite{Luk05Pin} instrumentation
-            \item One counter per page and per threads
+            \item Collects One counter per page and per thread
             \item Lock free
         \end{itemize}
     \end{block}
-    \pause
-    \begin{alertblock}{Tabarnac}
-        \begin{itemize}[<+->]
+\end{frame}
+
+\begin{frame}{Tabarnac}
+    \begin{alertblock}{}
+        \begin{itemize}
+            \item Build on top of Numalyze
             \item Differentiate access types (reads / writes)
             \item Retrieve data structure information
                 \begin{itemize}
@@ -306,80 +353,83 @@ Supervisors: & Pr, Bruno Raffin \\
                     \item Intercepts allocations
                     \item Uses debug flags to decide data structure names
                 \end{itemize}
-            \item Designed for improving performances on NUMA Machines
-            \item Simple yet meaningful R visualizations
+            \item R visualizations
+            \item Filter out almost unused data structures
         \end{itemize}
     \end{alertblock}
 \end{frame}
 
-\begin{frame}{Visualizations}
+\subsection{Optimizing IS, a well known benchmark}
+
+\begin{frame}{IS}
+    \begin{itemize}
+        \item Nas Parallel Benchmark~\cite{Jin99NPBOpenMP}
+        \item Integer (bucket) Sort
+        \item Memory Intensive
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Data structures}
+    \begin{columns}
+        \begin{column}{.45\linewidth}
+            \centering
+            \includegraphics[width=\linewidth]{tabarnac/is_b_structs_sz.png}
+        \end{column}
+        \begin{column}{.45\linewidth}
+            \centering
+            \includegraphics[width=\linewidth]{tabarnac/is_b_structs_rw.png}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+\begin{frame}{First touch}
     \alt<1>{
         \begin{columns}
             \begin{column}{.45\linewidth}
                 \centering
-                \includegraphics[width=\linewidth]{img/tabarnac/example_sz.png}
+                \includegraphics[width=\linewidth]{tabarnac/is_b_ka_ft.png}
             \end{column}
             \begin{column}{.45\linewidth}
-                \includegraphics[width=\linewidth]{img/tabarnac/example_rw.png}
+                \centering
+                \includegraphics[width=\linewidth]{tabarnac/is_b_kb2_ft.png}
             \end{column}
         \end{columns}
-        \begin{block}{}
-            \centering
-            Data structure importance
-        \end{block}
     }{
         \centering
-        \alt<2>{
-            \includegraphics[height=.7\textheight]{img/tabarnac/example_ft.png}
-            \begin{block}{}
-                \centering
-                First touch distribution for one data structure
-            \end{block}
-        }{
-            \includegraphics[height=.75\textheight]{img/tabarnac/is_b_kb2_orig.png}
-            \begin{block}{}
-                \centering
-                Accesses distribution for one data structure
-            \end{block}
-        }
+        \includegraphics[width=.65\linewidth]{tabarnac/is_b_kb1_ft.png}
     }
-    \pause
     \pause
 \end{frame}
 
-\subsection{Optimizing a well known benchmark}
-
-\begin{frame}{First analysis}
-\begin{figure}[htb]
-    \begin{columns}
-        \begin{column}{.45\linewidth}
-            \includegraphics[width=\linewidth]  {tabarnac/is_b_kb2_orig}
-            \begin{block}{}
+\begin{frame}{Accesses distribution}
+    \alt<1>{
+        \begin{columns}
+            \begin{column}{.45\linewidth}
                 \centering
-                Accesses distribution for key buffer 2
-            \end{block}
-        \end{column}
-        \begin{column}{.45\linewidth}
-            \includegraphics[width=\linewidth]  {tabarnac/is_b_kb1_orig}
-            \begin{block}{}
+                \includegraphics[width=\linewidth]{tabarnac/is_b_ka_dist.png}
+            \end{column}
+            \begin{column}{.45\linewidth}
                 \centering
-                Accesses distribution for key buffer 1
-            \end{block}
-        \end{column}
-    \end{columns}
-\end{figure}
-
+                \includegraphics[width=\linewidth]{tabarnac/is_b_kb2_dist.png}
+            \end{column}
+        \end{columns}
+    }{
+        \centering
+        \includegraphics[width=.65\linewidth]{tabarnac/is_b_kb1_dist.png}
+    }
+    \pause
 \end{frame}
 
 \begin{frame}{Understanding the issue}
-    \alt<1-2>{
+    \alt<1>{
         \centering
         \scalebox{.8}{
             \input{tikz/is-curve-nocolor}
         }
-        \pause
         \begin{block}{Original code}
-            \#pragma omp for schedule(dynamic)
+            \#pragma omp for schedule(dynamic)\\
+            for (k=0;k<N;k++)\\
+            \qquad key\_buff1[key\_buff2[k]]+= \ldots
         \end{block}
     }{
         \centering
@@ -387,34 +437,36 @@ Supervisors: & Pr, Bruno Raffin \\
             \input{tikz/is-curve}
         }
         \begin{alertblock}{Modified code}
-            \#pragma omp for schedule(static, size/(2*num\_threads))
+            \#pragma omp for schedule(static, size/(2*num\_threads))\\
+            for (k=0;k<N;k++)\\
+            \qquad  key\_buff1[key\_buff2[k]]+= \ldots
         \end{alertblock}
     }
     \pause
 \end{frame}
 
-\begin{frame}{Second analysis}
-    \begin{columns}
-        \begin{column}{.45\linewidth}
-            \includegraphics[width=\linewidth]  {tabarnac/is_b_kb2_modif}
-            \begin{block}{}
+\begin{frame}{Modified accesses distribution}
+    \alt<2>{
+        \begin{columns}
+            \begin{column}{.45\linewidth}
                 \centering
-                Accesses distribution for key buffer 2
-            \end{block}
-        \end{column}
-        \begin{column}{.45\linewidth}
-            \includegraphics[width=\linewidth]  {tabarnac/is_b_kb1_modif}
-            \begin{block}{}
+                \includegraphics[width=\linewidth]{tabarnac/is_b_ka_dist_m.png}
+            \end{column}
+            \begin{column}{.45\linewidth}
                 \centering
-                Accesses distribution for key buffer 1
-            \end{block}
-        \end{column}
-    \end{columns}
+                \includegraphics[width=\linewidth]{tabarnac/is_b_kb2_dist_m.png}
+            \end{column}
+        \end{columns}
+    }{
+        \centering
+        \includegraphics[width=.65\linewidth]{tabarnac/is_b_kb1_dist_m.png}
+    }
+    \pause
 \end{frame}
 
 \begin{frame}{Evaluation}
     \begin{block}{Machine}
-        64 thread / 8 nodes NUMA machine
+        64 thread / 4 nodes NUMA machine
     \end{block}
     \pause
     \begin{block}{Optimization method}
@@ -428,8 +480,8 @@ Supervisors: & Pr, Bruno Raffin \\
     \begin{alertblock}{Scheduling}
         \begin{itemize}
             \item Dynamic: default
-            \item Cyclic: cyclic distribution
             \item Fair: ours
+            \item Cyclic: cyclic distribution
         \end{itemize}
     \end{alertblock}
 \end{frame}
@@ -438,15 +490,15 @@ Supervisors: & Pr, Bruno Raffin \\
     \includegraphics[width=\linewidth]{tabarnac/is_exectime}
 \end{frame}
 
-\begin{frame}{Conclusions}
-    \begin{itemize}[<+-|alert@+>]
+\begin{frame}{Conclusions on Tabarnac}
+    \begin{itemize}
         \item Collaboration with M. Diener, UFRGS, P.O.A, Brasil
         \item Improved trace collection tool
-        \item Simple yet meaningful visualization
-        \item Significant performance gain on a well known benchmark
+        \item Meaningful R visualization
+        \item Significant performance gain on NPB IS
         \item Published at VPA'15~\cite{Beniamine15TABARNAC}
     \end{itemize}
-    \uncover<6->{
+    \uncover<2->{
         \begin{alertblock}{Limitations}
             \begin{itemize}
                 \item No temporal informations
@@ -460,35 +512,40 @@ Supervisors: & Pr, Bruno Raffin \\
 
 \subsection{Design}
 
-\begin{frame}{Background knowledge}
-    \begin{block}{Page faults}
+\begin{frame}{Goals}
+    \begin{block}{}
         \begin{itemize}
-            \item Mechanism triggered by hardware
-            \item Handled by Operation System
-            \item Happens at first write of a memory page
-            \item Happens rarely during the execution
-            \item Often used for collecting information on memory usage online
+            \item Fine grained memory traces
+            \item Reasonable overhead
+            \item Limit impact on thread scheduling
         \end{itemize}
     \end{block}
 \end{frame}
 
 \begin{frame}{Principles}
     \begin{alertblock}{Linux kernel module}
-        \begin{itemize}[<+->]
+        \begin{itemize}
             \item Tracks thread creation
             \item Intercept page faults
-            \item Injects false page faults
+            \item Periodically injects false page faults
             \item Keep the recent trace (kernel space)
         \end{itemize}
     \end{alertblock}
-    \uncover<5->{
+    \uncover<2->{
         \begin{block}{User space process}
-            \begin{itemize}[<+->]
+            \begin{itemize}
                 \item Run application with context library
                 \item Run application with kernel module loaded
                 \item Retrieve trace in user space
             \end{itemize}
         \end{block}
+    }
+\end{frame}
+
+\begin{frame}{Managing data in kernel space}
+    \centering
+    \resizebox{!}{.85\textheight}{
+        \input{tikz/moca-tikz-slides}
     }
 \end{frame}
 
@@ -509,7 +566,7 @@ Supervisors: & Pr, Bruno Raffin \\
             \midrule
             \textbf{Design} & & & &\\
             \midrule
-            Mechanisms   & Page faults  & Inst* & PEBS + Inst* & IBS \\
+            Mechanisms   & Page faults  & Instrumentation & PEBS & IBS \\
             Architecture & \textbf{Any} & Intel (AMD) & Intel & AMD   \\
             \midrule
             \textbf{Completeness} & & & &\\
@@ -521,7 +578,7 @@ Supervisors: & Pr, Bruno Raffin \\
             \midrule
             Temporal data & \textbf{Yes} & No          & \textbf{Yes} & \textbf{Yes} \\
             CPU location  & \textbf{Yes} & No          & \textbf{Yes} & \textbf{Yes} \\
-            Nature        & \textbf{Yes} &\textbf{Yes} & Yes**         & Yes**       \\
+            Nature        & \textbf{Yes} &\textbf{Yes} & Yes         & Yes       \\
         \bottomrule
     \end{tabular}
 \end{frame}
@@ -530,7 +587,7 @@ Supervisors: & Pr, Bruno Raffin \\
     \small
     \begin{tabular}{lrll}
         \toprule
-        \textbf{Name} & \textbf{Footprint*} & \textbf{Description} & \textbf{Group} \\
+        \textbf{Name} & \textbf{Footprint} & \textbf{Description} & \textbf{Group} \\
         \midrule
         \IS & \SI{132}{Mib} & Integer Sort  &
         \multirow{4}{*}{Memory Intensive}\\
@@ -552,71 +609,16 @@ Supervisors: & Pr, Bruno Raffin \\
     \end{tabular}
 \end{frame}
 
-\begin{frame}{Experimental results: trace precision}
-    \alt<1>{
+\begin{frame}{Percentage of captured pages}
         \includegraphics[width=\linewidth]{moca/moca_pages_intel.pdf}
-    }{
+\end{frame}
+
+\begin{frame}{Number of captured events}
         \includegraphics[width=\linewidth]{moca/moca_addr_intel.pdf}
-    }
-    \pause
 \end{frame}
 
-\begin{frame}{Experimental results: tracing overhead}
-    \alt<1>{
+\begin{frame}{Tracing overhead (intel)}
         \includegraphics[width=\linewidth]{moca/moca_overhead_intel.pdf}
-    }{
-        \includegraphics[width=\linewidth]{moca/moca_overhead_amd.pdf}
-    }
-    \pause
-\end{frame}
-
-\subsection{Visualizing and analyzing Moca traces}
-
-\begin{frame}{FrameSoc and Ocelotl}
-    \begin{block}{FrameSoc~\cite{Pagano14frameSoC}}
-        \begin{itemize}
-            \item Generic trace management tool
-            \item Several visualization of a trace
-            \item Designed for trace exploration
-        \end{itemize}
-    \end{block}
-    \pause
-    \begin{alertblock}{Ocelotl~\cite{Dosimont14Ocelotl}}
-        \begin{itemize}
-            \item FrameSoc Tool
-            \item Aggregates trace aiming at reducing information loss
-            \item Simple zoom and filters operations
-        \end{itemize}
-    \end{alertblock}
-\end{frame}
-
-\begin{frame}{Example: Matrix multiplication}
-    \centering
-    \includegraphics[width=\linewidth]{ocelotl/overview.png}
-\end{frame}
-
-\begin{frame}{Limits}
-    \begin{itemize}
-        \item FrameSoc trace model not well suited for memory traces
-        \item Interaction is too slow
-        \item Hard to identify / filter by data structures
-    \end{itemize}
-\end{frame}
-
-\begin{frame}{Programmatic approach}
-    \begin{block}{Idea}
-        \begin{itemize}
-            \item Programmatic approach using R
-            \item Org-mode labbook to record our analysis
-            \item Reference visualizations inspired from Tabarnac ones
-            \item Custom visualizations depending on the trace
-        \end{itemize}
-    \end{block}
-\end{frame}
-
-\begin{frame}{Example: dgetrf}
-    \centering
-    \includegraphics[width=\linewidth]{labbook-slides/intensity_RW_dgetrf_zoom}
 \end{frame}
 
 \section{Conclusions and perspectives}
@@ -627,37 +629,37 @@ Supervisors: & Pr, Bruno Raffin \\
     \end{alertblock}
     \pause
     \begin{block}{Tabarnac~\cite{Beniamine15TABARNAC}}
-        \begin{enumerate}[<+-|alert@+>]
+        \begin{enumerate}
             \item \textbf{Tace collection:} No temporal informations
             \item \textbf{Visualization:} Simple yet meaningful
-            \item \textbf{Optimization:} Up to 20\% performance gain
+            \item \textbf{Optimization:} To 20\% performance gain on NPB IS
         \end{enumerate}           
     \end{block}
     \pause
-    \begin{block}{Moca~\cite{Beniamine15Memory,Beniamine16Moca}}
-        \begin{enumerate}[<+-|alert@+>]
+    \begin{alertblock}{Moca~\cite{Beniamine15Memory,Beniamine16Moca}}
+        \begin{enumerate}
             \item \textbf{Trace collection:} Complete, detailed, precise
             \item \textbf{Visualization:} Encouraging preliminary results
             \item \textbf{Optimization:} Still a work in progress
         \end{enumerate}          
-    \end{block}
+    \end{alertblock}
 \end{frame}
 
 \begin{frame}{Perspectives}
-    \alertblockat{<1>}{Short term}{
+    \begin{block}{Short term}
         \begin{itemize}
             \item Use Moca traces to understand Intel MKL performaances
-            \item Analyze real application
-            \item Couple Moca traces with performances information
+            \item Analyze other real applications
+            \item Couple Moca traces with performances counters
         \end{itemize}
-    }
+    \end{block}
     \pause
-    \alertblockat{<2>}{Long term}{
+    \begin{alertblock}{Long term}
         \begin{itemize}
             \item Higher level trace visualization for Moca
             \item Similar tools for GPU / Accelerators
         \end{itemize}
-    }
+    \end{alertblock}
 \end{frame}
 
 \newcounter{finalframe}
@@ -682,6 +684,31 @@ Supervisors: & Pr, Bruno Raffin \\
 \section*{Hidden slides}
 %put this line before each frame
 %\setcounter{framenumber}{\value{finalframe}}
+
+\subsection*{Related work}
+\setcounter{framenumber}{\value{finalframe}}
+\begin{frame}{Generic performance analysis tools}
+    \begin{block}{Low level trace collection libraries}
+        \begin{itemize}
+            \item PAPI~\cite{Browne00Portable}
+            \item Likwid~\cite{Treibig10LIKWID}
+        \end{itemize}
+    \end{block}
+    \pause
+    \begin{block}{Higher level tools}
+        \begin{itemize}
+            \item PARAVER~\cite{Pillet95PARAVER}
+            \item MAQAO~\cite{Djoudi05MAQAO}
+            \item VTune~\cite{Reinders05VTune}
+            \item HPCToolkit~\cite{Adhianto10HPCTOOLKIT}
+            \item \ldots
+        \end{itemize}
+    \end{block}
+    \pause
+    \begin{alertblock}{Limitations}
+        Focus on CPU point of view
+    \end{alertblock}
+\end{frame}
 
 \subsection*{Tabarnac}
 
@@ -767,16 +794,34 @@ Supervisors: & Pr, Bruno Raffin \\
     \pause
 \end{frame}
 
+
 \setcounter{framenumber}{\value{finalframe}}
-\begin{frame}{Internal design}
-    \centering
-    \resizebox{!}{.85\textheight}{
-        \input{tikz/moca-tikz-slides}
-    }
+\begin{frame}{Experimental results: tracing overhead (amd)}
+        \includegraphics[width=\linewidth]{moca/moca_overhead_amd.pdf}
+\end{frame}
+
+\subsection*{Visualizing and analyzing Moca traces}
+
+\begin{frame}{FrameSoc and Ocelotl}
+    \begin{block}{FrameSoc~\cite{Pagano14frameSoC}}
+        \begin{itemize}
+            \item Generic trace management tool
+            \item Several visualization of a trace
+            \item Designed for trace exploration
+        \end{itemize}
+    \end{block}
+    \pause
+    \begin{alertblock}{Ocelotl~\cite{Dosimont14Ocelotl}}
+        \begin{itemize}
+            \item FrameSoc Tool
+            \item Aggregates trace aiming at reducing information loss
+            \item Simple zoom and filters operations
+        \end{itemize}
+    \end{alertblock}
 \end{frame}
 
 \setcounter{framenumber}{\value{finalframe}}
-\begin{frame}{Matrix multiplication full example}
+\begin{frame}{Example: Matrix multiplication}
     \centering
     \alt<1>{
         \resizebox{.8\linewidth}{!}{
@@ -802,8 +847,28 @@ Supervisors: & Pr, Bruno Raffin \\
     \pause
     \pause
 \end{frame}%
+
+\begin{frame}{Limits}
+    \begin{itemize}
+        \item FrameSoc trace model not well suited for memory traces
+        \item Interaction is too slow
+        \item Hard to identify / filter by data structures
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Programmatic approach}
+    \begin{block}{Idea}
+        \begin{itemize}
+            \item Programmatic approach using R
+            \item Org-mode labbook to record our analysis
+            \item Reference visualizations inspired from Tabarnac ones
+            \item Custom visualizations depending on the trace
+        \end{itemize}
+    \end{block}
+\end{frame}
+
 \setcounter{framenumber}{\value{finalframe}}
-\begin{frame}{dgetrf full example}
+\begin{frame}{Example: dgetrf}
     \centering
     \alt<1>{
         \includegraphics[width=\textwidth]{labbook-slides/intensity_Rw_dgetrf}
@@ -822,5 +887,6 @@ Supervisors: & Pr, Bruno Raffin \\
     \pause
     \pause
 \end{frame}%
+
 %=============================================================================
 \end{document}

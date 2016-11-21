@@ -95,12 +95,20 @@ text width=5em]
     \node [data] (TL)  at (12,-1) {Tasks map};
 
 
+    \uncover<4->{
     \node[handler] (Flh) at (1,-5.5) {Read callback};
+}
+    \uncover<2->{
     \node[handler] (PfH) at (10,-4.5) {page fault handler};
+    }
 
 
+    \uncover<4->{
     \node[entity,log] (F) at (1,-8) {Logging Process (userspace)};
-    \node[entity,mon] (M) at (6,-8) {Monitor thread (kernel)};
+}
+    \uncover<3->{
+        \node[entity,mon] (M) at (6,-8) {Monitor thread (kernel)};
+    }
 
 
     \begin{pgfonlayer}{background}
@@ -122,13 +130,16 @@ text width=5em]
     % Edges
 
     %% Loging process
+    \uncover<4->{
     \path[logA] (F.south) edge[in=140,out=270] node[right] {read} (proc.west);
     \path[logA] (proc.north) edge[in=-20,out=70]  node[pos=.2,left] {triggers} (Flh.east);
     \path[logA] (Flh.north) edge[out=90,in=270] node[pos=.2,left] {read write} (ch0.south);
 
     \path[logA] (Flh.west) edge[in=100,out=230] node[pos=.1,left] {write} (file.north);
+}
 
     % Page faults
+    \uncover<2->{
     \path[pfA] (T)   edge[out=70,in=-70] node[pos=.2,right] {triggers} ($(PfH.south)+(1,0)$);
 
     \coordinate (inv) at (8.5,0.5);
@@ -140,12 +151,15 @@ text width=5em]
 
     \coordinate (inv2) at ($(M.south)-(0,0.5)$);
     \path[pfA] (PfH.south) edge[out=-90, in=90] node[pos=.8,right] {read / write}(pgt.north);
+}
 
     %Monitor
+    \uncover<3->{
     \path[monA] (M.north) edge[out=70,in=290] node[pos=.2,right] {write} (PfL.south);
     \path[monA] (M.north) edge[out=110,in=-30] node[pos=.6,left] {write} (cur.east);
     \path[monA] (M)  edge[out=-130,in=110] node[pos=.8,left] {write} ($(pgt.north)-(.6,0)$);
 
     \path[monA] (M.north) edge[out=170,in=-10] node[pos=.5,left] {read} (ch1.east);
+}
 \end{tikzpicture}
 

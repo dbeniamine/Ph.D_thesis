@@ -1,0 +1,136 @@
+%!TEX encoding=UTF-8 Unicode
+%Palette PuOr 4 cols
+\definecolor{ColI}{HTML}{1B9E77}
+\definecolor{ColJ}{HTML}{D95F02}
+\definecolor{ColK}{HTML}{7570B3}
+
+\pgfdeclarelayer{background}
+\pgfdeclarelayer{foreground}
+\pgfsetlayers{background,foreground}
+
+
+\tikzstyle{PrimaryA}   = [-latex,very thick]
+\tikzstyle{SecondaryA} = [-latex,very thick,dashed]
+\tikzstyle{SwapA} = [latex-latex, thick,dotted]
+
+\newcommand{\coli}[1]{\textcolor{ColI}{#1}}
+\newcommand{\colj}[1]{\textcolor{ColJ}{#1}}
+\newcommand{\colk}[1]{\textcolor{ColK}{#1}}
+
+\tikzset{
+    algorithm/.style={
+        shape=rectangle,
+        alias=this,
+        append after command = {
+            \pgfextra{
+              % Top and bottom lines
+                \draw [] ($(this.north west)+(0,.5)$) -- ($(this.north east)+(0,.5)$);
+                \node [anchor=west] at ($(this.north west)+(0,0.25)$) {\textbf{Algorithm} #1};
+                \draw [] (this.north west) -- (this.north east);
+                \draw [] (this.south west) -- (this.south east);
+            }
+        }
+    },
+    matgrid/.style args={#1#2}{
+        %#1: name #2: size
+        alias=this,
+        append after command ={
+            \pgfextra{
+                \draw (this) grid ($(this)+(#2,#2)$);
+                % Four corners
+                \coordinate (m#1-00) at ($(this)+(0.5,0.5)$);
+                \coordinate (m#1-0N) at ($(this)+(0.5,#2-0.5)$);
+                \coordinate (m#1-N0) at ($(this)+(#2-0.5,0.5)$);
+                \coordinate (m#1-NN) at ($(this)+(#2-0.5,#2-0.5)$);
+
+                \node (#1) at ($(m#1-00)+(-1,0)$){\textbf{#1}};
+
+                \node at ($(m#1-0N)+(-.2,.2)$)  {0};
+                \node at ($(m#1-00)+(0,-.2)$) {N-1};
+                \node at ($(m#1-NN)+(.2,0)$)  {N-1};
+
+            }
+        }
+    }
+}
+
+
+
+\begin{tikzpicture}[font=\small]
+
+    \begin{pgfonlayer}{background}
+        \node[algorithm=Matrix multiplication] at (2.5,8.5){%
+            \begin{varwidth}{\linewidth}
+                \begin{algorithmic}
+                    \For{\coli{i in 0..N-1}}
+                    \For{\colj{j in 0..N-1}}
+                    \For{\colk{k in 0..N-1}}
+                    \State C[\coli{i},\colj{j}] += A[\coli{i},\colk{k}] * B[\colk{k},\colj{j}]
+                            \EndFor
+                        \EndFor
+                    \EndFor
+                \end{algorithmic}%
+            \end{varwidth}%
+        };
+
+        \coordinate (cj) at (.6,9.3);
+        \coordinate (cjint) at (.1,9.3);
+        \coordinate (ckint) at (.1,8.9);
+        \coordinate (ck) at (.6,8.9);
+        \uncover<5->{
+            \path[draw,SwapA] (cj) .. controls (cjint) and (ckint) ..(ck);
+        }
+
+        \uncover<2->{
+            \node[matgrid={A}{5}] at (0,0){};
+        }
+        \uncover<5->{
+            \node[matgrid={B}{5}] at (6,6){};
+        }
+        \uncover<4->{
+            \node[matgrid={C}{5}] at (6,0){};
+        }
+
+    \end{pgfonlayer}
+
+    % Indexes
+
+    \begin{pgfonlayer}{foreground}
+        %% A
+        \uncover<2->{
+            \draw[PrimaryA,ColK]   (mA-0N) -- node [above] {\textbf{k}} (mA-NN);
+            \draw[SecondaryA,ColI] (mA-0N) -- node [left]  {\textbf{i}} (mA-00);
+        }
+        \uncover<3->{
+            \foreach \i in {1,...,4}{
+                \draw[PrimaryA,ColK]   ($(mA-0N)+(0,-\i)$) -- ($(mA-NN)+(0,-\i)$);
+            }
+        }
+
+        %% B
+        \uncover<5->{
+            \draw[PrimaryA,ColK]   (mB-0N) -- node(bk) [left]  {\textbf{k}} (mB-00);
+            \draw[SecondaryA,ColJ] (mB-0N) -- node(bj) [above] {\textbf{j}} (mB-NN);
+        }
+        \uncover<6->{
+            \foreach \i in {1,...,4}{
+                \draw[PrimaryA,ColK]   ($(mB-0N)+(\i,0)$) -- ($(mB-00)+(\i,0)$);
+            }
+        }
+
+        \uncover<7->{
+            \draw[SwapA] (bj.south) edge[out=-90,in=0] (bk.east);
+        }
+
+        %% C
+        \uncover<4->{
+            \draw[PrimaryA,ColJ]   (mC-0N) -- node [above] {\textbf{j}} (mC-NN);
+            \draw[SecondaryA,ColI] (mC-0N) -- node [left]  {\textbf{i}} (mC-00);
+            \foreach \i in {1,...,4}{
+                \draw[PrimaryA,ColJ]   ($(mC-0N)+(0,-\i)$) -- ($(mC-NN)+(0,-\i)$);
+            }
+        }
+    \end{pgfonlayer}
+
+\end{tikzpicture}
+% vim: et si sta lbr  sw=4 ts=4 spelllang=en_us
