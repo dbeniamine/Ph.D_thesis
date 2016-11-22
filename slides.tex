@@ -212,7 +212,7 @@ Supervisors: & Pr, Bruno Raffin \\
 \end{frame}
 
 \begin{frame}{Alignment}
-    \centering
+    \hspace{-40pt}
     \scalebox{.8}{
         \input{tikz/bad-align}
     }
@@ -225,14 +225,14 @@ Supervisors: & Pr, Bruno Raffin \\
 \end{frame}
 
 \begin{frame}{False sharing}
-    \centering
+    \hspace{-35pt}
     \scalebox{.8}{
-        \input{tikz/false-sharing-slides}
+        \input{tikz/false-sharing}
     }
     \begin{block}{Cache line (64 bytes)}
         \begin{itemize}
-            \item Cache consistency handled at cache line level
-            \item Two threads writing same line => conflict
+            \item Consistency handled at cache line level
+            \item<alert@1-> Conflict on parallel write
             \item Conflict freeze cache hierarchy
         \end{itemize}
     \end{block}
@@ -329,24 +329,6 @@ Supervisors: & Pr, Bruno Raffin \\
     \end{alertblock}
 \end{frame}
 
-\begin{frame}{Dynamic mapping tools~\cite{Corbet12Toward,Diener14kMAF}}
-    \begin{block}{Principles}
-        \begin{itemize}
-            \item Collect informations on memory accesses online
-            \item Move data close to thread using them
-        \end{itemize}
-    \end{block}
-    \pause
-    \begin{alertblock}{Limitations}
-        \begin{itemize}
-            \item Do not store the trace
-            \item Do not help understanding issues
-            \item Opportunities of optimization lost during learning process
-            \item Cost of data move
-        \end{itemize}
-    \end{alertblock}
-\end{frame}
-
 \section{Tabarnac: Analyzing the global memory behavior}
 
 \subsection{Design}
@@ -362,16 +344,30 @@ Supervisors: & Pr, Bruno Raffin \\
     \end{block}
 \end{frame}
 
-\begin{frame}{Numalyze~\cite{Diener15Characterizing}}
-    \begin{block}{}
+\begin{frame}{Background knowledge}
+    \begin{block}{Mapping tools}
         \begin{itemize}
-            \item Existing tool
-            \item Designed to compare mapping tools
-            \item Pin~\cite{Luk05Pin} instrumentation
-            \item Collects One counter per page and per thread
-            \item Lock free
+            \item Dynamic tools~\cite{Corbet12Toward,Diener14kMAF}
+                \begin{itemize}
+                    \item Collect informations on memory accesses online
+                    \item Move data close to thread using them
+                \end{itemize}
+            \item  Static policies
+                \begin{itemize}
+                    \item First touch (default)
+                    \item Interleave: reduce memory contention
+                \end{itemize}
         \end{itemize}
     \end{block}
+    \pause
+    \begin{alertblock}{Numalyze~\cite{Diener15Characterizing}}
+        \begin{itemize}
+            \item Pin~\cite{Luk05Pin} instrumentation, lock free
+            \item Intercept every memory accesses
+            \item Collects one counter per page and per thread
+            \item Designed to compare dynamic mapping tools
+        \end{itemize}
+    \end{alertblock}
 \end{frame}
 
 \begin{frame}{Tabarnac}
@@ -395,9 +391,10 @@ Supervisors: & Pr, Bruno Raffin \\
 
 \begin{frame}{IS}
     \begin{itemize}
-        \item Nas Parallel Benchmark~\cite{Jin99NPBOpenMP}
+        \item NAS Parallel Benchmark~\cite{Jin99NPBOpenMP}
         \item Integer (bucket) Sort
         \item Memory Intensive
+        \item<alert@1-> “Random memory access” (according to NPB website)
     \end{itemize}
 \end{frame}
 
@@ -461,7 +458,7 @@ Supervisors: & Pr, Bruno Raffin \\
         \begin{block}{Original code}
             \#pragma omp for schedule(dynamic)\\
             for (k=0;k<N;k++)\\
-            \qquad key\_buff1[key\_buff2[k]]+= \ldots
+            \qquad key\_buff1[key\_buff2[k]]++
         \end{block}
     }{
         \centering
@@ -471,7 +468,7 @@ Supervisors: & Pr, Bruno Raffin \\
         \begin{alertblock}{Modified code}
             \#pragma omp for schedule(static, size/(2*num\_threads))\\
             for (k=0;k<N;k++)\\
-            \qquad  key\_buff1[key\_buff2[k]]+= \ldots
+            \qquad  key\_buff1[key\_buff2[k]]++ \ldots
         \end{alertblock}
     }
     \pause
@@ -522,13 +519,14 @@ Supervisors: & Pr, Bruno Raffin \\
     \includegraphics[width=\linewidth]{tabarnac/slides/is_exectime}
 \end{frame}
 
+
 \begin{frame}{Conclusions on Tabarnac}
     \begin{itemize}
         \item Collaboration with M. Diener, UFRGS, P.O.A, Brasil
         \item Improved trace collection tool
         \item Meaningful R visualization
         \item Significant performance gain on NPB IS
-        \item Published at VPA'15~\cite{Beniamine15TABARNAC}
+        \item<alert@1> Published at VPA'15~\cite{Beniamine15TABARNAC}
     \end{itemize}
     \uncover<2->{
         \begin{alertblock}{Limitations}

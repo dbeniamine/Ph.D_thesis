@@ -68,9 +68,12 @@
 
 
 \begin{tikzpicture}[font=\small]
-    \node[myarray={\tabsz}{fs}{\harrsz}{\arrsz}{0}] (cache) at (0,0) {\textbf{False sharing:}};
-
-    \node[myarray={\tabsz}{pad}{\harrsz}{\arrsz}{1}] (cache1) at (0,-2) {\textbf{No false sharing (padding):}};
+    \only<1>{
+        \node[text height=0em,myarray={\tabsz}{fs}{\harrsz}{\arrsz}{0}] (cache) at (0,0) {\textbf{False sharing:}};
+    }
+    \only<2>{
+        \node[text height=0em,myarray={\tabsz}{pad}{\harrsz}{\arrsz}{1}] (cache1) at (0,-2) {\textbf{No false sharing (padding):}};
+    }
 
 \end{tikzpicture}
 % vim: et si sta lbr  sw=4 ts=4 spelllang=en_us
