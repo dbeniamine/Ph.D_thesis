@@ -191,7 +191,7 @@ Supervisors: & Pr, Bruno Raffin \\
                 \alt<1>{
                     Early 2000's
                 }{
-                    Current machines
+                    2007 - Now
                 }
             \end{block}
         \end{column}
@@ -204,11 +204,24 @@ Supervisors: & Pr, Bruno Raffin \\
     \end{columns}
 \end{frame}
 
-\begin{frame}{A simple example}
+\begin{frame}{Sequential matrix multiplication}
     \centering
     \scalebox{.6}{
         \input{tikz/mat-mult-slides}
     }
+\end{frame}
+
+\begin{frame}{Alignment}
+    \centering
+    \scalebox{.8}{
+        \input{tikz/bad-align}
+    }
+    \begin{block}{Cache lines}
+        \begin{itemize}
+            \item Memory split into cache lines (64 bytes)
+            \item One access retrieves a whole line
+        \end{itemize}
+    \end{block}
 \end{frame}
 
 \begin{frame}{False sharing}
@@ -218,12 +231,31 @@ Supervisors: & Pr, Bruno Raffin \\
     }
     \begin{block}{Cache line (64 bytes)}
         \begin{itemize}
-            \item One access retrieves a whole line
             \item Cache consistency handled at cache line level
             \item Two threads writing same line => conflict
             \item Conflict freeze cache hierarchy
         \end{itemize}
     \end{block}
+\end{frame}
+
+\begin{frame}{Summary}
+    \begin{block}{Issues}
+        \begin{itemize}
+            \item Order of accesses
+            \item Alignment
+            \item False sharing
+            \item Thread and data placement
+            \item Remote NUMA accesses
+        \end{itemize}
+    \end{block}
+    \pause
+    \begin{alertblock}{Real applications}
+        \begin{itemize}
+            \item Complex data structures
+            \item Memory accesses patterns hard to identify from code
+            \item Thread handled by high level libraries
+        \end{itemize}
+    \end{alertblock}
 \end{frame}
 
 \begin{frame}{Research statement}
@@ -487,7 +519,7 @@ Supervisors: & Pr, Bruno Raffin \\
 \end{frame}
 
 \begin{frame}{Results}
-    \includegraphics[width=\linewidth]{tabarnac/is_exectime}
+    \includegraphics[width=\linewidth]{tabarnac/slides/is_exectime}
 \end{frame}
 
 \begin{frame}{Conclusions on Tabarnac}
@@ -536,7 +568,7 @@ Supervisors: & Pr, Bruno Raffin \\
             \begin{itemize}
                 \item Run application with context library
                 \item Run application with kernel module loaded
-                \item Retrieve trace in user space
+                \item Periodically flush trace to disk
             \end{itemize}
         \end{block}
     }
@@ -610,15 +642,15 @@ Supervisors: & Pr, Bruno Raffin \\
 \end{frame}
 
 \begin{frame}{Percentage of captured pages}
-        \includegraphics[width=\linewidth]{moca/moca_pages_intel.pdf}
+        \includegraphics[width=\linewidth]{moca/slides/moca_pages_intel.pdf}
 \end{frame}
 
 \begin{frame}{Number of captured events}
-        \includegraphics[width=\linewidth]{moca/moca_addr_intel.pdf}
+        \includegraphics[width=\linewidth]{moca/slides/moca_addr_intel.pdf}
 \end{frame}
 
 \begin{frame}{Tracing overhead (intel)}
-        \includegraphics[width=\linewidth]{moca/moca_overhead_intel.pdf}
+        \includegraphics[width=\linewidth]{moca/slides/moca_overhead_intel.pdf}
 \end{frame}
 
 \section{Conclusions and perspectives}
@@ -747,7 +779,7 @@ Supervisors: & Pr, Bruno Raffin \\
 
 \setcounter{framenumber}{\value{finalframe}}
 \begin{frame}{Tabarnac overhead}
-    \includegraphics[width=\linewidth]{tabarnac/tool-ovh.pdf}
+    \includegraphics[width=\linewidth]{tabarnac/slides/tool-ovh.pdf}
 \end{frame}
 
 \subsection*{Moca}
@@ -787,9 +819,9 @@ Supervisors: & Pr, Bruno Raffin \\
 \setcounter{framenumber}{\value{finalframe}}
 \begin{frame}{Parameters evaluation}
    \alt<1>{
-    \includegraphics[width=\linewidth]{moca/moca_param.pdf}
+    \includegraphics[width=\linewidth]{moca/slides/moca_param.pdf}
     }{
-        \includegraphics[width=\linewidth]{moca/moca_param_events.pdf}
+        \includegraphics[width=\linewidth]{moca/slides/moca_param_events.pdf}
     }
     \pause
 \end{frame}
@@ -797,7 +829,7 @@ Supervisors: & Pr, Bruno Raffin \\
 
 \setcounter{framenumber}{\value{finalframe}}
 \begin{frame}{Experimental results: tracing overhead (amd)}
-        \includegraphics[width=\linewidth]{moca/moca_overhead_amd.pdf}
+        \includegraphics[width=\linewidth]{moca/slides/moca_overhead_amd.pdf}
 \end{frame}
 
 \subsection*{Visualizing and analyzing Moca traces}
