@@ -450,16 +450,22 @@ Supervisors: & Pr, Bruno Raffin \\
 \end{frame}
 
 \begin{frame}{Understanding the issue}
-    \alt<1>{
+    \alt<1-2>{
         \centering
+        \alt<1>{
+        \includegraphics[height=.6\textheight]{standalone/is-curve-nocolor}
+        }{
         \includegraphics[height=.6\textheight]{standalone/is-curve-random}
-        \begin{block}{Dynamic scheduling}
-            \#pragma omp for schedule(dynamic)\\
+        }
+        \begin{block}{\alt<1>{\ }{Dynamic scheduling}}
+            \uncover<2>{
+                \#pragma omp for schedule(dynamic)\\
+            }
             for (k=0;k<N;k++)\\
             \qquad key\_buff1[key\_buff2[k]]++
         \end{block}
     }{
-        \alt<2>{
+        \alt<3>{
             \centering
             \includegraphics[height=.6\textheight]{standalone/is-curve-cyclic}
             \begin{block}{Cyclic scheduling}
@@ -712,11 +718,6 @@ Supervisors: & Pr, Bruno Raffin \\
 
 %=============================================================================
 %Uncomment next lines for uncounted backup slides & biblio
-\section*{Bibliography}
-%
-\bibliographystyle{apalike}
-\bibliography{biblio}
-
 %========================= Backup slides =====================================
 \section*{Hidden slides}
 %put this line before each frame
@@ -926,4 +927,11 @@ Supervisors: & Pr, Bruno Raffin \\
 \end{frame}%
 
 %=============================================================================
+
+\section*{Bibliography}
+%
+\bibliographystyle{apalike}
+\bibliography{biblio}
+
+
 \end{document}

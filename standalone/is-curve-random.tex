@@ -16,9 +16,14 @@
 \definecolor{Col2}{HTML}{B2DF8A}
 \definecolor{Col3}{HTML}{33A02C}
 
-\edef\step{.5}
-\pgfmathsetmacro{\sec}{2*\step}
+\edef\step{.1}
+\edef\first{\step}
+\pgfmathsetmacro{\sec}{\first+\step}
 \pgfmathsetmacro{\last}{8-\step}
+
+\pgfdeclarelayer{background}
+\pgfsetlayers{background,main}
+
 
 %\pgfmathsetseed{42}
 \begin{tikzpicture}
@@ -45,20 +50,20 @@
     }
     % actual plots
     \foreach \fnum in {0,...,9}{
-        \edef\doplot{\noexpand\addplot[draw=none,name path={f\fnum}, domain={0:8},forget plot] {0.\fnum*gauss(4)};}
+        \edef\doplot{\noexpand\addplot[draw=none,name path={f\fnum}, domain={0:8},forget plot] {0.\fnum*gauss(x)};}
         \doplot
 
-        \foreach \id in {\step,\sec,...,\last}{
+        \foreach \id in {\first,\sec,...,\last}{
             \pgfmathrandominteger{\cl}{0}{3}
             \edef\doplot{\noexpand\addplot[color={Col\cl},forget plot] fill between[of={f\fnum} and f10,
-                soft clip={($(\id,0)-(\step,0)$) rectangle (\id+\step,1)}];}
+            soft clip={($(\id,0)-(\step,0)$) rectangle (\id+\step,1)}];}
             \doplot
         }
     }
     %ugly fix
-    \addplot[draw=none,name path=f11,domain={0:8},forget plot] {gauss(4)};
-    \addplot[color=white,forget plot] fill between[of=f11 and f10,
-                soft clip={(-1,0) rectangle (9,1)},];
+    %\addplot[draw=none,name path=f11,domain={-.1:8.1},forget plot] {gauss(4)+0.001};
+    %\addplot[color=white,forget plot] fill between[of=f11 and f10,
+    %             soft clip={(-1,0) rectangle (9,1)},];
 
 \end{axis}
 \end{tikzpicture}

@@ -47,7 +47,7 @@
 
                 \node at ($(m#1-0N)+(-.2,.2)$)  {0};
                 \node at ($(m#1-00)+(0,-.2)$) {N-1};
-                \node at ($(m#1-NN)+(.2,0)$)  {N-1};
+                \node at ($(m#1-NN)+(0,0)$)  {N-1};
 
             }
         }
@@ -56,15 +56,20 @@
 
 
 
-\begin{tikzpicture}[font=\small]
+\begin{tikzpicture}[font=\Large]
 
     \begin{pgfonlayer}{background}
-        \node[algorithm=Matrix multiplication] at (2.5,8.5){%
+        \node[algorithm=Matrix multiplication] at (0,8.5){%
             \begin{varwidth}{\linewidth}
                 \begin{algorithmic}
                     \For{\coli{i in 0..N-1}}
-                    \For{\colj{j in 0..N-1}}
-                    \For{\colk{k in 0..N-1}}
+                    \alt<1-6>{
+                        \For{\colj{j in 0..N-1}}
+                        \For{\colk{k in 0..N-1}}
+                    }{
+                        \For{\colk{k in 0..N-1}}
+                        \For{\colj{j in 0..N-1}}
+                    }
                     \State C[\coli{i},\colj{j}] += A[\coli{i},\colk{k}] * B[\colk{k},\colj{j}]
                             \EndFor
                         \EndFor
@@ -73,10 +78,10 @@
             \end{varwidth}%
         };
 
-        \coordinate (cj) at (.6,9.3);
-        \coordinate (cjint) at (.1,9.3);
-        \coordinate (ckint) at (.1,8.9);
-        \coordinate (ck) at (.6,8.9);
+        \coordinate (cj) at (-2.7,9.7);
+        \coordinate (cjint) at (-3.8,9.7);
+        \coordinate (ckint) at (-3.8,9.1);
+        \coordinate (ck) at (-2,9.1);
         \uncover<7->{
             \path[draw,SwapA] (cj) .. controls (cjint) and (ckint) ..(ck);
         }
@@ -85,10 +90,10 @@
             \node[matgrid={A}{5}] at (0,0){};
         }
         \uncover<5->{
-            \node[matgrid={B}{5}] at (6,6){};
+            \node[matgrid={B}{5}] at (7,6){};
         }
         \uncover<4->{
-            \node[matgrid={C}{5}] at (6,0){};
+            \node[matgrid={C}{5}] at (7,0){};
         }
 
     \end{pgfonlayer}
@@ -108,10 +113,10 @@
         }
 
         %% B
-        \uncover<5->{
+        \uncover<5-6>{
             \draw[PrimaryA,ColK]   (mB-0N) -- node(bk) [left]  {\textbf{k}} (mB-00);
         }
-        \uncover<6->{
+        \uncover<6>{
             \draw[SecondaryA,ColJ] (mB-0N) -- node(bj) [above] {\textbf{j}} (mB-NN);
             \foreach \i in {1,...,4}{
                 \draw[PrimaryA,ColK]   ($(mB-0N)+(\i,0)$) -- ($(mB-00)+(\i,0)$);
@@ -119,8 +124,11 @@
         }
 
         \uncover<7->{
-            \draw[SwapA] (bj.south) .. controls
-            ($(bk.west)+(-1,3.5)$) .. (bk.east);
+            \draw[PrimaryA,ColJ] (mB-0N) -- node(bj) [above] {\textbf{j}} (mB-NN);
+            \draw[SecondaryA,ColK]   (mB-0N) -- node(bk) [left]  {\textbf{k}} (mB-00);
+            \foreach \i in {1,...,4}{
+                \draw[PrimaryA,ColJ]   ($(mB-0N)-(0,\i)$) -- ($(mB-NN)-(0,\i)$);
+            }
         }
 
         %% C
