@@ -1,0 +1,32 @@
+\documentclass{standalone}
+\input{../custom/tikz}
+\input{../custom/magic}
+\begin{document}
+\pgfmathdeclarefunction{gauss}{1}{%
+    \pgfmathparse{1/(1.4*sqrt(2*pi))*exp(-((#1-4)^2)/(2*1.4^2))}%
+}
+
+%Palette 4-class paired
+\definecolor{Col0}{HTML}{A6CEE3}
+\definecolor{Col1}{HTML}{1F78B4}
+\definecolor{Col2}{HTML}{B2DF8A}
+\definecolor{Col3}{HTML}{33A02C}
+
+\begin{tikzpicture}
+\begin{axis}[
+        axis x line=bottom,
+        axis y line=left,
+        xtick=\empty,
+        ytick=\empty,
+        ylabel={Intensity of accesses},
+        xlabel={Page number},
+        ymin=-.01,
+        xmin=-.1,
+        xmax=8.1,
+        legend style={at={(1.1,1)}, anchor= north east}
+     ]
+    \addplot[name path=f,domain={0:8},forget plot] {gauss(x)};
+
+\end{axis}
+\end{tikzpicture}
+\end{document}
