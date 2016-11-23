@@ -1,3 +1,4 @@
+include Makefile.inc
 # Source files
 TEXSRC = $(wildcard *.tex)
 BIBSRC = $(wildcard *.bib)
@@ -6,6 +7,8 @@ SUBDIRS=tex custom style tikz
 TEXSUBSRC = $(foreach d, $(SUBDIRS),$(wildcard $d/*.tex))
 TEXALLSRC = $(TEXSRC) $(TEXSUBSRC)
 AUX = $(TEXSRC:.tex=.aux)
+STANDALONESRC=$(wildcard standalone/*.tex)
+STANDALONES=$(STANDALONESRC:.tex=.pdf)
 
 # Temporary files
 TEMP=*.bbl *.blg *.synctex.gz *.aux *.toc *.ptc *.out *.ist *.ac? *.alg *.tdo *.lo? *.gl? *.snm *.nav
@@ -28,7 +31,7 @@ presentation: $(SLIDES)
 # Note that $(PDF) should only depends on $(BBL) and $(BBL) should depends on
 # $(AUX) but as the last compilation re write $(AUX) if we do so, make will
 # always think that we need to redo the $(BBL) and $(PDF) targets.
-%.pdf : %.tex $(TEXSUBSRC) %.aux %.bbl
+%.pdf : %.tex $(TEXSUBSRC) %.aux %.bbl standalone
 	if [ $@ == $(MAIN) ]; then \
 		$(GLOSSARY) $* ; \
 		fi
@@ -111,10 +114,15 @@ testreffloats:
 	@echo "PASSED"
 
 
-.PHONY: clean distclean
+.PHONY: clean distclean standalone
+
+standalone:
+	make -C standalone
 
 clean:
 	rm -rf $(TEMP)
+	make -C standalone clean
 
 distclean: clean
 	rm -rf $(PDFS)
+	make -C standalone distclean

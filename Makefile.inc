@@ -1,0 +1,9 @@
+# Temporary files
+TEMP=*.bbl *.blg *.synctex.gz *.aux *.toc *.ptc *.out *.ist *.ac? *.alg *.tdo *.lo? *.gl? *.snm *.nav
+# Avoid removing temp files
+.INTERMEDIATE: $(TEMP)
+
+# Commands + arguments
+TEX = pdflatex -interaction=nonstopmode -synctex=1
+BIB = bibtex
+GLOSSARY = makeglossaries

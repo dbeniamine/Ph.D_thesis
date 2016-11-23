@@ -1,3 +1,7 @@
+\documentclass{standalone}
+\input{../custom/tikz}
+\input{../custom/magic}
+\begin{document}
 \pgfmathdeclarefunction{gauss}{1}{%
     \pgfmathparse{1/(1.4*sqrt(2*pi))*exp(-((#1-4)^2)/(2*1.4^2))}%
 }
@@ -22,7 +26,7 @@
         legend style={at={(1.1,1)}, anchor= north east}
      ]
     \addplot[name path=f,domain={0:8},forget plot] {gauss(x)};
-    \addplot[name path=x,domain={0:8},forget plot] {0};
+    \addplot[draw=none, name path=x,domain={0:8},forget plot] {0};
     \pgfplotsinvokeforeach{0,...,3}{
         \addplot[dashed,forget plot] coordinates {(#1+4,0) (#1+4,{gauss(#1+4)})};
         \addplot[dashed,forget plot] coordinates {(#1,0) (#1,{gauss(#1)})};
@@ -37,3 +41,4 @@
         \addplot[solid,very thick,white] coordinates {(4,0) (4,{gauss(4)})};
 \end{axis}
 \end{tikzpicture}
+\end{document}

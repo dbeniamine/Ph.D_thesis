@@ -1,0 +1,65 @@
+\documentclass{standalone}
+\input{../custom/tikz}
+\input{../custom/magic}
+\begin{document}
+\pgfmathdeclarefunction{gauss}{1}{%
+    \pgfmathparse{1/(1.4*sqrt(2*pi))*exp(-((#1-4)^2)/(2*1.4^2))}%
+}
+
+%\pgfdeclarelayer{back}
+%\pgfdeclarelayer{bb}
+%\pgfsetlayers{bb,back,main}
+
+%Palette 4-class paired
+\definecolor{Col0}{HTML}{A6CEE3}
+\definecolor{Col1}{HTML}{1F78B4}
+\definecolor{Col2}{HTML}{B2DF8A}
+\definecolor{Col3}{HTML}{33A02C}
+
+\edef\step{.5}
+\pgfmathsetmacro{\sec}{2*\step}
+\pgfmathsetmacro{\last}{8-\step}
+
+%\pgfmathsetseed{42}
+\begin{tikzpicture}
+\begin{axis}[
+        axis x line=bottom,
+        axis y line=left,
+        xtick=\empty,
+        ytick=\empty,
+        ylabel={Intensity of accesses},
+        xlabel={Page number},
+        ymin=-.01,
+        xmin=-.1,
+        xmax=8.1,
+        legend style={at={(1.1,1)}, anchor= north east}
+     ]
+    \addplot[name path=f10,domain={0:8},forget plot] {gauss(x)};
+    \addplot[draw=none,name path=f0,domain={0:8},forget plot] {0};
+
+    % Plots for legend
+    \pgfplotsinvokeforeach {0,...,3}{
+        \addplot[color={Col#1}] fill between[of=f0 and f10,
+            soft clip={($(0,0)-(0,0)$) rectangle (.1,1)},];
+        \addlegendentry{Thread #1}
+    }
+    % actual plots
+    \foreach \fnum in {0,...,9}{
+        \edef\doplot{\noexpand\addplot[draw=none,name path={f\fnum}, domain={0:8},forget plot] {0.\fnum*gauss(4)};}
+        \doplot
+
+        \foreach \id in {\step,\sec,...,\last}{
+            \pgfmathrandominteger{\cl}{0}{3}
+            \edef\doplot{\noexpand\addplot[color={Col\cl},forget plot] fill between[of={f\fnum} and f10,
+                soft clip={($(\id,0)-(\step,0)$) rectangle (\id+\step,1)}];}
+            \doplot
+        }
+    }
+    %ugly fix
+    \addplot[draw=none,name path=f11,domain={0:8},forget plot] {gauss(4)};
+    \addplot[color=white,forget plot] fill between[of=f11 and f10,
+                soft clip={(-1,0) rectangle (9,1)},];
+
+\end{axis}
+\end{tikzpicture}
+\end{document}
