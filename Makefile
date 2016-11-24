@@ -10,15 +10,7 @@ AUX = $(TEXSRC:.tex=.aux)
 STANDALONESRC=$(wildcard standalone/*.tex)
 STANDALONES=$(STANDALONESRC:.tex=.pdf)
 
-# Temporary files
-TEMP=*.bbl *.blg *.synctex.gz *.aux *.toc *.ptc *.out *.ist *.ac? *.alg *.tdo *.lo? *.gl? *.snm *.nav
-# Avoid removing temp files
-.INTERMEDIATE: $(TEMP)
-
 # Commands + arguments
-TEX = pdflatex -interaction=nonstopmode -synctex=1
-BIB = bibtex
-GLOSSARY = makeglossaries
 MAIN=thesis.pdf
 SLIDES=slides.pdf
 PDFS= $(MAIN) $(SLIDES)
@@ -26,7 +18,9 @@ PDFS= $(MAIN) $(SLIDES)
 all : $(PDFS)
 
 presentation: $(SLIDES)
-	pdfpc -s -d 0 -s $<
+	killall redshift
+	caffeinate pdfpc $(PDFPCARGS) -d 0 $<
+	redshift-gtk &
 
 # Note that $(PDF) should only depends on $(BBL) and $(BBL) should depends on
 # $(AUX) but as the last compilation re write $(AUX) if we do so, make will

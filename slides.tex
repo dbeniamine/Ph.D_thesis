@@ -163,17 +163,16 @@ Supervisors: & Pr, Bruno Raffin \\
         \begin{column}{.45\textwidth}
             \pause
             \begin{block}{Increase CPU frequency}
-                \begin{itemize}
+                \begin{enumerate}
                     \item Gap CPU / Memory
                     \item Energy consumption
-                \end{itemize}
+                \end{enumerate}
             \end{block}
             \pause
-            \begin{alertblock}{Memory}
+            \begin{alertblock}{Memory caches}
                 \begin{itemize}
                     \item Spatial locality
                     \item Temporal locality
-                    \item Caches
                 \end{itemize}
             \end{alertblock}
             \pause
@@ -219,7 +218,7 @@ Supervisors: & Pr, Bruno Raffin \\
     \begin{block}{Cache lines}
         \begin{itemize}
             \item Memory split into cache lines (64 bytes)
-            \item One access retrieves a whole line
+            \item<alert@1-> One access retrieves a whole line
         \end{itemize}
     \end{block}
 \end{frame}
@@ -229,9 +228,10 @@ Supervisors: & Pr, Bruno Raffin \\
     \scalebox{.8}{
         \input{tikz/false-sharing}
     }
-    \begin{block}{Cache line (64 bytes)}
+    \vspace{20pt}
+    \begin{block}{Cache consistency}
         \begin{itemize}
-            \item Consistency handled at cache line level
+            \item Consistency handled at cache line granularity
             \item<alert@1-> Conflict on parallel write
             \item Conflict freeze cache hierarchy
         \end{itemize}
@@ -239,7 +239,7 @@ Supervisors: & Pr, Bruno Raffin \\
 \end{frame}
 
 \begin{frame}{Summary}
-    \begin{block}{Issues}
+    \begin{block}{Usual performance issues}
         \begin{itemize}
             \item Order of accesses
             \item Alignment
@@ -287,7 +287,7 @@ Supervisors: & Pr, Bruno Raffin \\
 \enableTocAtSection
 
 \begin{frame}{Trace collection mechanisms}
-    \begin{block}{Performance counters}
+    \begin{block}{Performance counters~\cite{Browne00Portable,Treibig10LIKWID}}
         \begin{itemize}
             \item Hardware based / lightweight
             \item CPU point of view
@@ -343,8 +343,11 @@ Supervisors: & Pr, Bruno Raffin \\
         \end{itemize}
     \end{block}
     \pause
-    \begin{alertblock}{Mechanism}
-        Pin instrumentation
+    \begin{alertblock}{Mechanisms}
+        \begin{itemize}
+            \item Pin instrumentation
+            \item R visualizations
+        \end{itemize}
     \end{alertblock}
 \end{frame}
 
@@ -366,7 +369,7 @@ Supervisors: & Pr, Bruno Raffin \\
     \pause
     \begin{alertblock}{Numalyze~\cite{Diener15Characterizing}}
         \begin{itemize}
-            \item Pin~\cite{Luk05Pin} instrumentation, lock free
+            \item Pin instrumentation, lock free
             \item Intercept every memory accesses
             \item Collects one counter per page and per thread
             \item Designed to compare dynamic mapping tools
@@ -385,8 +388,8 @@ Supervisors: & Pr, Bruno Raffin \\
                     \item Intercepts allocations
                     \item Uses debug flags to decide data structure names
                 \end{itemize}
-            \item R visualizations
             \item Filter out almost unused data structures
+            \item R visualizations
         \end{itemize}
     \end{alertblock}
 \end{frame}
@@ -525,7 +528,7 @@ Supervisors: & Pr, Bruno Raffin \\
     \pause
     \begin{block}{Optimization method}
         \begin{itemize}
-            \item Base: Simple operating system
+            \item Base: Normal operating system
             \item Numa Balancing: Adaptive page mapping tool
             \item Interleave: Static mapping policy
         \end{itemize}
@@ -535,7 +538,7 @@ Supervisors: & Pr, Bruno Raffin \\
         \begin{itemize}
             \item Dynamic: default
             \item Cyclic: static
-            \item Fair: ours
+            \item Fair: ours + manual mapping
         \end{itemize}
     \end{alertblock}
 \end{frame}
@@ -546,13 +549,15 @@ Supervisors: & Pr, Bruno Raffin \\
 
 
 \begin{frame}{Conclusions on Tabarnac}
-    \begin{itemize}
-        \item Collaboration with M. Diener, UFRGS, P.O.A, Brasil
-        \item Improved trace collection tool
-        \item Meaningful R visualization
-        \item Significant performance gain on NPB IS
-        \item<alert@1> Published at VPA'15~\cite{Beniamine15TABARNAC}
-    \end{itemize}
+    \begin{block}{}
+        \begin{itemize}
+            \item Collaboration with M. Diener, UFRGS, P.O.A, Brasil
+            \item Improved trace collection tool
+            \item Meaningful R visualization
+            \item Significant performance gain on NPB IS
+            \item<alert@+-> Published at VPA'15~\cite{Beniamine15TABARNAC}
+        \end{itemize}
+    \end{block}
     \uncover<2->{
         \begin{alertblock}{Limitations}
             \begin{itemize}
@@ -563,7 +568,7 @@ Supervisors: & Pr, Bruno Raffin \\
     }
 \end{frame}
 
-\section{Moca: Collecting and analyzing fine grained traces}
+\section{Moca: Collecting fine grained memory traces}
 
 \subsection{Design}
 
@@ -576,8 +581,11 @@ Supervisors: & Pr, Bruno Raffin \\
         \end{itemize}
     \end{block}
     \pause
-    \begin{alertblock}{Mechanism}
-        Page faults interception and injection
+    \begin{alertblock}{Mechanisms}
+        \begin{itemize}
+            \item Page fault interception
+            \item Page fault injection
+        \end{itemize}
     \end{alertblock}
 \end{frame}
 
@@ -592,11 +600,11 @@ Supervisors: & Pr, Bruno Raffin \\
     \end{alertblock}
     \uncover<2->{
         \begin{block}{User space process}
-            \begin{itemize}
+            \begin{enumerate}
                 \item Run application with context library
                 \item Run application with kernel module loaded
                 \item Periodically flush trace to disk
-            \end{itemize}
+            \end{enumerate}
         \end{block}
     }
 \end{frame}
@@ -678,6 +686,24 @@ Supervisors: & Pr, Bruno Raffin \\
 
 \begin{frame}{Tracing overhead (intel)}
         \includegraphics[width=\linewidth]{moca/slides/moca_overhead_intel.pdf}
+\end{frame}
+
+\begin{frame}{Conclusions on Moca}
+    \begin{block}{}
+        \begin{itemize}
+            \item Collects complete, detailed and precise traces
+            \item Faster than Tabarnac
+            \item Two Research reports~\cite{Beniamine15Memory,Beniamine16Moca}
+            \item Submitted at CCGRID'16
+        \end{itemize}
+    \end{block}
+    \pause
+    \begin{alertblock}{Visualization and analysis}
+        \begin{itemize}
+            \item Traces spread over five dimensions
+            \item Still a work in progress
+        \end{itemize}
+    \end{alertblock}
 \end{frame}
 
 \section{Conclusions and perspectives}
@@ -856,6 +882,7 @@ Supervisors: & Pr, Bruno Raffin \\
 
 \subsection*{Visualizing and analyzing Moca traces}
 
+\setcounter{framenumber}{\value{finalframe}}
 \begin{frame}{FrameSoc and Ocelotl}
     \begin{block}{FrameSoc~\cite{Pagano14frameSoC}}
         \begin{itemize}
@@ -902,6 +929,7 @@ Supervisors: & Pr, Bruno Raffin \\
     \pause
 \end{frame}%
 
+\setcounter{framenumber}{\value{finalframe}}
 \begin{frame}{Limits}
     \begin{itemize}
         \item FrameSoc trace model not well suited for memory traces
@@ -910,6 +938,7 @@ Supervisors: & Pr, Bruno Raffin \\
     \end{itemize}
 \end{frame}
 
+\setcounter{framenumber}{\value{finalframe}}
 \begin{frame}{Programmatic approach}
     \begin{block}{Idea}
         \begin{itemize}
