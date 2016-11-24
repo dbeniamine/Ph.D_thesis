@@ -333,8 +333,8 @@ Supervisors: & Pr, Bruno Raffin \\
 
 \subsection{Design}
 
-\begin{frame}{Goals}
-    \begin{block}{}
+\begin{frame}{Main principles}
+    \begin{block}{Goals}
         \begin{itemize}
             \item Global understanding of memory behavior
             \item Designed for NUMA machines
@@ -342,6 +342,10 @@ Supervisors: & Pr, Bruno Raffin \\
             \item Simple to use
         \end{itemize}
     \end{block}
+    \pause
+    \begin{alertblock}{Mechanism}
+        Pin instrumentation
+    \end{alertblock}
 \end{frame}
 
 \begin{frame}{Background knowledge}
@@ -390,12 +394,14 @@ Supervisors: & Pr, Bruno Raffin \\
 \subsection{Optimizing IS, a well known benchmark}
 
 \begin{frame}{IS}
-    \begin{itemize}
-        \item NAS Parallel Benchmark~\cite{Jin99NPBOpenMP}
-        \item Integer (bucket) Sort
-        \item Memory Intensive
-        \item<alert@1-> “Random memory access” (according to NPB website)
-    \end{itemize}
+    \begin{block}{}
+        \begin{itemize}
+            \item NAS Parallel Benchmark~\cite{Jin99NPBOpenMP}
+            \item Integer (bucket) Sort
+            \item Memory Intensive
+            \item<alert@1-> “Random memory access” (according to NPB website)
+        \end{itemize}
+    \end{block}
 \end{frame}
 
 \begin{frame}{Data structures}
@@ -449,40 +455,46 @@ Supervisors: & Pr, Bruno Raffin \\
     \pause
 \end{frame}
 
-\begin{frame}{Understanding the issue}
-    \alt<1-2>{
-        \centering
-        \alt<1>{
+\begin{frame}{Understanding and fixing the issue}
+    \centering
+    \alt<1>{
         \includegraphics[height=.6\textheight]{standalone/is-curve-nocolor}
-        }{
-        \includegraphics[height=.6\textheight]{standalone/is-curve-random}
-        }
-        \begin{block}{\alt<1>{\ }{Dynamic scheduling}}
-            \uncover<2>{
-                \#pragma omp for schedule(dynamic)\\
-            }
-            for (k=0;k<N;k++)\\
-            \qquad key\_buff1[key\_buff2[k]]++
-        \end{block}
     }{
-        \alt<3>{
-            \centering
-            \includegraphics[height=.6\textheight]{standalone/is-curve-cyclic}
-            \begin{block}{Cyclic scheduling}
-                \#pragma omp for schedule(static)\\
-                for (k=0;k<N;k++)\\
-                \qquad  key\_buff1[key\_buff2[k]]++
-            \end{block}
+        \alt<2>{
+            \includegraphics[height=.6\textheight]{standalone/is-curve-random}
         }{
-            \centering
+            \alt<3>{
+                \includegraphics[height=.6\textheight]{standalone/is-curve-cyclic}
+            }{
             \includegraphics[height=.6\textheight]{standalone/is-curve}
-            \begin{alertblock}{Fair scheduling}
-                \#pragma omp for schedule(static, size/(2*num\_threads))\\
-                for (k=0;k<N;k++)\\
-                \qquad  key\_buff1[key\_buff2[k]]++
-            \end{alertblock}
+            }
         }
     }
+    \begin{block}{\uncover<2->{
+            \alt<1-2>{
+                Dynamic scheduling
+            }{
+                \alt<3>{
+                    Cyclic scheduling
+                }{
+                    Fair scheduling
+                }}}}
+        \uncover<2->{\alert{
+        \#pragma omp for schedule
+            \alt<1-2>{
+                (dynamic)\\
+            }{
+                \alt<3>{
+                    (static)\\
+                }{
+                    (static, size/(2*num\_threads))\\
+                }
+            }
+            }}
+        for (k=0;k<N;k++)\\
+            \qquad key\_buff1[key\_buff2[k]]++
+    \end{block}
+    \pause
     \pause
     \pause
 \end{frame}
@@ -522,8 +534,8 @@ Supervisors: & Pr, Bruno Raffin \\
     \begin{alertblock}{Scheduling}
         \begin{itemize}
             \item Dynamic: default
+            \item Cyclic: static
             \item Fair: ours
-            \item Cyclic: cyclic distribution
         \end{itemize}
     \end{alertblock}
 \end{frame}
@@ -555,20 +567,24 @@ Supervisors: & Pr, Bruno Raffin \\
 
 \subsection{Design}
 
-\begin{frame}{Goals}
-    \begin{block}{}
+\begin{frame}{Main principles}
+    \begin{block}{Goals}
         \begin{itemize}
             \item Fine grained memory traces
             \item Reasonable overhead
             \item Limit impact on thread scheduling
         \end{itemize}
     \end{block}
+    \pause
+    \begin{alertblock}{Mechanism}
+        Page faults interception and injection
+    \end{alertblock}
 \end{frame}
 
 \begin{frame}{Main components}
     \begin{alertblock}{Linux kernel module}
         \begin{itemize}
-            \item Tracks thread creation
+            \item Monitor all threads of an application
             \item Intercept page faults
             \item Periodically injects false page faults
             \item Keep the recent trace (kernel space)
