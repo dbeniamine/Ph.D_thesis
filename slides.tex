@@ -426,15 +426,27 @@ Supervisors: & Pr, Bruno Raffin \\
             \begin{column}{.45\linewidth}
                 \centering
                 \includegraphics[width=\linewidth]{tabarnac/is_b_ka_ft.png}
+                \begin{block}{}
+                    \centering
+                    key\_array
+                \end{block}
             \end{column}
             \begin{column}{.45\linewidth}
                 \centering
                 \includegraphics[width=\linewidth]{tabarnac/is_b_kb2_ft.png}
+                \begin{block}{}
+                    \centering
+                    key\_buff2
+                \end{block}
             \end{column}
         \end{columns}
     }{
         \centering
-        \includegraphics[width=.65\linewidth]{tabarnac/is_b_kb1_ft.png}
+        \includegraphics[width=.6\linewidth]{tabarnac/is_b_kb1_ft.png}
+        \begin{block}{}
+            \centering
+            key\_buff1
+        \end{block}
     }
     \pause
 \end{frame}
@@ -445,15 +457,27 @@ Supervisors: & Pr, Bruno Raffin \\
             \begin{column}{.45\linewidth}
                 \centering
                 \includegraphics[width=\linewidth]{tabarnac/is_b_ka_dist.png}
+                \begin{block}{}
+                    \centering
+                    key\_array
+                \end{block}
             \end{column}
             \begin{column}{.45\linewidth}
                 \centering
                 \includegraphics[width=\linewidth]{tabarnac/is_b_kb2_dist.png}
+                \begin{block}{}
+                    \centering
+                    key\_buff2
+                \end{block}
             \end{column}
         \end{columns}
     }{
         \centering
-        \includegraphics[width=.65\linewidth]{tabarnac/is_b_kb1_dist.png}
+        \includegraphics[width=.6\linewidth]{tabarnac/is_b_kb1_dist.png}
+        \begin{block}{}
+            \centering
+            key\_buff1
+        \end{block}
     }
     \pause
 \end{frame}
@@ -618,8 +642,8 @@ Supervisors: & Pr, Bruno Raffin \\
 
 \begin{frame}{Handling page faults}
     \centering
-    \resizebox{!}{.7\textheight}{
-        \input{tikz/moca-fpf}
+    \resizebox{!}{.8\textheight}{
+        \input{tikz/moca-fpf-slides}
     }
 \end{frame}
 
@@ -693,8 +717,12 @@ Supervisors: & Pr, Bruno Raffin \\
         \begin{itemize}
             \item Collects complete, detailed and precise traces
             \item Faster than Tabarnac
-            \item Two Research reports~\cite{Beniamine15Memory,Beniamine16Moca}
-            \item Submitted at CCGRID'16
+            \item Two research reports
+                \begin{itemize}
+                    \item \cite{Beniamine15Memory}
+                    \item \cite{Beniamine16Moca}
+                \end{itemize}
+            \item Submitted at CCGRID'17
         \end{itemize}
     \end{block}
     \pause

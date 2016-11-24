@@ -1,0 +1,134 @@
+%!TEX encoding=UTF-8 Unicode
+
+\tikzstyle{decision} = [rectangle, draw, fill=orange!30,text centered,
+text width=6.5em]
+\tikzstyle{mblock} = [rectangle, draw, fill=blue!25,text centered, rounded corners, node distance=3cm, minimum height=3em]
+\tikzstyle{lblock} = [rectangle, draw, fill=blue!10, text centered, rounded corners, node distance=3cm, minimum height=3em]
+\tikzstyle{line} = [draw, -latex,thick]
+
+\tikzset{
+  basic box/.style = {
+    shape = rectangle,
+    draw,
+    rounded corners},
+  header node/.style = {
+    %Minimum Width = header nodes,
+    font          = \strut\large\ttfamily,
+    text depth    = +0pt,
+    fill          = #1,
+    draw},
+    header/.style n args={2}{%
+    inner ysep = +2em,
+    append after command = {
+      \pgfextra{\let\TikZlastnode\tikzlastnode}
+      node [header node=#2] (header-\TikZlastnode) at (\TikZlastnode.north) {#1}
+      %node %[span = (\TikZlastnode)(header-\TikZlastnode)]
+       % at (fit bounding box) (h-\TikZlastnode) {}
+    }
+  },
+}
+
+\newcommand*{\StrikeThruDistance}{0.15cm}%
+%\newcommand*{\StrikeThru}{\StrikeThruDistance,\StrikeThruDistance}%
+\tikzset{strike thru arrow/.style={
+        decoration={markings, mark=at position 0.3 with {
+            \draw [black, very thick,solid,-]
+                    ++ (-\StrikeThruDistance,-\StrikeThruDistance)
+                    -- ( \StrikeThruDistance, \StrikeThruDistance);
+            \draw [black, very thick,solid,-]
+                    ++ ( \StrikeThruDistance,-\StrikeThruDistance)
+                    -- ( -\StrikeThruDistance, \StrikeThruDistance);
+                } },
+                    postaction={decorate},
+                                    }
+        }
+
+    \begin{tikzpicture}[scale=0.8]
+
+        \node [lblock]   (pf)  at (0,0) {PageFault(task, @)};
+
+        \node [lblock]   (hpf)  at (0,-7) {HandleFault(task,@)};
+
+        \node [lblock]   (resume)   at (0,-14){Resume execution};
+
+        \uncover<2->{
+            \node [mblock]   (pfi) at (14,0) {InterceptPageFault(task,@)};
+
+            \node [decision] (mon) at (14,-2) {Is task monitored ?};
+
+        }
+        \uncover<3->{
+            \node [decision] (shou) at (7,-3) {Should we monitor it ?};
+            \node [mblock] (Add)  at (14,-8) {AddToChunk(task,@)};
+        }
+
+        \uncover<4->{
+            \node [mblock] (Add1) at (7,-5) {Monitor(task)};
+        }
+
+        \uncover<5->{
+            \node [decision] (sfix)     at (14,-11) {Is it a false page fault ?};
+        }
+
+        \uncover<6->{
+            \node [mblock]   (fix)      at (14,-14) {FixFalsePageFault(task,@)};
+
+        }
+        \coordinate (inv) at ($(shou)-(4,0)$);
+        \node[fit=(pfi) (shou) (fix) (inv),header={Moca}{white},basic box] (Moca) {};
+        \node[fit=(pf) (hpf) (resume),header={Linux}{white},basic box] (OS) {};
+
+        \only<1>{
+            \draw [line] (pf) -- (hpf);
+        }
+        \path [line] (hpf) -- (resume);
+
+        \only<2->{
+            \path [line] (pf.south) -- ($(pf.south)+(0,-.4)$) --
+            ($(pf.south)+(7,-.4)$)  -- ($(pfi.north)+(-7,.4)$) --
+            ($(pfi.north)+(0,.4)$) -- (pfi.north);
+
+            \draw [-latex, strike thru arrow,dashed] (pf) -- (hpf);
+
+            \path [line] (pfi.south) -- (mon.north);
+        }
+
+
+        \only<3->{
+
+            \path [line] (mon.west) -- node [pos=.5,above] {No} ($(mon)+(-7,0)$)
+            -- (shou.north);
+            \path [line] (mon.south) -- node [pos=.5,right] {Yes} (Add.north);
+        }
+        \only<4->{
+
+            \path [line] (shou.west)  -- node [pos=.2,above] {No} ($(shou)+(-7,0)$)
+             -- (hpf.north);
+
+            \path [line] (shou.south) -- node [right] {Yes} (Add1.north);
+
+            \path [line] (Add1.south) -- ($(Add1.south)+(0,-.5)$)
+            -- ($(Add.north)+(0,1)$) -- (Add.north);
+
+        }
+        \only<5->{
+            \path [line] (Add.south) -- (sfix);
+
+        }\only<6->{
+            \path [line] (sfix.west) -- node [pos=.3,above] {No}
+            ($(sfix)+(-10,0)$) -- ($(sfix)+(-10,6)$)
+            -- ($(hpf)+(0,2)$) -- (hpf.north);
+
+            \path [line] (sfix.south) -- node [right] {Yes} (fix.north);
+        }
+        \only<7->{
+            \path [line] (fix.south) -- ($(fix.south)+(0,-.5)$)
+            -- ($(fix.south)+(-10,-.5)$) -- ($(fix)+(-10,1.5)$)
+            -- ($(resume)+(0,1.5)$) --(resume.north);
+        }
+
+    \end{tikzpicture}
+
+
+% vim: et si sta lbr  sw=4 ts=4 spelllang=en_us
+

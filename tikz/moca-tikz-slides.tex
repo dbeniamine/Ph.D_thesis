@@ -30,48 +30,48 @@ text width=5em]
 \tikzstyle{logA} = [-latex,dotted,line,logcolor]
 
 \tikzset{
-  basic box/.style = {
-    shape = rectangle,
-    draw,
+    basic box/.style = {
+        shape = rectangle,
+        draw,
     rounded corners},
-  filled box/.style = {
-    shape = rectangle,
-    draw  = #1,
-    fill  = #1,
+    filled box/.style = {
+        shape = rectangle,
+        draw  = #1,
+        fill  = #1,
     rounded corners},
-  header node/.style = {
+    header node/.style = {
     %Minimum Width = header nodes,
-    font          = \strut\large\ttfamily,
-    text depth    = +0pt,
-    fill          = #1,
+        font          = \strut\large\ttfamily,
+        text depth    = +0pt,
+        fill          = #1,
     draw},
     header/.style n args={2}{%
-    inner ysep = +1.5em,
-    append after command = {
-      \pgfextra{\let\TikZlastnode\tikzlastnode}
-      node [header node=#2] (header-\TikZlastnode) at (\TikZlastnode.north) {#1}
+        inner ysep = +1.5em,
+        append after command = {
+            \pgfextra{\let\TikZlastnode\tikzlastnode}
+            node [header node=#2] (header-\TikZlastnode) at (\TikZlastnode.north) {#1}
       %node %[span = (\TikZlastnode)(header-\TikZlastnode)]
        % at (fit bounding box) (h-\TikZlastnode) {}
-    }
-  },
-  footer node/.style = {
+        }
+    },
+    footer node/.style = {
     %Minimum Width = header nodes,
-    font          = \strut\large\ttfamily,
-    text depth    = +0pt,
-    fill          = #1,
+        font          = \strut\large\ttfamily,
+        text depth    = +0pt,
+        fill          = #1,
     draw},
     footer/.style n args={2}{%
-    inner ysep = +1.5em,
-    append after command = {
-      \pgfextra{\let\TikZlastnode\tikzlastnode}
-      node [header node=#2] (header-\TikZlastnode) at (\TikZlastnode.south) {#1}
+        inner ysep = +1.5em,
+        append after command = {
+            \pgfextra{\let\TikZlastnode\tikzlastnode}
+            node [header node=#2] (header-\TikZlastnode) at (\TikZlastnode.south) {#1}
       %node %[span = (\TikZlastnode)(header-\TikZlastnode)]
        % at (fit bounding box) (h-\TikZlastnode) {}
-    }
-  },
-  hv/.style = {to path = {-|(\tikztotarget)\tikztonodes}},
-  vh/.style = {to path = {|-(\tikztotarget)\tikztonodes}},
-  fat blue line/.style = {ultra thick, blue}
+        }
+    },
+    hv/.style = {to path = {-|(\tikztotarget)\tikztonodes}},
+    vh/.style = {to path = {|-(\tikztotarget)\tikztonodes}},
+    fat blue line/.style = {ultra thick, blue}
 }
 
 
@@ -95,18 +95,18 @@ text width=5em]
     \node [data] (TL)  at (12,-1) {Tasks map};
 
 
-    \uncover<4->{
-    \node[handler] (Flh) at (1,-5.5) {Read callback};
-}
+    \uncover<9->{
+        \node[handler] (Flh) at (1,-5.5) {Read callback};
+    }
     \uncover<2->{
-    \node[handler] (PfH) at (10,-4.5) {page fault handler};
+        \node[handler] (PfH) at (10,-4.5) {page fault handler};
     }
 
 
-    \uncover<4->{
-    \node[entity,log] (F) at (1,-8) {Logging Process (userspace)};
-}
-    \uncover<3->{
+    \uncover<8->{
+        \node[entity,log] (F) at (1,-8) {Logging Process (userspace)};
+    }
+    \uncover<5->{
         \node[entity,mon] (M) at (6,-8) {Monitor thread (kernel)};
     }
 
@@ -124,42 +124,54 @@ text width=5em]
     \begin{pgfonlayer}{background}
         \node[fit=(file) (proc) (pgt) (T),footer={Linux}{white} ,basic box=red,
         %below=1.5em of Moca
-    ] (Linux) {};
+        ] (Linux) {};
     \end{pgfonlayer}
 
     % Edges
 
     %% Loging process
-    \uncover<4->{
-    \path[logA] (F.south) edge[in=140,out=270] node[right] {read} (proc.west);
-    \path[logA] (proc.north) edge[in=-20,out=70]  node[pos=.2,left] {triggers} (Flh.east);
-    \path[logA] (Flh.north) edge[out=90,in=270] node[pos=.2,left] {read write} (ch0.south);
+    \uncover<8->{
+        \path[logA] (F.south) edge[in=140,out=270] node[right] {read} (proc.west);
+    }
+    \uncover<9->{
+        \path[logA] (proc.north) edge[in=-20,out=70]  node[pos=.2,left] {triggers} (Flh.east);
+    }
+    \uncover<10->{
+        \path[logA] (Flh.north) edge[out=90,in=270] node[pos=.2,left] {read write} (ch0.south);
 
-    \path[logA] (Flh.west) edge[in=100,out=230] node[pos=.1,left] {write} (file.north);
-}
+        \path[logA] (Flh.west) edge[in=100,out=230] node[pos=.1,left] {write} (file.north);
+    }
 
     % Page faults
     \uncover<2->{
-    \path[pfA] (T)   edge[out=70,in=-70] node[pos=.2,right] {triggers} ($(PfH.south)+(1,0)$);
+        \path[pfA] (T)   edge[out=70,in=-70] node[pos=.2,right] {triggers} ($(PfH.south)+(1,0)$);
+        \coordinate (inv2) at ($(M.south)-(0,0.5)$);
+        \path[pfA] (PfH.north) edge node[right] {read \\ (write)} (TL.south);
+    }
 
-    \coordinate (inv) at (8.5,0.5);
-    \path[pfAI] (PfH.north) edge[out=100,in=-10] (inv);
-    \path[pfA]  (inv)     edge[out=170,in=20] node[pos=.1,above] {write} ($(ch2.east)+(0,0.2)$);
+    \uncover<3->{
+        \coordinate (inv) at (8.5,0.5);
+        \path[pfAI] (PfH.north) edge[out=100,in=-10] (inv);
+        \path[pfA]  (inv)     edge[out=170,in=20] node[pos=.1,above] {write} ($(ch2.east)+(0,0.2)$);
+    }
 
-    \path[pfA] (PfH.north) edge node[right] {read \\ (write)} (TL.south);
-    \path[pfA] (PfH.north) edge[out=160,in=310] node[pos=.8,right] {read} ($(PfL.south)+(0.2,0)$);
+    \uncover<4->{
+        \path[pfA] (PfH.south) edge[out=-90, in=90] node[pos=.8,right] {read / write}(pgt.north);
+        \path[pfA] (PfH.north) edge[out=160,in=310] node[pos=.8,right] {read} ($(PfL.south)+(0.2,0)$);
 
-    \coordinate (inv2) at ($(M.south)-(0,0.5)$);
-    \path[pfA] (PfH.south) edge[out=-90, in=90] node[pos=.8,right] {read / write}(pgt.north);
-}
+    }
 
     %Monitor
-    \uncover<3->{
-    \path[monA] (M.north) edge[out=70,in=290] node[pos=.2,right] {write} (PfL.south);
-    \path[monA] (M.north) edge[out=110,in=-30] node[pos=.6,left] {write} (cur.east);
-    \path[monA] (M)  edge[out=-130,in=110] node[pos=.8,left] {write} ($(pgt.north)-(.6,0)$);
+    \uncover<5->{
+        \path[monA] (M.north) edge[out=110,in=-30] node[pos=.6,left] {write} (cur.east);
+    }
+    \uncover<6->{
+        \path[monA] (M.north) edge[out=170,in=-10] node[pos=.5,left] {read} (ch1.east);
+    }
+    \uncover<7->{
+        \path[monA] (M.north) edge[out=70,in=290] node[pos=.2,right] {write} (PfL.south);
+        \path[monA] (M)  edge[out=-130,in=110] node[pos=.8,left] {write} ($(pgt.north)-(.6,0)$);
 
-    \path[monA] (M.north) edge[out=170,in=-10] node[pos=.5,left] {read} (ch1.east);
-}
+    }
 \end{tikzpicture}
 
