@@ -352,17 +352,17 @@ Supervisors: & Pr, Bruno Raffin \\
 \end{frame}
 
 \begin{frame}{Background knowledge}
-    \begin{block}{Mapping tools}
+    \begin{block}{Page mapping tools}
         \begin{itemize}
-            \item Dynamic tools~\cite{Corbet12Toward,Diener14kMAF}
-                \begin{itemize}
-                    \item Collect informations on memory accesses online
-                    \item Move data close to thread using them
-                \end{itemize}
             \item  Static policies
                 \begin{itemize}
                     \item First touch (default)
                     \item Interleave: reduce memory contention
+                \end{itemize}
+            \item Dynamic tools~\cite{Corbet12Toward,Diener14kMAF}
+                \begin{itemize}
+                    \item Collect informations on memory accesses online
+                    \item Move data close to thread using them
                 \end{itemize}
         \end{itemize}
     \end{block}
@@ -382,11 +382,11 @@ Supervisors: & Pr, Bruno Raffin \\
         \begin{itemize}
             \item Build on top of Numalyze
             \item Differentiate access types (reads / writes)
-            \item Retrieve data structure information
+            \item Context library (data structure informations)
                 \begin{itemize}
                     \item Read binary for static data structures
                     \item Intercepts allocations
-                    \item Uses debug flags to decide data structure names
+                    \item Uses debug flags to retrieve data structure names
                 \end{itemize}
             \item Filter out almost unused data structures
             \item R visualizations
@@ -669,7 +669,7 @@ Supervisors: & Pr, Bruno Raffin \\
             \midrule
             Temporal data & \textbf{Yes} & No          & \textbf{Yes} & \textbf{Yes} \\
             CPU location  & \textbf{Yes} & No          & \textbf{Yes} & \textbf{Yes} \\
-            Nature        & \textbf{Yes} &\textbf{Yes} & Yes         & Yes       \\
+            Nature        & \textbf{Yes} &\textbf{Yes} & \textbf{Yes} &\textbf{Yes}  \\
         \bottomrule
     \end{tabular}
 \end{frame}
