@@ -41,7 +41,6 @@
 
 %========================= Hyperref ==========================================
 
-
 %\hypersetup{
 %    colorlinks=false, %colore les liens
 %    breaklinks=true, %permet le retour à la ligne dans les liens trop longs
@@ -71,7 +70,11 @@
 
 \definecolor{INstruct}{HTML}{82A382}
 \setbeamercolor{structure}{fg=INstruct}
+\definecolor{Example}{HTML}{7570B3}
+\setbeamercolor{example text}{fg=Example}
 
+% Alert =>
+% Example => Red
 
 %=============================================================================
 
@@ -122,14 +125,14 @@
 \small
 {\centering\itshape Jury members\par}
 \begin{tabular}[t]{@{}l@{\hspace{3pt}}p{.45\textwidth}@{}}
-President: & Pr, Martin Quinson\\
-Reviewers: & Pr, Jes\'us Labarta Mancho \\
-& Pr,  Raymond Namyst \\
-Examiners: & Dr, Lucas M. Schnorr \\
+President: & Pr. Martin Quinson\\
+Reviewers: & Pr. Jes\'us Labarta Mancho \\
+& Pr.  Raymond Namyst \\
+Examiners: & Dr. Lucas M. Schnorr \\
 \end{tabular}%
 \begin{tabular}[t]{@{}l@{\hspace{3pt}}p{.45\textwidth}@{}}
-Supervisors: & Pr, Bruno Raffin \\
- & Dr, Guillaume Huard
+Supervisors: & Pr. Bruno Raffin \\
+ & Dr. Guillaume Huard
 \end{tabular}%
 \end{frame}
 
@@ -146,7 +149,7 @@ Supervisors: & Pr, Bruno Raffin \\
     \input{tikz/intro}
 \end{frame}
 
-\begin{frame}{Improving sequential computers performances}
+\begin{frame}{Improving sequential computers performance}
     \begin{columns}
         \begin{column}{.45\textwidth}
             \centering
@@ -169,16 +172,16 @@ Supervisors: & Pr, Bruno Raffin \\
                 \end{enumerate}
             \end{block}
             \pause
-            \begin{alertblock}{Memory caches}
+            \begin{exampleblock}{Memory caches}
                 \begin{itemize}
                     \item Spatial locality
                     \item Temporal locality
                 \end{itemize}
-            \end{alertblock}
+            \end{exampleblock}
             \pause
-            \begin{alertblock}{Energy}
+            \begin{exampleblock}{Energy}
                 Build parallel machines
-            \end{alertblock}
+            \end{exampleblock}
         \end{column}
     \end{columns}
 \end{frame}
@@ -195,15 +198,15 @@ Supervisors: & Pr, Bruno Raffin \\
             \end{block}
         \end{column}
         \begin{column}{.8\linewidth}
-            \centering
-            \scalebox{.6}{
+            \resizebox{!}{.75\textheight}{
+                \centering
                 \input{tikz/topo-NUMA.tex}
             }
         \end{column}
     \end{columns}
 \end{frame}
 
-\begin{frame}{Sequential matrix multiplication}
+\begin{frame}{Sequential matrix multiplication: $C=A*B$}
     \centering
     \scalebox{.6}{
         \input{tikz/mat-mult-slides}
@@ -238,7 +241,7 @@ Supervisors: & Pr, Bruno Raffin \\
     \end{block}
 \end{frame}
 
-\begin{frame}{Summary}
+\begin{frame}{From simple examples to actual applications}
     \begin{block}{Usual performance issues}
         \begin{itemize}
             \item Order of accesses
@@ -249,9 +252,9 @@ Supervisors: & Pr, Bruno Raffin \\
         \end{itemize}
     \end{block}
     \pause
-    \begin{alertblock}{Real applications}
+    \begin{alertblock}{Actual applications}
         \begin{itemize}
-            \item Complex data structures
+            \item Complex data structures / generic classes
             \item Memory accesses patterns hard to identify from code
             \item Thread handled by high level libraries
         \end{itemize}
@@ -259,11 +262,11 @@ Supervisors: & Pr, Bruno Raffin \\
 \end{frame}
 
 \begin{frame}{Research statement}
-    \begin{alertblock}{}
-        How can we analyze the memory behavior of an application to optimize its performances ?
-    \end{alertblock}
+    \begin{exampleblock}{}
+        How can we analyze the \textbf{memory behavior} of an application to optimize its performance ?
+    \end{exampleblock}
     \pause
-    \begin{block}{Challenges}
+    \begin{block}{Means}
         \begin{enumerate}
                 \item Collect memory traces
                 \begin{itemize}
@@ -302,38 +305,50 @@ Supervisors: & Pr, Bruno Raffin \\
         \end{itemize}
     \end{block}
     \pause
-    \begin{alertblock}{Instruction sampling~\cite{Drongowski07Instructionbased,Levinthal09Performance}}
+    \begin{exampleblock}{Instruction sampling~\cite{Drongowski07Instructionbased,Levinthal09Performance}}
         \begin{itemize}
             \item Lightweight
             \item Detailed information on memory
             \item Coarse grain sampling
         \end{itemize}
-    \end{alertblock}
+    \end{exampleblock}
 \end{frame}
 
 \begin{frame}{Existing memory profiling tools}
     \begin{block}{}
         \begin{itemize}
-            \item  MemPhis~\cite{McCurdy10Memphis}
-            \item<alert@1->  MemProf~\cite{Lachaize12MemProf}
-            \item  HPCToolkit extension~\cite{Liu14Tool}
-            \item <alert@1-> MemAxes / Mitos~\cite{Gimenez14Dissecting}
+            \item MemPhis~\cite{McCurdy10Memphis} (AMD IBS)
+                \begin{itemize}
+                    \item Textual output
+                \end{itemize}
+            \item \textbf{MemProf \cite{Lachaize12MemProf} (AMD IBS)}
+                \begin{itemize}
+                    \item Textual output
+                \end{itemize}
+            \item \cite{Liu14Tool} (IBS/PEBS)
+                \begin{itemize}
+                    \item Generic visualization tool: HPCToolkit
+                \end{itemize}
+            \item \textbf{Mitos \cite{Gimenez14Dissecting} (Intel PEBS)}
+                \begin{itemize}
+                    \item Ad Hoc visualization tool: MemAxes
+                \end{itemize}
         \end{itemize}
     \end{block}
-    \pause
-    \begin{alertblock}{Limitations}
-        \begin{itemize}
-            \item Not complete: miss significant part of memory
-            \item Not precise enough to detect patterns
-        \end{itemize}
-    \end{alertblock}
+\pause
+\begin{alertblock}{Limitations}
+    \begin{itemize}
+        \item Not complete: miss significant part of memory
+        \item Not precise enough to detect patterns
+    \end{itemize}
+\end{alertblock}
 \end{frame}
 
 \section{Tabarnac: Analyzing the global memory behavior}
 
 \subsection{Design}
 
-\begin{frame}{Main principles}
+\begin{frame}{Main principles of Tabarnac}
     \begin{block}{Goals}
         \begin{itemize}
             \item Global understanding of memory behavior
@@ -343,12 +358,12 @@ Supervisors: & Pr, Bruno Raffin \\
         \end{itemize}
     \end{block}
     \pause
-    \begin{alertblock}{Mechanisms}
+    \begin{exampleblock}{Mechanisms}
         \begin{itemize}
-            \item Pin instrumentation
+            \item Intel Pin~\cite{Luk05Pin} instrumentation
             \item R visualizations
         \end{itemize}
-    \end{alertblock}
+    \end{exampleblock}
 \end{frame}
 
 \begin{frame}{Background knowledge}
@@ -367,20 +382,20 @@ Supervisors: & Pr, Bruno Raffin \\
         \end{itemize}
     \end{block}
     \pause
-    \begin{alertblock}{Numalyze~\cite{Diener15Characterizing}}
+    \begin{exampleblock}{Numalyze~\cite{Diener15Characterizing}}
         \begin{itemize}
             \item Pin instrumentation, lock free
             \item Intercept every memory accesses
             \item Collects one counter per page and per thread
             \item Designed to compare dynamic mapping tools
         \end{itemize}
-    \end{alertblock}
+    \end{exampleblock}
 \end{frame}
 
 \begin{frame}{Tabarnac}
-    \begin{alertblock}{}
+    \begin{exampleblock}{}
         \begin{itemize}
-            \item Build on top of Numalyze
+            \item Fork of Numalyze
             \item Differentiate access types (reads / writes)
             \item Context library (data structure informations)
                 \begin{itemize}
@@ -391,12 +406,12 @@ Supervisors: & Pr, Bruno Raffin \\
             \item Filter out almost unused data structures
             \item R visualizations
         \end{itemize}
-    \end{alertblock}
+    \end{exampleblock}
 \end{frame}
 
 \subsection{Optimizing IS, a well known benchmark}
 
-\begin{frame}{IS}
+\begin{frame}{IS (class B)}
     \begin{block}{}
         \begin{itemize}
             \item NAS Parallel Benchmark~\cite{Jin99NPBOpenMP}
@@ -532,15 +547,27 @@ Supervisors: & Pr, Bruno Raffin \\
             \begin{column}{.45\linewidth}
                 \centering
                 \includegraphics[width=\linewidth]{tabarnac/is_b_ka_dist_m.png}
+                \begin{block}{}
+                    \centering
+                    key\_array
+                \end{block}
             \end{column}
             \begin{column}{.45\linewidth}
                 \centering
                 \includegraphics[width=\linewidth]{tabarnac/is_b_kb2_dist_m.png}
+                \begin{block}{}
+                    \centering
+                    key\_buff2
+                \end{block}
             \end{column}
         \end{columns}
     }{
         \centering
-        \includegraphics[width=.65\linewidth]{tabarnac/is_b_kb1_dist_m.png}
+        \includegraphics[width=.6\linewidth]{tabarnac/is_b_kb1_dist_m.png}
+        \begin{block}{}
+            \centering
+            key\_buff1
+        \end{block}
     }
     \pause
 \end{frame}
@@ -558,13 +585,13 @@ Supervisors: & Pr, Bruno Raffin \\
         \end{itemize}
     \end{block}
     \pause
-    \begin{alertblock}{Scheduling}
+    \begin{exampleblock}{Scheduling}
         \begin{itemize}
             \item Dynamic: default
             \item Cyclic: static
             \item Fair: ours + manual mapping
         \end{itemize}
-    \end{alertblock}
+    \end{exampleblock}
 \end{frame}
 
 \begin{frame}{Results}
@@ -605,23 +632,23 @@ Supervisors: & Pr, Bruno Raffin \\
         \end{itemize}
     \end{block}
     \pause
-    \begin{alertblock}{Mechanisms}
+    \begin{exampleblock}{Mechanisms}
         \begin{itemize}
             \item Page fault interception
             \item Page fault injection
         \end{itemize}
-    \end{alertblock}
+    \end{exampleblock}
 \end{frame}
 
 \begin{frame}{Main components}
-    \begin{alertblock}{Linux kernel module}
+    \begin{exampleblock}{Linux kernel module}
         \begin{itemize}
             \item Monitor all threads of an application
             \item Intercept page faults
             \item Periodically injects false page faults
             \item Keep the recent trace (kernel space)
         \end{itemize}
-    \end{alertblock}
+    \end{exampleblock}
     \uncover<2->{
         \begin{block}{User space process}
             \begin{enumerate}
@@ -674,7 +701,7 @@ Supervisors: & Pr, Bruno Raffin \\
     \end{tabular}
 \end{frame}
 
-\begin{frame}{Benchmarks}
+\begin{frame}{Nas Parallel Benchmarks (class B)}
     \small
     \begin{tabular}{lrll}
         \toprule
@@ -713,7 +740,7 @@ Supervisors: & Pr, Bruno Raffin \\
 \end{frame}
 
 \begin{frame}{Conclusions on Moca}
-    \begin{block}{}
+    \begin{exampleblock}{Trace Collection}
         \begin{itemize}
             \item Collects complete, detailed and precise traces
             \item Faster than Tabarnac
@@ -724,22 +751,22 @@ Supervisors: & Pr, Bruno Raffin \\
                 \end{itemize}
             \item Submitted at CCGRID'17
         \end{itemize}
-    \end{block}
+    \end{exampleblock}
     \pause
-    \begin{alertblock}{Visualization and analysis}
+    \begin{block}{Visualization and analysis}
         \begin{itemize}
             \item Traces spread over five dimensions
             \item Still a work in progress
         \end{itemize}
-    \end{alertblock}
+    \end{block}
 \end{frame}
 
 \section{Conclusions and perspectives}
 
 \begin{frame}{Conclusions}
-    \begin{alertblock}{}
-        How can we analyze the memory behavior of an application to optimize its performances ?
-    \end{alertblock}
+    \begin{exampleblock}{}
+        How can we analyze the memory behavior of an application to optimize its performance ?
+    \end{exampleblock}
     \pause
     \begin{block}{Tabarnac~\cite{Beniamine15TABARNAC}}
         \begin{enumerate}
@@ -749,30 +776,30 @@ Supervisors: & Pr, Bruno Raffin \\
         \end{enumerate}           
     \end{block}
     \pause
-    \begin{alertblock}{Moca~\cite{Beniamine15Memory,Beniamine16Moca}}
+    \begin{exampleblock}{Moca~\cite{Beniamine15Memory,Beniamine16Moca}}
         \begin{enumerate}
             \item \textbf{Trace collection:} Complete, detailed, precise
             \item \textbf{Visualization:} Encouraging preliminary results
             \item \textbf{Optimization:} Still a work in progress
         \end{enumerate}          
-    \end{alertblock}
+    \end{exampleblock}
 \end{frame}
 
 \begin{frame}{Perspectives}
     \begin{block}{Short term}
         \begin{itemize}
-            \item Use Moca traces to understand Intel MKL performaances
+            \item Use Moca traces to understand Intel MKL performance
             \item Analyze other real applications
-            \item Couple Moca traces with performances counters
+            \item Couple Moca traces with performance counters
         \end{itemize}
     \end{block}
     \pause
-    \begin{alertblock}{Long term}
+    \begin{block}{Long term}
         \begin{itemize}
             \item Higher level trace visualization for Moca
             \item Similar tools for GPU / Accelerators
         \end{itemize}
-    \end{alertblock}
+    \end{block}
 \end{frame}
 
 \newcounter{finalframe}
@@ -911,6 +938,39 @@ Supervisors: & Pr, Bruno Raffin \\
 \subsection*{Visualizing and analyzing Moca traces}
 
 \setcounter{framenumber}{\value{finalframe}}
+\begin{frame}{Moca traces visualization}
+    \begin{block}{Idea}
+        \begin{itemize}
+            \item Programmatic approach using R
+            \item Org-mode labbook to record our analysis
+            \item Reference visualizations inspired from Tabarnac ones
+            \item Custom visualizations depending on the trace
+        \end{itemize}
+    \end{block}
+\end{frame}
+
+\setcounter{framenumber}{\value{finalframe}}
+\begin{frame}{Example: dgetrf}
+    \centering
+    \alt<1>{
+        \includegraphics[width=\textwidth]{labbook-slides/intensity_Rw_dgetrf}
+    }{
+        \alt<2>{
+            \includegraphics[width=\textwidth]{labbook-slides/intensity_RW_dgetrf_zoom}
+        }{
+            \alt<3>{
+                \includegraphics[width=\textwidth]{labbook-slides/intensity_Share_dgetrf_zoom-init}
+            }{
+                \includegraphics[width=\textwidth]{labbook-slides/intensity_Share_dgetrf_zoom-init1}
+            }
+        }
+    }
+    \pause
+    \pause
+    \pause
+\end{frame}%
+
+\setcounter{framenumber}{\value{finalframe}}
 \begin{frame}{FrameSoc and Ocelotl}
     \begin{block}{FrameSoc~\cite{Pagano14frameSoC}}
         \begin{itemize}
@@ -966,38 +1026,6 @@ Supervisors: & Pr, Bruno Raffin \\
     \end{itemize}
 \end{frame}
 
-\setcounter{framenumber}{\value{finalframe}}
-\begin{frame}{Programmatic approach}
-    \begin{block}{Idea}
-        \begin{itemize}
-            \item Programmatic approach using R
-            \item Org-mode labbook to record our analysis
-            \item Reference visualizations inspired from Tabarnac ones
-            \item Custom visualizations depending on the trace
-        \end{itemize}
-    \end{block}
-\end{frame}
-
-\setcounter{framenumber}{\value{finalframe}}
-\begin{frame}{Example: dgetrf}
-    \centering
-    \alt<1>{
-        \includegraphics[width=\textwidth]{labbook-slides/intensity_Rw_dgetrf}
-    }{
-        \alt<2>{
-            \includegraphics[width=\textwidth]{labbook-slides/intensity_RW_dgetrf_zoom}
-        }{
-            \alt<3>{
-                \includegraphics[width=\textwidth]{labbook-slides/intensity_Share_dgetrf_zoom-init}
-            }{
-                \includegraphics[width=\textwidth]{labbook-slides/intensity_Share_dgetrf_zoom-init1}
-            }
-        }
-    }
-    \pause
-    \pause
-    \pause
-\end{frame}%
 
 %=============================================================================
 
