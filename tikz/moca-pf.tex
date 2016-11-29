@@ -1,10 +1,17 @@
 %!TEX encoding=UTF-8 Unicode
 
+% 4 class RdYlBU
+\definecolor{hcolor} {HTML}{2C7BB6}
+\definecolor{ccolor} {HTML}{ABD9E9}
+\definecolor{acolor} {HTML}{FDAE61}
+\definecolor{mcolor} {HTML}{D7191C}
+
 \tikzstyle{block} = [rectangle, draw, text centered, text width=6em]
 \tikzstyle{page} = [block, text width=1em, minimum height=2em]
-\tikzstyle{ablock} = [block, fill=orange!30]
-\tikzstyle{mblock} = [block, fill=blue!25, rounded corners]
-\tikzstyle{lblock} = [block, fill=blue!10, rounded corners]
+\tikzstyle{ablock} = [block, fill=acolor]
+\tikzstyle{mblock} = [block, fill=mcolor, rounded corners, text=white]
+\tikzstyle{hblock} = [block, fill=hcolor, rounded corners, text=white]
+\tikzstyle{cblock} = [block, fill=ccolor, rounded corners]
 \tikzstyle{line} = [-latex,thick]
 \tikzstyle{dline} = [line,latex-latex]
 
@@ -32,7 +39,7 @@
 
 \begin{tikzpicture}[scale=0.8]
 
-    \node [lblock]   (pf)  at (0,0) {Page fault Handler};
+    \node [hblock]   (pf)  at (0,0) {Page fault Handler};
     % pages
     \node[page] (p0) at ($(pf)+(-1,-2)$) {\alt<1-2,8-10,14->{
                                 \color{red}{X}}{\color{green}{$\surd$}}};
@@ -46,9 +53,9 @@
 
     \uncover<8->{
         \node[mblock] (mon) at ($(pf)+(7,0)$) {Monitoring thread};
-        \node[mblock] (pfM) at ($(mon)+(0,-2)$) {Page fault Handler};
-        \node[mblock] (trace) at ($(mon)+(4,0)$) {Trace};
-        \node[mblock] (fpf) at ($(trace)+(0,-2)$) {False page faults};
+        \node[hblock] (pfM) at ($(mon)+(0,-2)$) {Page fault Handler};
+        \node[cblock] (trace) at ($(mon)+(4,0)$) {Trace};
+        \node[cblock] (fpf) at ($(trace)+(0,-2)$) {False page faults};
 
 
         \node[fit=(pfM) (fpf) (trace) (mon),header={Moca}{white},basic box] (Moca) {};
