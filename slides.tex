@@ -623,24 +623,39 @@ Supervisors: & Pr. Bruno Raffin \\
 
 \subsection{Design}
 
-\begin{frame}{Main principles}
-    \begin{block}{Goals}
+\begin{frame}{Main principles of Moca}
+    \begin{block}{Goals to collect trace for patterns detection}
         \begin{itemize}
-            \item Fine grained memory traces
-            \item Reasonable overhead
+            \item Collect temporal information
+            \item Complete trace
+            \item Fine grain informations
             \item Limit impact on thread scheduling
+            \item Reasonable overhead
         \end{itemize}
     \end{block}
     \pause
     \begin{exampleblock}{Mechanisms}
         \begin{itemize}
             \item Page fault interception
-            \item Page fault injection
+            \item False page fault injection
         \end{itemize}
     \end{exampleblock}
 \end{frame}
 
-\begin{frame}{Main components}
+\begin{frame}{Page faults interception and injection}
+    \centering
+    \input{tikz/moca-pf}
+\end{frame}
+
+\begin{frame}{Main components of Moca}
+   \begin{block}{User space process}
+       \begin{enumerate}
+           \item Run application with context library
+           \item Run application with kernel module loaded
+           \item Periodically flush trace to disk
+       \end{enumerate}
+   \end{block}
+    \uncover<2->{
     \begin{exampleblock}{Linux kernel module}
         \begin{itemize}
             \item Monitor all threads of an application
@@ -649,21 +664,6 @@ Supervisors: & Pr. Bruno Raffin \\
             \item Keep the recent trace (kernel space)
         \end{itemize}
     \end{exampleblock}
-    \uncover<2->{
-        \begin{block}{User space process}
-            \begin{enumerate}
-                \item Run application with context library
-                \item Run application with kernel module loaded
-                \item Periodically flush trace to disk
-            \end{enumerate}
-        \end{block}
-    }
-\end{frame}
-
-\begin{frame}{Managing data in kernel space}
-    \centering
-    \resizebox{!}{.85\textheight}{
-        \input{tikz/moca-tikz-slides}
     }
 \end{frame}
 
@@ -672,6 +672,10 @@ Supervisors: & Pr. Bruno Raffin \\
     \resizebox{!}{.8\textheight}{
         \input{tikz/moca-fpf-slides}
     }
+\end{frame}
+
+\begin{frame}{Page sampling VS Instruction sampling}
+    \missingfigure{Page sampling VS Instruction sampling}
 \end{frame}
 
 \subsection{Experimental evaluation}
@@ -886,6 +890,15 @@ Supervisors: & Pr. Bruno Raffin \\
 \end{frame}
 
 \subsection*{Moca}
+
+\setcounter{framenumber}{\value{finalframe}}
+\begin{frame}{Managing data in kernel space}
+    \centering
+    \resizebox{!}{.85\textheight}{
+        \input{tikz/moca-tikz-slides}
+    }
+\end{frame}
+
 
 \setcounter{framenumber}{\value{finalframe}}
 \begin{frame}{Experimental setup}
