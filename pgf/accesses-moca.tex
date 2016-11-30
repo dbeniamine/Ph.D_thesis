@@ -1,0 +1,54 @@
+\documentclass{standalone}
+\input{../custom/tikz}
+\input{../custom/magic}
+\begin{document}
+
+%Palette 4-class paired
+\definecolor{Col0}{HTML}{A6CEE3}
+\definecolor{Col1}{HTML}{1F78B4}
+\definecolor{Col2}{HTML}{B2DF8A}
+\definecolor{Col3}{HTML}{33A02C}
+
+\begin{tikzpicture}
+\begin{axis}[
+        axis x line=bottom,
+        axis y line=left,
+        xtick=\empty,
+        ytick=\empty,
+        ylabel={Pages},
+        xlabel={Time},
+        ytick={1,2,3,4},
+        xtick={1,2,3,4},
+        y tick label style={
+            anchor=east,
+            below left=12pt and 1 pt,
+        },
+        yticklabels={P0,P1,P2,P3},
+        ymajorgrids,
+        xmajorgrids,
+        ymin=0,
+        ymax=4.1,
+        xmin=0,
+        xmax=4.1,
+        legend style={at={(1.1,1)}, anchor= north east}
+     ]
+     % First access on each page, manually computed
+    \addplot[fill=Col0, mark=*, only marks] coordinates {
+        (0.045,0.054)
+        (0.875,1.05)
+        (1.0416,1.25)
+        (1.7083,2.05)
+        (2.05,2.460)
+        (2.5416,3.05)
+        (3.05,3.660)
+    };
+    \addplot[fill=Col3, mark=square*, only marks] coordinates {
+        (1.2083,0.05)
+        (2.05,0.96)
+        (2.125,1.05)
+        (3.05,2.160)
+        (3.7916,3.05)
+    };
+\end{axis}
+\end{tikzpicture}
+\end{document}

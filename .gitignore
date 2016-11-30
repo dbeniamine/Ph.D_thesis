@@ -21,4 +21,4 @@ sty/*/*.pdf
 *.ist
 *.nav
 *.snm
-standalone/*.pdf
+pgf/*.pdf

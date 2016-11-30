@@ -1,0 +1,39 @@
+\documentclass{standalone}
+\input{../custom/tikz}
+\input{../custom/magic}
+\begin{document}
+
+%Palette 4-class paired
+\definecolor{Col0}{HTML}{A6CEE3}
+\definecolor{Col1}{HTML}{1F78B4}
+\definecolor{Col2}{HTML}{B2DF8A}
+\definecolor{Col3}{HTML}{33A02C}
+
+\begin{tikzpicture}
+    \begin{axis}[
+        axis x line=bottom,
+        axis y line=left,
+        xtick=\empty,
+        ytick=\empty,
+        ylabel={Pages},
+        xlabel={Time},
+        ytick={1,2,3,4},
+        xtick={1,2,3,4},
+        y tick label style={
+            anchor=east,
+            below left=12pt and 1 pt,
+        },
+        ymajorgrids,
+        xmajorgrids,
+        yticklabels={P0,P1,P2,P3},
+        ymin=0,
+        ymax=4.1,
+        xmin=0,
+        xmax=4.1,
+        legend style={at={(1.1,1)}, anchor= north east}
+     ]
+     \addplot[domain={0.045:3.28},fill=Col0, mark=*, only marks, samples=100,name path=f,forget plot] {1.2*x};
+    \addplot[domain={1.3:3.95},fill=Col3, mark=square*, only marks, samples=100,name path=f1,forget plot] {1.2*x-1.5};
+\end{axis}
+\end{tikzpicture}
+\end{document}

@@ -500,15 +500,15 @@ Supervisors: & Pr. Bruno Raffin \\
 \begin{frame}{Understanding and fixing the issue}
     \centering
     \alt<1>{
-        \includegraphics[height=.6\textheight]{standalone/is-curve-nocolor}
+        \includegraphics[height=.6\textheight]{pgf/is-curve-nocolor}
     }{
         \alt<2>{
-            \includegraphics[height=.6\textheight]{standalone/is-curve-random}
+            \includegraphics[height=.6\textheight]{pgf/is-curve-random}
         }{
             \alt<3>{
-                \includegraphics[height=.6\textheight]{standalone/is-curve-cyclic}
+                \includegraphics[height=.6\textheight]{pgf/is-curve-cyclic}
             }{
-            \includegraphics[height=.6\textheight]{standalone/is-curve}
+            \includegraphics[height=.6\textheight]{pgf/is-curve}
             }
         }
     }
@@ -626,9 +626,9 @@ Supervisors: & Pr. Bruno Raffin \\
 \begin{frame}{Main principles of Moca}
     \begin{block}{Goals to trace memory patterns}
         \begin{itemize}
-            \item Collect temporal information
+            \item Temporal information
             \item Complete trace
-            \item Fine grain informations
+            \item Fine grain information
             \item Limit impact on thread scheduling
             \item Reasonable overhead
         \end{itemize}
@@ -648,7 +648,7 @@ Supervisors: & Pr. Bruno Raffin \\
 \end{frame}
 
 \begin{frame}{Main components of Moca}
-   \begin{block}{User space process}
+   \begin{block}{Main process (user space)}
        \begin{enumerate}
            \item Run application with context library
            \item Run application with kernel module loaded
@@ -657,12 +657,13 @@ Supervisors: & Pr. Bruno Raffin \\
    \end{block}
     \uncover<2->{
     \begin{exampleblock}{Linux kernel module}
-        \begin{itemize}
-            \item Monitor all threads of an application
-            \item Intercept page faults
-            \item Periodically injects false page faults
-            \item Keep the recent trace (kernel space)
-        \end{itemize}
+        \begin{enumerate}
+            \item Intercept all page faults
+            \item \textbf{Identify} monitored threads
+            \item Periodically inject false page faults
+            \item \textbf{Distinguish genuine page faults} from false ones
+            \item Manage \textbf{large trace} in kernel space
+        \end{enumerate}
     \end{exampleblock}
     }
 \end{frame}
@@ -675,7 +676,30 @@ Supervisors: & Pr. Bruno Raffin \\
 \end{frame}
 
 \begin{frame}{Page sampling VS Instruction sampling}
-    \missingfigure{Page sampling VS Instruction sampling}
+    \centering
+    \alt<1>{
+        \includegraphics[height=.7\textheight]{pgf/accesses}
+        \begin{block}{}
+            \centering
+            Accesses done by two threads on a set of pages
+        \end{block}
+    }{
+        \alt<2>{
+            \includegraphics[height=.7\textheight]{pgf/accesses-sampled}
+            \begin{block}{}
+                \centering
+                Accesses intercepted by \textbf{instruction sampling}
+            \end{block}
+        }{
+            \includegraphics[height=.7\textheight]{pgf/accesses-moca}
+            \begin{block}{}
+                \centering
+                Accesses intercepted by \textbf{Moca}
+            \end{block}
+        }
+    }
+    \pause
+    \pause
 \end{frame}
 
 \subsection{Experimental evaluation}
@@ -789,6 +813,9 @@ Supervisors: & Pr. Bruno Raffin \\
     \end{exampleblock}
 \end{frame}
 
+\newcounter{finalframe}
+\setcounter{finalframe}{\value{framenumber}}
+%Last numbered frame go here
 \begin{frame}{Perspectives}
     \begin{block}{Short term}
         \begin{itemize}
@@ -805,10 +832,6 @@ Supervisors: & Pr. Bruno Raffin \\
         \end{itemize}
     \end{block}
 \end{frame}
-
-\newcounter{finalframe}
-\setcounter{finalframe}{\value{framenumber}}
-%Last numbered frame go here
 
 \begin{frame}{}
     \centering

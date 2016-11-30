@@ -1,4 +1,4 @@
-include ../Makefile.inc
+include ../Makefile.def
 
 SRC=$(wildcard *.tex)
 PDF=$(SRC:.tex=.pdf)

@@ -1,4 +1,4 @@
-include Makefile.inc
+include Makefile.def
 # Source files
 TEXSRC = $(wildcard *.tex)
 BIBSRC = $(wildcard *.bib)
@@ -7,7 +7,7 @@ SUBDIRS=tex custom style tikz
 TEXSUBSRC = $(foreach d, $(SUBDIRS),$(wildcard $d/*.tex))
 TEXALLSRC = $(TEXSRC) $(TEXSUBSRC)
 AUX = $(TEXSRC:.tex=.aux)
-STANDALONESRC=$(wildcard standalone/*.tex)
+STANDALONESRC=$(wildcard pgf/*.tex)
 STANDALONES=$(STANDALONESRC:.tex=.pdf)
 
 # Commands + arguments
@@ -23,7 +23,7 @@ presentation: $(SLIDES)
 	redshift-gtk &
 
 $(STANDALONES):
-	make -C standalone
+	make -C pgf
 
 # Note that $(PDF) should only depends on $(BBL) and $(BBL) should depends on
 # $(AUX) but as the last compilation re write $(AUX) if we do so, make will
@@ -115,8 +115,8 @@ testreffloats:
 
 clean:
 	rm -rf $(TEMP)
-	make -C standalone clean
+	make -C pgf clean
 
 distclean: clean
 	rm -rf $(PDFS)
-	make -C standalone distclean
+	make -C pgf distclean
