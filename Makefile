@@ -28,8 +28,8 @@ $(STANDALONES):
 # Note that $(PDF) should only depends on $(BBL) and $(BBL) should depends on
 # $(AUX) but as the last compilation re write $(AUX) if we do so, make will
 # always think that we need to redo the $(BBL) and $(PDF) targets.
-%.pdf : %.tex $(TEXSUBSRC) %.aux %.bbl $(STANDALONES)
-	if [ $@ == $(MAIN) ]; then \
+%.pdf : %.tex  $(TEXSUBSRC) %.aux %.bbl $(STANDALONES)
+	if [ $@ = $(MAIN) ]; then \
 		$(GLOSSARY) $* ; \
 		fi
 	$(TEX) $*.tex
