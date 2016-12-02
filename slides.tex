@@ -155,6 +155,7 @@ Supervisors: & Pr. Bruno Raffin \\
             \centering
             \input{tikz/topo-naive}
             \begin{block}{}
+                \centering
                 \only<1-2>{
                     Before 1990
                 }
@@ -167,8 +168,8 @@ Supervisors: & Pr. Bruno Raffin \\
             \pause
             \begin{block}{Increase CPU frequency}
                 \begin{enumerate}
-                    \item Gap CPU / Memory
-                    \item Energy consumption
+                    \item<alert@+-> Gap CPU / Memory
+                    \item<alert@+-> Energy consumption
                 \end{enumerate}
             \end{block}
             \pause
@@ -574,7 +575,7 @@ Supervisors: & Pr. Bruno Raffin \\
 
 \begin{frame}{Evaluation setup}
     \begin{block}{Machine}
-        64 thread / 4 nodes NUMA machine
+        64 thread / 4 NUMA nodes machine
     \end{block}
     \pause
     \begin{block}{Optimization method}
@@ -636,8 +637,8 @@ Supervisors: & Pr. Bruno Raffin \\
     \pause
     \begin{exampleblock}{Mechanisms}
         \begin{itemize}
-            \item Page fault interception
-            \item False page fault injection
+            \item Page fault interception (usually 1 fault per page)
+            \item False page fault injection (hundreds of faults per page)
         \end{itemize}
     \end{exampleblock}
 \end{frame}
@@ -783,7 +784,7 @@ Supervisors: & Pr. Bruno Raffin \\
     \pause
     \begin{block}{Visualization and analysis}
         \begin{itemize}
-            \item Traces spread over five dimensions
+            \item<alert@+-> Traces spread over five dimensions
             \item Still a work in progress
         \end{itemize}
     \end{block}
@@ -871,6 +872,11 @@ Supervisors: & Pr. Bruno Raffin \\
     \begin{alertblock}{Limitations}
         Focus on CPU point of view
     \end{alertblock}
+\end{frame}
+
+\begin{frame}{MemAxes}
+    \centering
+    \includegraphics[width=\linewidth]{memAxes}
 \end{frame}
 
 \subsection*{Tabarnac}
