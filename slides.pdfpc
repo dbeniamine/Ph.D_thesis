@@ -1,2 +1,11 @@
 [file]
 slides.pdf
+[font_size]
+21401
+[notes]
+### 53
+Malloc => about 3 000 accesses
+Stack => 1 000 accesses
+Stack:1256 =>  36 000 accesses
+
+last zoom: 135 accesses
