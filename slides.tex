@@ -150,7 +150,7 @@ Supervisors: & Pr. Bruno Raffin \\
     \input{tikz/intro}
 \end{frame}
 
-\begin{frame}{Improving sequential computers performance}
+\begin{frame}{Improving the performance of sequential computers}
     \begin{columns}
         \begin{column}{.45\textwidth}
             \centering
@@ -238,7 +238,7 @@ Supervisors: & Pr. Bruno Raffin \\
         \begin{itemize}
             \item Consistency handled at cache line granularity
             \item<alert@1-> Conflict on parallel write
-            \item Conflict freeze cache hierarchy
+            \item Conflict freezes cache hierarchy
         \end{itemize}
     \end{block}
 \end{frame}
@@ -272,7 +272,7 @@ Supervisors: & Pr. Bruno Raffin \\
         \begin{enumerate}
                 \item Collect memory traces
                 \begin{itemize}
-                    \item \textbf{Complete}: do not miss part of the address space
+                    \item \textbf{Complete}: do not miss parts of the address space
                     \item \textbf{Precise}:  enough to detect patterns
                     \item \textbf{Detailed}: embed time, space, location, nature
                 \end{itemize}
@@ -340,7 +340,7 @@ Supervisors: & Pr. Bruno Raffin \\
 \pause
 \begin{alertblock}{Limitations}
     \begin{itemize}
-        \item Not complete: miss significant part of memory
+        \item Not complete: miss significant parts of memory
         \item Not precise enough to detect patterns
     \end{itemize}
 \end{alertblock}
@@ -378,7 +378,7 @@ Supervisors: & Pr. Bruno Raffin \\
                 \end{itemize}
             \item Dynamic tools~\cite{Corbet12Toward,Diener14kMAF}
                 \begin{itemize}
-                    \item Collect informations on memory accesses online
+                    \item Collect information on memory accesses online
                     \item Move data close to thread using them
                 \end{itemize}
         \end{itemize}
@@ -399,7 +399,7 @@ Supervisors: & Pr. Bruno Raffin \\
         \begin{itemize}
             \item Fork of Numalyze
             \item Differentiate access types (reads / writes)
-            \item Context library (data structure informations)
+            \item Context library (data structure information)
                 \begin{itemize}
                     \item Read binary for static data structures
                     \item Intercepts allocations
@@ -411,7 +411,7 @@ Supervisors: & Pr. Bruno Raffin \\
     \end{exampleblock}
 \end{frame}
 
-\subsection{Optimizing IS, a well known benchmark}
+\subsection{Optimizing IS, a well-known benchmark}
 
 \begin{frame}{IS (class B)}
     \begin{block}{}
@@ -514,6 +514,7 @@ Supervisors: & Pr. Bruno Raffin \\
             }
         }
     }
+    \vspace{-5pt}
     \begin{block}{\uncover<2->{
             \alt<1-2>{
                 Dynamic scheduling
@@ -524,14 +525,13 @@ Supervisors: & Pr. Bruno Raffin \\
                     Fair scheduling
                 }}}}
         \uncover<2->{\alert{
-        \#pragma omp for schedule
             \alt<1-2>{
-                (dynamic)\\
+                \#pragma omp for schedule (dynamic)\\
             }{
                 \alt<3>{
-                    (static)\\
+                    \#pragma omp for schedule (static)\\
                 }{
-                    (static, size/(2*num\_threads))\\
+                   \#pragma omp for schedule (static, size/(2*num\_threads))\\
                 }
             }
             }}
@@ -614,7 +614,7 @@ Supervisors: & Pr. Bruno Raffin \\
     \uncover<2->{
         \begin{alertblock}{Limitations}
             \begin{itemize}
-                \item No temporal informations
+                \item No temporal information
                 \item Cannot detect precise sharing
             \end{itemize}
         \end{alertblock}
@@ -800,7 +800,7 @@ Supervisors: & Pr. Bruno Raffin \\
     \pause
     \begin{block}{Tabarnac~\cite{Beniamine15TABARNAC}}
         \begin{enumerate}
-            \item \textbf{Tace collection:} No temporal informations
+            \item \textbf{Trace collection:} No temporal information
             \item \textbf{Visualization:} Simple yet meaningful
             \item \textbf{Optimization:} To 20\% performance gain on NPB IS
         \end{enumerate}           
@@ -979,7 +979,7 @@ Supervisors: & Pr. Bruno Raffin \\
         \begin{itemize}
             \item Programmatic approach using R
             \item Org-mode labbook to record our analysis
-            \item Reference visualizations inspired from Tabarnac ones
+            \item Reference visualizations inspired from Tabarnac
             \item Custom visualizations depending on the trace
         \end{itemize}
     \end{block}
@@ -1009,7 +1009,7 @@ Supervisors: & Pr. Bruno Raffin \\
     \begin{block}{FrameSoc~\cite{Pagano14frameSoC}}
         \begin{itemize}
             \item Generic trace management tool
-            \item Several visualization of a trace
+            \item Several visualizations of a trace
             \item Designed for trace exploration
         \end{itemize}
     \end{block}
@@ -1018,7 +1018,7 @@ Supervisors: & Pr. Bruno Raffin \\
         \begin{itemize}
             \item FrameSoc Tool
             \item Aggregates trace aiming at reducing information loss
-            \item Simple zoom and filters operations
+            \item Simple zoom and filtering operations
         \end{itemize}
     \end{alertblock}
 \end{frame}

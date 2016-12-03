@@ -20,7 +20,7 @@
 %\setlength{\cornerlength}{.1}
 
 \begin{tikzpicture}[font=\small,scale=1]
-    \node[text=white,filled box=Computer] (computers)   at (0,3) {\only<5->{\textbf{More\newline performant\newline}} computers};
+    \node[text=white,filled box=Computer] (computers)   at (0,3) {\only<5->{\textbf{More\newline performant\newline}} Computers};
     \uncover<2->{
         \node[text=white,filled box=Science] (simu)        at (5,5) {\only<4->{\textbf{More complex\newline}} Simulations \newline and large scale \newline experiments};
         \path[arr,Computer] (computers.north) edge[out=90,in=180] (simu.west);
