@@ -82,7 +82,7 @@ testfonts:
 testpdfversion:
 	@echo "Checking version of the produced pdf"
 	for f in $(PDFS); do \
-		[ "`pdfinfo $$f | grep "version" | awk '{print $$3}'`" = "1.4" ]; \
+		[ "`pdfinfo $$f | grep "PDF version" | awk '{print $$3}'`" = "1.4" ]; \
 		done
 	@echo "PASSED"
 
