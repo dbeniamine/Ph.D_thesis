@@ -3,7 +3,10 @@ slides.pdf
 [font_size]
 21401
 [notes]
-### 53
+### 15
+Introduce memory pages + Virtual / physical memory### 28
+Interception 1 fault
+Injections 100 faults### 53
 Malloc => about 3 000 accesses
 Stack => 1 000 accesses
 Stack:1256 =>  36 000 accesses
