@@ -64,7 +64,7 @@
         alias=this,
         append after command ={
             \pgfextra{
-                \draw[very thin,loosely dotted,step=.5] (this) grid ($(this)+(#2,#2)$);
+                \draw[very thin,loosely dotted,step=.7] (this) grid ($(this)+(#2,#2)$);
                 \draw (this) rectangle ($(this)+(#2,#2)$);
                 % Four corners
                 \coordinate (m#1-00) at ($(this)+(0,0)$);
@@ -105,8 +105,8 @@
         \draw[very thick,ColH] (mB-north) -- (mB-south);
         \draw[very thick,ColH] (mC-north) -- (mC-south);
 
-        \node at ($(mA-east)!0.5!(mA-west)+(0,1)$) {\Ta and \Tb};
-        \node at ($(mA-east)!0.5!(mA-west)+(0,-1)$) {\Tc and \Td};
+        \node at ($(mA-east)!0.5!(mA-west)+(0,1)$) {\Ta\ and \Tb};
+        \node at ($(mA-east)!0.5!(mA-west)+(0,-1)$) {\Tc\ and \Td};
  
         \node[text centered,text width=4em] at ($(mB-north)!0.5!(mB-south)+(-1,0)$) {\Ta\newline and \Tc};
         \node[text centered,text width=4em] at ($(mB-north)!0.5!(mB-south)+(1,0)$) {\Tb\newline and \Td};

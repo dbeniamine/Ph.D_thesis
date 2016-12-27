@@ -28,7 +28,7 @@ Then we propose a second, more flexible approach based on \gls{R} in \sect{visu-
 Finally we present some perspective of improvement of these analysis and our conclusions in \sect{visu-cncl}.
 
 
-\section{Interactive visualization of aggregated traces}
+\section{Interactive visualization of aggregated trace}
 \label{sec:visu-first}
 
 As \gls{Moca} traces are spread over five dimensions and as the address space of an application can be quite large, we need a way to navigate easily in the trace and highlight interesting parts.
@@ -73,13 +73,6 @@ In addition, it uses a parameter $p<[0,1]$ that controls the trade-off between i
 Once the first visualization is generated, \gls{Ocelotl} provide the ability to explore the trace (zoom, use \gls{Framesoc} filters \ldots) and change the $p$ parameter.
 The usual workflow with \gls{Ocelotl} is starting with a high $p$, where the trace is mostly aggregated, zoom on anomalies or interesting parts and decreasing $p$ to understand more precisely what phenomena we are observing.
 
-\begin{figure}[htb]
-    \centering
-    \includegraphics[width=\linewidth]{ocelotl/overview.png}
-    \caption{Screenshot of Ocelotl.}
-    \label{fig:ocelotl-overview}
-\end{figure}
-
 \fig{ocelotl-overview} is a screenshot of \gls{Ocelotl}, showing on the main pane an overview of an example trace, aggregated over time and space (memory addresses).
 The X-axis represents time and the Y-axis represent the memory space, we can see on the left that the Y-axis is organized hierarchically.
 Indeed, the blocks on the left of the main page represents a tree where the root represent the whole memory and which is then divided in data structures and continuous allocations.
@@ -93,6 +86,13 @@ The red (dark) curve shows the information gain and the green (light) one the co
 The current value of $p$ is showed by a blue vertical line, and displayed in a text block under the curve.
 We can set the $p$ parameter either by clicking the curve or by entering the requested value inside the text block.
 At this point, the user could zoom in a subpart of the trace by selecting it, or change the parameter $p$ to disaggregate the visualization.
+
+\begin{figure}[htb]
+    \centering
+    \includegraphics[width=\linewidth]{ocelotl/overview.png}
+    \caption{Screenshot of Ocelotl.}
+    \label{fig:ocelotl-overview}
+\end{figure}
 
 \subsection{Trace Description}
 
@@ -121,13 +121,6 @@ Finally, the \gls{CPU} on which the access occurred is stored as an event parame
 
 \subsection{Sharing detection}
 
-\begin{figure}[htb]
-    \centering
-    \input{tikz/sharing-detection}
-    \caption{Sharing detection in Moca traces.}
-    \label{fig:sharing-detection}
-\end{figure}
-
 \gls{Moca} does not compute sharing directly but the traces contains enough information to detect shared accesses.
 Indeed, in \gls{Moca} traces, each access is timestamped with the begin and end of the chunk to which it belongs, which means that an access can be seen as a time interval during which a thread is using a memory page.
 We do the sharing detection at the page level as \gls{Moca} traces are complete at the page granularity.
@@ -135,6 +128,13 @@ Consequently, we consider that a sharing occurs when two threads access the same
 To compute this sharing, we retrieve the list of accesses for each page.
 Then we cut the global time interval each time a thread start or stop using a page and mark each access with the number of threads involved in the sharing.
 \fig{sharing-detection} shows this transformation.
+
+\begin{figure}[htb]
+    \centering
+    \input{tikz/sharing-detection}
+    \caption{Sharing detection in Moca traces.}
+    \label{fig:sharing-detection}
+\end{figure}
 
 \subsection{Example}
 
@@ -149,6 +149,10 @@ Furthermore, we split the work by cutting the result matrix in four parts, resul
     \label{fig:mat-mult-par}
 \end{figure}
 
+\fig{ocelotl-th0} is a screenshot of \gls{Ocelotl} visualization by thread of a \gls{Moca} trace.
+We can see the hierarchy on the Y-axis, starting with the memory root, then three data structures.
+The X-axis represent temporal evolution.
+
 \begin{figure}[htb]
     \centering
     \includegraphics[width=\textwidth]{ocelotl/TaskView.png}
@@ -156,14 +160,10 @@ Furthermore, we split the work by cutting the result matrix in four parts, resul
     \label{fig:ocelotl-th0}
 \end{figure}
 
-\fig{ocelotl-th0} is a screenshot of \gls{Ocelotl} visualization by thread of a \gls{Moca} trace.
-We can see the hierarchy on the Y-axis, starting with the memory root, then three data structures.
-The X-axis represent temporal evolution.
-
 From this view, we see clearly that  blue accesses occurs only during the initialization phase (vertical light line at the beginning) except for a small data structure on the bottom of the figure (thin dark line).
 Blue is the color of threads~$0$, therefore we can see that this is the master thread doing the initialization.
 Moreover, the master thread also access to some private data (the small structures in the bottom).
-Among these data, we can find a pid array used to wait the end of the slave threads.
+Among these data, we can find a \gls{PID} array used to wait the end of the slave threads.
 We can confirm that by filtering the accesses to show only the accesses done by thread~$0$.
 Or by zooming on the initialization phase.
 
@@ -174,16 +174,8 @@ As these accesses are regular, all the accesses are aggregated.
 
 At the two third of the execution, we can see a change of colors in the middle data structure.
 Additionally, it seems that at the same time the violet (dark) thread has completed his work and does not access the memory anymore.
-Moreover, just before this threads finished its accesses, the middle structures tuns violet (dark) for a small time lapse which means that this thread is responsible for most of theses access at that time.
+Moreover, just before this threads finished its accesses, the middle structures turns violet (dark) for a small time lapse which means that this thread is responsible for most of theses access at that time.
 This could be an effect of Linux scheduler that privileged temporarily this thread.
-
-\begin{figure}[htb]
-    \centering
-    \includegraphics[width=\textwidth]{ocelotl/TaskView-zoom-init.png}
-    \caption{By thread view of the memory usage of a naive parallel matrix multiplication,
-    initialization.}
-    \label{fig:ocelotl-th1}
-\end{figure}
 
 Now let's zoom on the initialization step.
 The result is shown in \fig{ocelotl-th1}.
@@ -194,9 +186,10 @@ Finally, we see that as soon as the thread~$0$ has finished to initialize the da
 
 \begin{figure}[htb]
     \centering
-    \includegraphics[width=\textwidth]{ocelotl/Sharing.png}
-    \caption{Sharing view of the memory usage of a naive parallel matrix multiplication.}
-    \label{fig:ocelotl-carto0}
+    \includegraphics[width=\textwidth]{ocelotl/TaskView-zoom-init.png}
+    \caption{By thread view of the memory usage of a naive parallel matrix multiplication,
+    initialization.}
+    \label{fig:ocelotl-th1}
 \end{figure}
 
 In the previous view there was one access type per thread.
@@ -212,9 +205,9 @@ At this point it is interesting to zoom in the middle of the execution and disag
 
 \begin{figure}[htb]
     \centering
-    \includegraphics[width=\textwidth]{ocelotl/Sharing-zoom.png}
-    \caption{Sharing view of the memory usage of a naive parallel matrix multiplication, computing phase.}
-    \label{fig:ocelotl-Carto-zoom}
+    \includegraphics[width=\textwidth]{ocelotl/Sharing.png}
+    \caption{Sharing view of the memory usage of a naive parallel matrix multiplication.}
+    \label{fig:ocelotl-carto0}
 \end{figure}
 
 By focusing on the middle of the execution and setting $p$ to zero, we obtain the \fig{ocelotl-Carto-zoom}.
@@ -228,10 +221,17 @@ Due to the representation of 2D matrices in \texttt{C}, each access made by each
 Hence \gls{Ocelotl} groups almost everything in huge chunks of accesses on all the matrix.
 We can also see in this figure that shared (orange) accesses appears regularly on the two other data structures (matrix A and C) which is also coherent with the expected behavior.
 
+\begin{figure}[htb]
+    \centering
+    \includegraphics[width=\textwidth]{ocelotl/Sharing-zoom.png}
+    \caption{Sharing view of the memory usage of a naive parallel matrix multiplication, computing phase.}
+    \label{fig:ocelotl-Carto-zoom}
+\end{figure}
+
 \subsection{Discussion}
 
 \gls{Ocelotl} enabled visualizing \gls{Moca} traces and helped identifying inefficient patterns on a test application.
-We used visualized \gls{Moca} traces from two different point of view, the first one show the memory accesses by threads and helps understanding the division of the work.
+We visualized \gls{Moca} traces from two different point of view, the first one show the memory accesses by threads and helps understanding the division of the work.
 The second shows the access types independently from the threads it helps understanding how the memory is globally used.
 
 However even for this extremely simple benchmark we started to see some scalability issues.
@@ -292,20 +292,13 @@ Our analysis always starts with a typical pipeline that we can easily adapt to t
     \item First set of predefined plots: we can present, using processed dataframes, some predefined  plots. This first set is inspired from \gls{Tabarnac} plots and show the size of data structures, the number of accesses, and amount of sharing.
     \item  Filtering: at this step we can easily identify data structures that are rarely used and might not have a significant impact on the application performance, we filter these data structures out to focus on the most important ones.
     \item Second set of predefined plots: for all the data structures that are left we visualize the memory accesses over the time depending on their type.
-        For these plot, the color represent either the number of accesses or the number of threads involved in the access.
+        For these plots, the color represent either the number of accesses or the number of threads involved in the access.
 \end{enumerate}
-At any step of the pipeline, it is possible to do more filtering using our knowledge of the analyzed application to speed the process up.
-Once the predefined plots or obtained, we can easily navigate in them using \gls{R} selection operators to do complex filtering or zoom on a part of the trace.
+At any step of the pipeline, it is possible to do more filtering using our knowledge of the analyzed application to speed up the process.
+Once the predefined plots are obtained, we can easily navigate in them using \gls{R} selection operators to do complex filtering or zoom on a part of the trace.
 Moreover it is possible to design any other visualization that might be interesting.
 
 \subsection{Example of visualization}
-
-\begin{figure}[htb]
-    \centering
-    \includegraphics[width=\textwidth]{labbook/intensity_Rw_dgetrf}
-    \caption{Visualization of the memory access of the dgetrf kernel from ffplas-ffpack.}
-    \label{fig:dgetrf-intensity}
-\end{figure}
 
 We illustrate our visualization with the \emph{dgetrf} kernel from the fflas-ffpack~\cite{group16FFLASFFPACK} compiled against the OpenBlas~\cite{Chothia16OpenBlas}.
 This trace was collected on a machine from the Edel cluster which hardware was presented in \tbl{hw-moca}.
@@ -315,25 +308,25 @@ This trace was collected on a machine from the Edel cluster which hardware was p
     the number of accesses per page over the time.
 Furthermore we differentiate four types of access: \texttt{PrivateRead}, \texttt{PrivateWrites}, \texttt{SharedRead} and \texttt{SharedWrites}.
 
+\begin{figure}[htb]
+    \centering
+    \includegraphics[width=\textwidth]{labbook/intensity_Rw_dgetrf}
+    \caption{Visualization of the memory access of the dgetrf kernel from ffplas-ffpack.}
+    \label{fig:dgetrf-intensity}
+\end{figure}
+
 For each structures, some accesses seemed to appear private and shared at the same time which is not possible.
 Nevertheless, by zooming on a small part of the execution were able to confirm that those access are interleaved and never of both types at the same time.
 This means that several threads are working on data very close and often do actually share some pages.
 
 From this visualization we can see that two of the stacks (1252 and 1250) are always used privately.
 Furthermore the data structure malloc\#5 seems to be used mostly privately and only very rarely read in a shared way.
-The name mallo\#N means that it is the $N$th call to malloc intercepted by the library.
+The name malloc\#N means that it is the $N$th call to malloc intercepted by the library.
 These three structures seems also to be accessed mostly linearly, hence they should not be subject to memory optimization.
-
-\lstinputlisting[caption={R code to focus on interesting data structures.}, label=lst:R-zoom,float=htb]{code/zoom.R}
 
 At this point, it is interesting to ignore these three data structures and focus on the others, we can do this with the simple line of code displayed in \lstr{R-zoom}.
 
-\begin{figure}[htb]
-    \centering
-    \includegraphics[width=\textwidth]{labbook/intensity_RW_dgetrf_zoom}
-    \caption{Visualization of the memory access of the dgetrf kernel from ffplas-ffpack, zoom on the three interesting data structures.}
-    \label{fig:dgetrf-share-zoom}
-\end{figure}
+\lstinputlisting[caption={R code to focus on interesting data structures.}, label=lst:R-zoom,float=htb]{code/zoom.R}
 
 These three structures present different and interesting memory access patterns that are presented in \fig{dgetrf-share-zoom}.
 First the malloc\#1 structure is very small and accessed intensively in a shared way, during all the execution and always on the same page.
@@ -348,9 +341,9 @@ If not, Linux will allocate each page on the memory bank of the master thread in
 
 \begin{figure}[htb]
     \centering
-    \includegraphics[width=\textwidth]{labbook/intensity_Share_dgetrf_zoom-init}
-    \caption{Visualization of the sharing patterns of the dgetrf kernel from ffplas-ffpack, zoom on the initialization of \texttt{stack:1256}.}
-    \label{fig:dgetrf-share-zoom-init}
+    \includegraphics[width=\textwidth]{labbook/intensity_RW_dgetrf_zoom}
+    \caption{Visualization of the memory access of the dgetrf kernel from ffplas-ffpack, zoom on the three interesting data structures.}
+    \label{fig:dgetrf-share-zoom}
 \end{figure}
 
 \fig{dgetrf-share-zoom-init} shows the memory accesses occurring inside \texttt{stack:1256} during the first par of the execution.
@@ -364,13 +357,21 @@ We can confirm this behavior by zooming even more in the initialization.
 
 \begin{figure}[htb]
     \centering
-    \includegraphics[width=\textwidth]{labbook/intensity_Share_dgetrf_zoom-init1}
-    \caption{Visualization of the sharing patterns of the dgetrf kernel from ffplas-ffpack, zoom on a part of the initialization of \texttt{stack:1256}.}
-    \label{fig:dgetrf-share-zoom-init1}
+    \includegraphics[width=\textwidth]{labbook/intensity_Share_dgetrf_zoom-init}
+    \caption{Visualization of the sharing patterns of the dgetrf kernel from ffplas-ffpack, zoom on the initialization of \texttt{stack:1256}.}
+    \label{fig:dgetrf-share-zoom-init}
 \end{figure}
 
 By zooming even more, we obtain \fig{dgetrf-share-zoom-init1} which shows that access are indeed not shared and private at the same time.
 Furthermore it confirms that the data in this stack are read before being written.
+
+\begin{figure}[htb]
+    \centering
+    \includegraphics[width=\textwidth]{labbook/intensity_Share_dgetrf_zoom-init1}
+    \caption{Visualization of the sharing patterns of the dgetrf kernel from ffplas-ffpack, zoom on a part of the initialization of \texttt{stack:1256}.}
+    \label{fig:dgetrf-share-zoom-init1}
+\end{figure}
+\afterpage{\clearpage}
 
 After discussing these results with some of the developers of the fflas-ffpack, it appears that the observed patterns can be due to the OpenBlas library and might be complex to improve.
 Yet an interesting thing to do would be to compare these traces, with the trace of the same kernel but compiled against the \gls{MKL}.
@@ -382,7 +383,8 @@ This is more complicated than using \gls{Framesoc} and \gls{Ocelotl}.
 Additionally, we had some troubles to analyze some traces from Lulesh and \gls{SOFA}.
 Indeed these applications generates thousands of call to the malloc functions (hundreds of thousands for Lulesh), probably to create trees.
 Hence, retrieving the mapping page to data structure was extremely slow or nearly impossible without merging some data structures.
-In the end it appears that we need to add a priori knowledge of the developers in the parsing step to merge data structures.
+In the end it appears that we need to add a priori knowledge of the developers in the parsing step to merge data structures.%
+
 
 \section{Conclusions}
 \label{sec:visu-cncl}
@@ -407,7 +409,7 @@ Using a labbook is particularly appropriate for such workflows as it is designed
 Moreover it is also easy with a labbook to link a plot generate with a previous trace and, thus, compare two traces.
 While this is less user friendly, \gls{R} is a powerful tool and it enables more complex visualization.
 Moreover, it is optimized to analyze large data sets spreed over several dimensions and provides powerful selection operators that can be used to do conditional zoom and filtering.
-Using \gls{R}, we have provided several meaningful plots that can be used to start a memory trace analysis
+Using \gls{R}, we have provided several meaningful plots that can be used to start a memory trace analysis.
 These visualization could be used to compare the memory access patterns of applications in order to understand the underlying algorithm of proprietary programs such as the \gls{MKL}.
 
 Another approach that have not been studied during this thesis would be to analyze traces automatically.
@@ -417,7 +419,7 @@ Yet, defining such a pattern in a more specific way is a hard task.
 
 For any approach, it appears that the developers knowledge is useful to focus the analysis on the interesting parts.
 Therefore we need a way to use this knowledge during the analysis and as soon as possible to reduce the amount of data to analyze.
-Nerveless, we have seen in \chap{perf} that they might not know all the sources of performance issues.
-In the end, this knowledge can be used to focus the analysis but it is important to also have a global visualization of the trace, to spot issue that would have been missed by the developers.
+Nevertheless, we have seen in \chap{perf} that they might not know all the sources of performance issues.
+In the end, this knowledge can be used to focus the analysis but it is important to also have a global visualization of the trace, to spot issues that would have been missed by the developers.
 Hence the two approaches described in this chapter can be used in a complementary way.
 % vim: et si sta lbr  sw=4 ts=4 spelllang=en_us
