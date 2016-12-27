@@ -34,6 +34,7 @@ $(STANDALONES):
 		fi
 	$(TEX) $*.tex
 	$(TEX) $*.tex
+	$(TEX) $*.tex
 
 # Bibtex
 %.bbl: $(BIBSRC) $(TEXSUBSRC)
