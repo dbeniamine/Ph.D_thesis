@@ -259,7 +259,7 @@ Consequently, a more flexible approach that ease switching from point of view an
 The main drawback of using a generic visualization tool for analyzing \gls{Moca} traces come from the difficulty to switch the perspective from which we visualize the data.
 More precisely, this limitation comes from the static representation of traces as a two dimensional entities used in most tools.
 This is problematic for \gls{Moca} traces because not only they are spread over five dimensions, but these dimensions are related to each other.
-Indeed, the placement of threads on the \glspl{CPU} is not necessarily fixed but it matters and can impact the performances.
+Indeed, the placement of threads on the \glspl{CPU} is not necessarily fixed but it matters and can impact the performance.
 Furthermore, this placement must be analyzed in relation to the placement of memory pages on the physical memory and on the underlying hierarchy.
 As a result, projecting such traces on two dimension is complex and different projections should be analyzed and correlated to understand the memory behavior of an application.
 Hence, a more programmatic approach may enable the analyst to work closer to the data and ease this point of view switch.
@@ -290,7 +290,7 @@ Our analysis always starts with a typical pipeline that we can easily adapt to t
             \item By sorting both dataframes (accesses and data structures) by address, we can retrieve this mapping while going through each data frame only one time.
         \end{itemize}
     \item First set of predefined plots: we can present, using processed dataframes, some predefined  plots. This first set is inspired from \gls{Tabarnac} plots and show the size of data structures, the number of accesses, and amount of sharing.
-    \item  Filtering: at this step we can easily identify data structures that are rarely used and might not have a significant impact on the application performances, we filter these data structures out to focus on the most important ones.
+    \item  Filtering: at this step we can easily identify data structures that are rarely used and might not have a significant impact on the application performance, we filter these data structures out to focus on the most important ones.
     \item Second set of predefined plots: for all the data structures that are left we visualize the memory accesses over the time depending on their type.
         For these plot, the color represent either the number of accesses or the number of threads involved in the access.
 \end{enumerate}

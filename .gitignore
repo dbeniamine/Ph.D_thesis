@@ -10,8 +10,8 @@ sty/*/*.pdf
 *.tdo
 *.fdb_latexmk
 *.synctex.gz
-*.swp
-*/*.swp
+*.sw?
+*/*.sw?
 *.ps
 *.lo?
 *.gl?

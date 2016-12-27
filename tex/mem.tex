@@ -8,7 +8,7 @@ Thus it is still required to analyze the code manually.
 As memory is often a performance bottleneck, several tools where developed to analyze performance in regards of the memory.
 However, none of these tools is currently able to present the memory access patterns of an application.
 
-This chapter discuss memory analysis tools, first we present the specificities of recent memory subsystems and the usual mistakes that can generate performances drop in \sect{archi}.
+This chapter discuss memory analysis tools, first we present the specificities of recent memory subsystems and the usual mistakes that can generate performance drop in \sect{archi}.
 Then we present existing memory performance analysis tools, how they relate to usual memory issues and discuss their limitation in \sect{mem-tools}.
 Finally we describe what would be in idealistic memory performance analysis tool \sect{mem-cncl}.
 
@@ -31,7 +31,7 @@ These caches are organized hierarchically, thus, the time required to access a p
 One access to the fastest cache usually cost about $4$ \gls{CPU} cycles while retrieving one piece of data from the main memory cost around $180$ \gls{CPU} cycles~\cite{Levinthal09Performance}.
 As these caches are small, each time a data is added in a cache it replaces (evict) an existing one.
 Several mechanisms where designed to guess which data should be in the cache and which one should be evicted.
-As a result, a developer seeking for performances must consider the architecture of these caches and the way the work to benefit from them.
+As a result, a developer seeking for performance must consider the architecture of these caches and the way the work to benefit from them.
 
 \subsubsection{Cache lines and alignment}
 
@@ -39,17 +39,17 @@ To benefit from spatial locality, the memory is divided on lines (usually \SI{64
 Therefore accessing $8$ successive doubles (usually one double equals \SI{8}{Bytes}) requires only one memory transaction if they all are in the same line of cache.
 As a result, aligning data structure to cache line can improve the memory access time.
 
+For instance if we consider accessing an array of two lines of caches as illustrated in \fig{bad-align}.
+If the data structure is aligned to cache lines, two accesses will be required to retrieve the whole data structure, and no unused data will be introduced in the cache.
+At the opposite, if it is not correctly aligned, not only one more memory fetch will be required but one useless line will be introduced inside the cache.
+As caches are designed to keep only a limited volume of data, inserting one line inside a cache means evicting another one, thus, introducing unused data must be avoided as much as possible.
+
 \begin{figure}[htb]
     \centering
     \input{tikz/bad-align}
     \caption[Example of bad alignment.]{Retrieving two lines of cache with one or two fetches depending on the alignment of the lines.}
     \label{fig:bad-align}
 \end{figure}
-
-For instance if we consider accessing an array of two lines of caches as illustrated in \fig{bad-align}.
-If the data structure is aligned to cache lines, two accesses will be required to retrieve the whole data structure, and no unused data will be introduced in the cache.
-At the opposite, if it is not correctly aligned, not only one more memory fetch will be required but one useless line will be introduced inside the cache.
-As caches are designed to keep only a limited volume of data, inserting one line inside a cache means evicting another one, thus, introducing unused data must be avoided as much as possible.
 
 \subsubsection{Cache management policies}
 
@@ -78,13 +78,6 @@ Consequently most caches use pseudo-\gls{LRU} heuristics.
 
 \subsubsection{A naive example}
 
-\begin{figure}[htb]
-    \centering
-    \input{tikz/mat-mult}
-    \caption[Example of non linear memory accesses.]{Example of non linear memory accesses: the naive matrix multiplication.}
-    \label{fig:mat-mult}
-\end{figure}
-
 The naive matrix multiplication is a good illustration of how a simple program can benefit from the caches or not.
 \fig{mat-mult} illustrate a naive, sequential matrix multiplication algorithm that computes $C=A*B$.
 For the matrices $A$ and $C$, this algorithm loops over a whole row before going to the next one, while it goes through $B$ by columns first.
@@ -99,12 +92,30 @@ With huge matrices, it may not even fit in the L3 cache resulting in contention 
 The simplest way to fix this issue (although it is not the optimal algorithm for the matrix multiplication) consists in swapping the two inner loop of the algorithm, as shown by the dotted arrows.
 Indeed the order of the operations does not change the result of the multiplication (all computations are independent in this example) this swap only changes the order of the accesses concerning the matrix $B$.
 
+\begin{figure}[htb]
+    \centering
+    \input{tikz/mat-mult}
+    \caption[Example of non linear memory accesses.]{Example of non linear memory accesses: the naive matrix multiplication.}
+    \label{fig:mat-mult}
+\end{figure}
+
 Recent caches also embed a prefecther that tries to detect memory accesses patterns to retrieve several lines of cache at the same time from the main memory.
 This mechanism is particularly efficient with linear or regularly spaced accesses.
 Yet, for sparse and random accesses it might prefetch unused lines evicting potentially useful ones.
 Consequently, this mechanism amplify the impact of the accesses regularity.
 
 \subsubsection{Memory caches and parallelism}
+
+Several reasons have led vendors to make their \glspl{CPU} more and more parallel.
+For instance, increasing by \SI{20}{\%} the frequency of a \gls{CPU} requires much more energy than using two cores at the original frequency and results in less computational power.
+Furthermore, increasing the frequency of a processor increases also the amount of heat produced, and there is a physical limitation on the maximum heat that an area can produce before current leakage happens.
+As a result, modern \glspl{CPU} embed several cores.
+
+Using one huge private cache per core would be costly and space consuming, at the opposite if we use only one cache shared by each thread, they will interfere with each other all the time.
+Therefore, the caches are organized hierarchically.
+The highest level of cache is shared by each core while the lowest is private, the intermediate levels are usually shared by a subset of the cores.
+\fig{topo-single} depicts a quad core machine with hyperthreading enabled (two threads per physical core).
+This machine embed three levels of cache, the first one is private for each core, while the second one is shared by half the cores and the last one is shared by every cores.
 
 \begin{figure}[htb]
     \centering
@@ -113,30 +124,12 @@ Consequently, this mechanism amplify the impact of the accesses regularity.
     \label{fig:topo-single}
 \end{figure}
 
-Several reasons have led vendors to make their \glspl{CPU} more and more parallel.
-For instance, increasing by \SI{20}{\%} the frequency of a \gls{CPU} requires much more energy than using two cores at the original frequency and results in less computational power.
-Furthermore, increasing the frequency of a processors increases also the amount of heat produced, and there is a physical limitation on the maximum heat that an area can produce before current leakage happens.
-As a result, modern \glspl{CPU} embed several cores.
-
-Using one huge private cache per core would be costly and space consuming, at the opposite if we use only one cache shared by each thread, they will interfere with each other all the time.
-Therefore, the caches are organized hierarchically.
-The highest level of cache is shared by each core while the lowest is private, the intermediate levels are usually shared by a subset of the cores.
-\fig{topo-single} depicts a quad core machine with hyper threading enabled (two threads per physical core).
-This machine embed three levels of cache, the first one is private for each core, while the second one is shared by half the cores and the last one is shared by every cores.
-
-A consequence of that hierarchy is that the physical location of thread sharing data can have a considerable impact on the performances.
+A consequence of that hierarchy is that the physical location of thread sharing data can have a considerable impact on the performance.
 Indeed if two threads on the same core read the same line, the first one will copy it to the L1 cache and the second one will access it extremely fast.
 If they are executed inside different cores, the sharing will be efficient at the lowest common level (L2 or L3).
 At the opposite, if two threads write data in the same cache line, a conflict occurs and must be solved by the cache coherency protocol.
 The coherency is done at the lowest shared level of cache and requires to lock the memory subsystem.
 Therefore conflicts are extremely costly, and must be avoided when possible, or at least must occurs between threads as close as possible to avoid locking the L3 cache.
-
-\begin{figure}[htb]
-    \centering
-    \input{tikz/false-sharing}
-    \caption[Example of false sharing.]{Two threads writing 4 consecutive doubles on the same line of cache, without any actual sharing, resulting in false sharing and an easy fix by padding the data structure.}
-    \label{fig:false-sharing}
-\end{figure}
 
 For instance, we  consider a simple example where two threads are working on a small array of $8$ doubles.
 As a double is usually coded on $8$ Bytes, this array is exactly the size of one cache line.
@@ -151,7 +144,27 @@ Hence the name false sharing.
 Not only the accesses to this array are inefficient but they generates lots of useless data traffic in the memory bus which can create some contention slowing down the whole application.
 The easiest way to fix such issues, consists in padding the data structure, which mean introducing zeroes between each element of the data structure so that each thread works on a different cache line.
 
+\begin{figure}[htb]
+    \centering
+    \input{tikz/false-sharing}
+    \caption[Example of false sharing.]{Two threads writing 4 consecutive doubles on the same line of cache, without any actual sharing, resulting in false sharing and an easy fix by padding the data structure.}
+    \label{fig:false-sharing}
+\end{figure}
+
 \subsection{Memory hierarchy}
+
+Increasing the parallelism inside a chip means fitting more transistors in a limited space.
+Therefore, it requires to reduce the size of the transistors and find a way to dissipate the heat produced by them.
+Consequently it is not possible to increase indefinitely this parallelism.
+As a results, modern computers often embed several \glspl{CPU} sockets to overpass this limitation.
+A machine with several sockets can either give them a uniform access to the memory by sharing the memory bus or split the memory into banks and giving non uniform access to the sockets, such machine is called \gls{NUMA}.
+While the first option seems simpler to use, it means that the bandwidth is shared by all the threads, therefore contention can easily appear.
+At the opposite, the second option provides a maximal bandwidth for each socket.
+\fig{topo-NUMA} depicts a \gls{NUMA} machine, we can see that each socket has a privileged access to one memory bank.
+Furthermore, the sockets are linked via a interconnect with a ring topology.
+As a result, each socket  has a direct access to its memory bank, a slower one the banks of its neighbors and an even slower access to the last bank.
+Writing code that uses efficiently this specific architecture remains the burden of the developer who therefore needs to explicitly consider the physical location of its data.
+\tbl{mem-latency} provides approximate accesses latencies depending on the memory hierarchy level for  the \gls{Intel} I7 Xeon 5500 Series.
 
 \begin{figure}[htb]
     \centering
@@ -184,18 +197,6 @@ The easiest way to fix such issues, consists in padding the data structure, whic
 }
 \label{tab:mem-latency}
 \end{table}
-Increasing the parallelism inside a chip means fitting more transistors in a limited space.
-Therefore, it requires to reduce the size of the transistors and find a way to dissipate the heat produced by them.
-Consequently it is not possible to increase indefinitely this parallelism.
-As a results, modern computers often embed several \glspl{CPU} sockets to overpass this limitation.
-A machine with several sockets we can either give them a uniform access to the memory by sharing the memory bus or split the memory into banks and giving non uniform access to the sockets, such machine is called \gls{NUMA}.
-While the first option seems simpler to use, it means that the bandwidth is shared by all the threads, therefore contention can easily appear.
-At the opposite, the second option provides a maximal bandwidth for each socket.
-\fig{topo-NUMA} depicts a \gls{NUMA} machine, we can see that each socket has a privileged access to one memory bank.
-Furthermore, the sockets are linked via a interconnect with a ring topology.
-As a result, each socket  has a direct access to its memory bank, a slower one the banks of its neighbors and an even slower access to the last bank.
-Writing code that uses efficiently this specific architecture remains the burden of the developer who therefore needs to explicitly consider the physical location of its data.
-\tbl{mem-latency} provides approximate accesses latencies depending on the memory hierarchy level for  the \gls{Intel} I7 Xeon 5500 Series.
 
 To use \gls{NUMA} machines efficiently, we need to understand how the \gls{OS} handles the memory.
 From the \gls{OS} point of view, the memory is split into contiguous chunks called pages, usually one page corresponds to \SI{4}{Kb} (some \gls{HPC} applications uses huge pages of \SI{4}{Gb}).
@@ -225,14 +226,13 @@ The user can use it to explicitly allocate data structures and bind threads to n
 Still, finding the optimal mapping for one machine is not trivial and, mapping threads and data structures in an adaptive way is even harder.
 Therefore, several tools were developed to automatically map threads and pages online~\cite{Diener14kMAF,Corbet12Toward}.
 Such tools count remote accesses for each page, and move them when they are more accessed remotely than locally.
-While adaptive tools often improve the performances, they cannot reach the same performances as an application optimized while considering memory issues.
+While adaptive tools often improve the performance, they cannot reach the same performance as an application optimized while considering memory issues.
 Indeed, these tools, by conception, require a time to detect inefficient patterns and adapt and consequently lose opportunities of optimizations.
 
 % First touch hack
 An easy way to overpass this issue for small computational kernels consists in running a loop of computation on the data before initializing them.
 Indeed, by doing so, each page will be mapped as close as possible to the first thread that will actually use it.
 Nevertheless, this technique is only efficient for kernel that repeat several iterations of the same computations and is not suitable for more complex applications
-
 
 To conclude, using efficiently the memory is challenging.
 Indeed, due to the organization of the memory in pages and cache lines, we must consider where and how our data structures are allocated.
@@ -262,7 +262,7 @@ Therefore the trace it collects must have the following properties:
 \end{itemize}
 
 Several studies propose to analyze memory  by looking solely at the information collected through \gls{PAPI} and \gls{Likwid} libraries~\cite{Majo13(Mis)understanding, Jiang14Understanding,Bosch00Rivet,Weyers14Visualization,Tao01Visualizing,DeRose01Hardware}.
-Generic tools have been designed on top of hardware performance counters to analyze and improve parallel applications performances, such as Intel's \gls{VTune}~\cite{Reinders05VTune}, \gls{PCM}~\cite{Wilhalm12Intel}, the \gls{HPCToolkit}~\cite{Adhianto10HPCTOOLKIT}, and AMD's \gls{CodeAnalyst}~\cite{Drongowski08introduction}.
+Generic tools have been designed on top of hardware performance counters to analyze and improve parallel applications performance, such as Intel's \gls{VTune}~\cite{Reinders05VTune}, \gls{PCM}~\cite{Wilhalm12Intel}, the \gls{HPCToolkit}~\cite{Adhianto10HPCTOOLKIT}, and AMD's \gls{CodeAnalyst}~\cite{Drongowski08introduction}.
 Although performance counters provide information about the memory use (bandwith, volume of data transferred \ldots),  they consider the memory as one huge entity and do not differentiate distinct addresses or at least distinct pages.
 Thus, these methods lacks of precision as they are not able to locate issues in the memory and determine in which data structure they happen.
 
@@ -317,8 +317,15 @@ A part of this limit is due to the fact that the previously cited tools work on 
 Liu et al~\cite{Liu13Datacentric,Liu14Tool} proposed an \gls{HPCToolkit} extension that let the user visualize the number of accesses done by each thread to a data structure.
 This visualization gives already more information about data sharing, but the granularity is quite high.
 Consequently, we cannot identify patterns inside the data structure nor pattern change over time.
-Tao et al~\cite{Tao01Visualizing} proposed a more fine grain  visualization, showing for each page the number remote and local accesses.
+Tao et al~\cite{Tao01Visualizing} proposed a more fine grain  visualization, showing for each page the number of remote and local accesses.
 Yet, compared to the previous study they loose the notion of sharing.
+
+Finally, \gls{MemAxes}~\cite{Gimenez14Dissecting}, which is the visualization tool for \gls{Mitos}, provide a unified view of the trace.
+This view, presented in \fig{memaxes}, correlates the information collected in the samples (bottom pane) with the architecture (middle pane) and the source code and data structures (left pane).
+It enables to do some selection on any part of the visualization to focus on some code or a NUMA node etc.
+Furthermore, Husain et al.~\cite{Husain15Relating} have recently added a layer to \gls{MemAxes} that enable to trace simulations and link the simulation visualization to \gls{MemAxes}.
+Still, this visualization does not show sharing pattern or access patterns, it only helps identifying the lines of code and data structures responsible for the bad performance (hotspots)
+As a result, the user still has to correlate the samples information to understand the nature of the issue and how to fix it.
 
 \begin{figure}[htb]
     \centering
@@ -328,26 +335,19 @@ Yet, compared to the previous study they loose the notion of sharing.
     \label{fig:memaxes}
 \end{figure}
 
-Finally, \gls{MemAxes}~\cite{Gimenez14Dissecting}, which is the visualization tool for \gls{Mitos}, provide a unified view of the trace.
-This view, presented in \fig{memaxes}, correlates the information collected in the samples (bottom pane) with the architecture (middle pane) and the source code and data structures (left pane).
-It enables to do some selection on any part of the visualization to focus on some code or a NUMA node etc.
-Furthermore, Husain et al.~\cite{Husain15Relating} have recently added a layer to \gls{MemAxes} that enable to trace simulations and link the simulation visualization to \gls{MemAxes}.
-Still, this visualization does not show sharing pattern or access patterns, it only helps identifying the lines of code and data structures responsible for the bad performances (hotspots)
-As a result, the user still has to correlate the samples information to understand the nature of the issue and how to fix it.
-
 \section{Conclusions}
 \label{sec:mem-cncl}
 
 The memory subsystems have became more and more complex over the last few decades.
-As a result, the way a program allocates and access its memory has a significant impact on the performances.
-Eventually, a developer looking for performances must consider the memory access patterns of its application.
+As a result, the way a program allocates and access its memory has a significant impact on the performance.
+Eventually, a developer looking for performance must consider the memory access patterns of its application.
 Therefore a tool able to collect a memory trace and to display accesses and sharing patterns would be useful for performance optimization.
 
 Most existing memory trace collection tools consider the memory as a monolithic entity and only provide global information such as the bandwidth.
 Some tools provide more detailed memory traces.
 Nevertheless, they rely either on  hardware based sampling in which case the resulting trace only shows a small subset of the memory, or on hardware modifications and are thus not usable by real life developers.
 
-When it comes to visualizing these traces, many techniques were developed to identify precisely in the code and data structures where performances are suboptimal.
+When it comes to visualizing these traces, many techniques were developed to identify precisely in the code and data structures where performance are suboptimal.
 Yet, most of the existing tools are not able to show memory patterns of any kind.
 A few advanced tools picture the number of accesses per data structure and per thread or the number of remote accesses per page.
 Still this is not sufficient to understand precisely sharing patterns or memory access patterns.

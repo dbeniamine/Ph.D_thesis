@@ -17,9 +17,9 @@ All the files required to reproduce each step of each experiment presented in th
 Analyzing the memory behavior of an application raises two challenges: the first one is to collect a trace complete and precise enough to contain memory patterns.
 This is challenging as there is no hardware designed specifically for memory analysis comparable to the performance counters for \glspl{CPU} traces.
 The second challenge is to provide a comprehensive visualization of the memory traces which are spread over five dimensions: time, address space, threads, \gls{CPU} location and access types.
-A few tools were designed to analyze performances from the memory point of view, yet they rely on instruction sampling, which is a hardware assisted mechanism that enable interception of some instruction at a defined frequency.
+A few tools were designed to analyze performance from the memory point of view, yet they rely on instruction sampling, which is a hardware assisted mechanism that enable interception of some instruction at a defined frequency.
 The limit of instruction sampling based tools is that they miss a significant part of the execution and therefore are not able to display memory patterns or to give a global overview of the memory sharing.
-As explained in \chap{mem}, these patterns can have a significant impact on the performances.
+As explained in \chap{mem}, these patterns can have a significant impact on the performance.
 Therefore we consider that the existing memory analysis tools are not sufficient.
 
 \section{Contributions}
@@ -28,8 +28,8 @@ We proposed two different tools to address the challenge of memory performance a
 The first tool, called \gls{Tabarnac} and presented in \chap{tabarnac}, is based on an existing binary instrumentation, which relies on \gls{Pin}, an instrumentation library developed by \gls{Intel}.
 We improved this instrumentation to add contextual information allowing to determine on which data structure the memory accesses occured.
 Furthermore we designed several comprehensive visualizations to interpret \gls{Tabarnac} traces.
-Finally we evaluated the overhead of \gls{Tabarnac} and used the knowledge acquired thanks to this tools to improve the performances of two benchmarks, resulting on \SI{20}{\%} performance gain on a well studied benchmark.
-This work was published at \gls{VPA} 2015 a Super Computing workshop~\cite{Beniamine15TABARNAC}, and is the result of a collaboration with M. Diener and P.O.A Navaux from the informatica team of the \gls{UFRGS}, Porto Alegre, Brazil.
+Finally we evaluated the overhead of \gls{Tabarnac} and used the knowledge acquired thanks to this tools to improve the performance of two benchmarks, resulting on \SI{20}{\%} performance gain on a well studied benchmark.
+This work was published at \gls{VPA} 2015 a Super Computing workshop~\cite{Beniamine15TABARNAC}, and is the result of a collaboration with M. Diener and P.O.A Navaux from the \gls{GPPD} of the \gls{UFRGS}, Porto Alegre, Brazil.
 Moreover \gls{Tabarnac} is distributed as a free software under the \gls{GPL} license: \url{https://github.com/dbeniamine/Tabarnac}.
 This provides sufficient traces to understand and improve the global sharing pattern of an application.
 Nevertheless, more precise traces are required to understand temporal and complex patterns.
@@ -91,8 +91,8 @@ However, the pages where such pattern occurs while appears as hotspots in \gls{M
 Thus, it would be interesting to build an extremely fine grain collection traces that focuses on small parts of the execution, identified by a first analysis, to visualize these patterns.
 
 Finally it would be interesting to use memory traces to understand proprietary code.
-More specifically, it is sometimes hard to understand the performances of some kernels of the \gls{MKL} as its code is kept secret.
-Comparing the memory patterns of the kernels from this library to equivalent free kernels might help to understand the differences of performances and to improve those free kernels.
+More specifically, it is sometimes hard to understand the performance of some kernels of the \gls{MKL} as its code is kept secret.
+Comparing the memory patterns of the kernels from this library to equivalent free kernels might help to understand the differences of performance and to improve those free kernels.
 
 A longer term perspective would be to build a tool similar to \gls{Moca} for recent memory oriented co-processors architectures, such as the \gls{Intel} Xeon Phi, or for \glspl{GPU}.
 This would require to identify a mechanism that can be used to collect memory traces which is far from being trivial as we have far less control on these architectures than on general purpose \glspl{CPU}.
