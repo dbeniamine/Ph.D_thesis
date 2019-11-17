@@ -4,6 +4,6 @@ TEMP=*.bbl *.blg *.synctex.gz *.aux *.toc *.ptc *.out *.ist *.ac? *.alg *.tdo *.
 .INTERMEDIATE: $(TEMP)
 
 # Commands + arguments
-TEX = pdflatex -interaction=nonstopmode -synctex=1
+TEX = lualatex -interaction=nonstopmode -synctex=1
 BIB = bibtex
 GLOSSARY = makeglossaries
